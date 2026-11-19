@@ -47,6 +47,8 @@
         <SolidColorBrush x:Key="MainWindowBackground" Color="{DynamicResource WindowBackgroundColor}" />
         <SolidColorBrush x:Key="MainWindowBorder" Color="{DynamicResource GlobalThemeBorderColor}" />
         <ResourceDictionary x:Key="New">
+            <!-- tab header text: dark on the light tabs of New/Original, cream on Coyote's dark tabs -->
+            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <Color x:Key="GlobalThemeColor">#ad4fff</Color>
             <Color x:Key="GlobalThemeBorderColor">#FF787878</Color>
 
@@ -125,8 +127,12 @@
             <SolidColorBrush x:Key="SuccessBrush" Color="#FF3FB950" />
             <SolidColorBrush x:Key="WarningBrush" Color="#FFFFC14D" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF8A80" />
+            <SolidColorBrush x:Key="TlProgressBarForeground" Color="#FF06B025" />
+            <SolidColorBrush x:Key="TlProgressBarBackground" Color="#FFE6E6E6" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Original">
+            <!-- tab header text: dark on the light tabs of New/Original, cream on Coyote's dark tabs -->
+            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <Color x:Key="GlobalThemeColor">#FFFFC864</Color>
             <Color x:Key="GlobalThemeBorderColor">#FF787878</Color>
 
@@ -205,9 +211,13 @@
             <SolidColorBrush x:Key="SuccessBrush" Color="#FF3FB950" />
             <SolidColorBrush x:Key="WarningBrush" Color="#FFFFC14D" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF8A80" />
+            <SolidColorBrush x:Key="TlProgressBarForeground" Color="#FF06B025" />
+            <SolidColorBrush x:Key="TlProgressBarBackground" Color="#FFE6E6E6" />
         </ResourceDictionary>
         <!-- Coyote: chocolate eye-patch base, varsity-red accent, turquoise eye stripe for progress/focus -->
         <ResourceDictionary x:Key="Coyote">
+            <!-- tab header text: dark on the light tabs of New/Original, cream on Coyote's dark tabs -->
+            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="#FFF5ECDC" />
             <Color x:Key="GlobalThemeColor">#FFC42A31</Color>
             <Color x:Key="GlobalThemeBorderColor">#FF6E4A34</Color>
 
@@ -310,12 +320,13 @@
             <SolidColorBrush x:Key="SuccessBrush" Color="#FF5CC97A" />
             <SolidColorBrush x:Key="WarningBrush" Color="#FFF0C02E" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF6B5E" />
+            <SolidColorBrush x:Key="TlProgressBarForeground" Color="#FF45C7D9" />
+            <SolidColorBrush x:Key="TlProgressBarBackground" Color="#FFEFE4CF" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Shared">
             <system:Double x:Key="GlobalFontSize">14</system:Double>
             <system:Double x:Key="GlobalFontEmphasizeSize">18</system:Double>
             <!-- Colors -->
-            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <SolidColorBrush x:Key="MultilineTextBoxMouseOverBorder"
                              Color="{DynamicResource TextControlBorderMouseOverColor}" />
             <SolidColorBrush x:Key="MultilineTextBoxFocusBorder"
@@ -353,8 +364,6 @@
             <SolidColorBrush x:Key="MainWindowForeground" Color="{DynamicResource TextForegroundLightColor}" />
             <SolidColorBrush x:Key="MainWindowBackground" Color="{DynamicResource WindowBackgroundColor}" />
             <SolidColorBrush x:Key="MainWindowBorder" Color="{DynamicResource GlobalThemeBorderColor}" />
-            <SolidColorBrush x:Key="TlProgressBarForeground" Color="{DynamicResource ProgressBarProgressColor}" />
-            <SolidColorBrush x:Key="TlProgressBarBackground" Color="{DynamicResource ProgressBarBackgroundColor}" />
             <!-- Redesign brushes: views use these, never hex colours, so every theme applies -->
         </ResourceDictionary>
     </Application.Resources>
@@ -391,7 +400,7 @@
 
 
             <Style Selector="TextBlock.TlTabItemText">
-                <Setter Property="Foreground" Value="{StaticResource TlTabItemTextForeground}" />
+                <Setter Property="Foreground" Value="{DynamicResource TlTabItemTextForeground}" />
             </Style>
             <!-- /TextBlock -->
 
