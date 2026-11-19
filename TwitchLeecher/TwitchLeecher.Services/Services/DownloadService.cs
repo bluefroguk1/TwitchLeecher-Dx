@@ -31,7 +31,11 @@ namespace TwitchLeecher.Services.Services
         private const int DOWNLOAD_RETRY_TIME = 5;
 
         // one shared client so segment downloads reuse connections instead of a new TLS handshake per chunk
-        private static readonly HttpClient _httpClient = new HttpClient();
+        // PooledConnectionLifetime re-resolves DNS on long downloads so we do not stay pinned to one slow CDN edge
+        private static readonly HttpClient _httpClient = new HttpClient(new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+        });
 
         #endregion Constants
 
@@ -587,9 +591,17 @@ namespace TwitchLeecher.Services.Services
 
             long completedPartDownloads = 0;
 
-            Parallel.ForEach(vodPlaylist,
-                new ParallelOptions() { MaxDegreeOfParallelism = Math.Max(1, maxConnectionCount - 1) },
-                (part, loopState) =>
+            // Parallel.ForEach over a List hands each worker growing batches of up to 16 chunks and blocks a pool
+            // thread per chunk, so connections ramp up slowly and the last batches finish on one connection.
+            // ForEachAsync takes one chunk at a time and keeps exactly maxConnectionCount requests in flight.
+            // The outer download task is synchronous, so its own thread waits here (one blocked thread, not N).
+            Parallel.ForEachAsync(vodPlaylist,
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Math.Max(1, maxConnectionCount),
+                    CancellationToken = cancellationToken
+                },
+                async (part, ct) =>
                 {
                     int retryCounter = 0;
 
@@ -599,11 +611,11 @@ namespace TwitchLeecher.Services.Services
                     {
                         try
                         {
-                            byte[] bytes = _httpClient.GetByteArrayAsync(part.RemoteFile).GetAwaiter().GetResult();
+                            byte[] bytes = await _httpClient.GetByteArrayAsync(part.RemoteFile, ct);
 
                             FileSystem.DeleteFile(part.LocalFile);
 
-                            File.WriteAllBytes(part.LocalFile, bytes);
+                            await File.WriteAllBytesAsync(part.LocalFile, bytes, ct);
 
                             long completed = Interlocked.Increment(ref completedPartDownloads);
 
@@ -611,7 +623,8 @@ namespace TwitchLeecher.Services.Services
 
                             success = true;
                         }
-                        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
+                        catch (Exception ex) when ((ex is HttpRequestException or TaskCanceledException or IOException)
+                                                   && !ct.IsCancellationRequested)
                         {
                             if (ex is HttpRequestException { StatusCode: not null })
                             {
@@ -632,7 +645,7 @@ namespace TwitchLeecher.Services.Services
                                 log(Environment.NewLine + Environment.NewLine + "Downloading file '" + part.RemoteFile +
                                     "' failed! Trying again in " + DOWNLOAD_RETRY_TIME + "s");
                                 log(Environment.NewLine + ex);
-                                Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
+                                await Task.Delay(DOWNLOAD_RETRY_TIME * 1000, ct);
                             }
                             else
                             {
@@ -641,12 +654,7 @@ namespace TwitchLeecher.Services.Services
                             }
                         }
                     } while (!success);
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        loopState.Stop();
-                    }
-                });
+                }).GetAwaiter().GetResult();
 
             setProgress(100);
 
