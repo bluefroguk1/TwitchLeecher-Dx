@@ -17,6 +17,8 @@ namespace TwitchLeecher.Services.Interfaces
 
         Dictionary<TwitchVideoQuality, string> GetClipQualities(string slug);
 
+        TwitchStoryboard GetStoryboard(string vodId);
+
         List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to, Action<TimeSpan> onPage);
 
         bool ChannelExists(string channel);

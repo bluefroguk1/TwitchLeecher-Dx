@@ -958,6 +958,54 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
+        // Video.seekPreviewsURL points to a JSON array of storyboards ("low" 160x90, "high" 220x124), each
+        // {count, width, height, cols, rows, interval, quality, images:[file names relative to the JSON]}.
+        // Returns null when the VOD has none.
+        public TwitchStoryboard GetStoryboard(string vodId)
+        {
+            if (string.IsNullOrEmpty(vodId) || !vodId.All(char.IsAsciiDigit))
+            {
+                return null;
+            }
+
+            string infoUrl;
+
+            using (WebClient webClient = CreateGqlWebClient())
+            {
+                string request = "{\"query\":\"query{video(id:\\\"" + vodId + "\\\"){seekPreviewsURL}}\"}";
+                infoUrl = JObject.Parse(webClient.UploadString(GQL_URL, request))
+                    .SelectToken("$.data.video.seekPreviewsURL")?.Value<string>();
+            }
+
+            if (string.IsNullOrWhiteSpace(infoUrl))
+            {
+                return null;
+            }
+
+            // plain client: the CDN must not receive the Twitch OAuth header
+            using (WebClient webClient = new WebClient())
+            {
+                JToken board = JArray.Parse(webClient.DownloadString(infoUrl))
+                    .FirstOrDefault(b => b.Value<string>("quality") == "high");
+
+                if (board == null)
+                {
+                    return null;
+                }
+
+                Uri baseUri = new Uri(infoUrl);
+
+                return new TwitchStoryboard(
+                    board["images"].Select(image => new Uri(baseUri, image.Value<string>())).ToList(),
+                    board.Value<int>("interval"),
+                    board.Value<int>("cols"),
+                    board.Value<int>("rows"),
+                    board.Value<int>("width"),
+                    board.Value<int>("height"),
+                    board.Value<int>("count"));
+            }
+        }
+
         // Pages through VOD chat with the persisted query the Twitch web player uses; anonymous access is enough.
         // Pages by time offset only: Twitch rejects cursor paging without a browser integrity token.
         public List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to,

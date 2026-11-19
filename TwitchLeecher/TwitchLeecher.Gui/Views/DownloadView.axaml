@@ -3,186 +3,232 @@
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:controls="clr-namespace:TwitchLeecher.Gui.Controls"
              x:DataType="viewModels:DownloadViewModel">
     <Design.DataContext>
         <viewModels:DownloadViewModel />
     </Design.DataContext>
-    <Grid Margin="20" Width="450" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition />
-        </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-            <TextBlock Text="Download Video" FontSize="21.333" FontWeight="Bold" />
-        </Border>
+    <!-- shortcut: palette colours are local to this view; move them to App.axaml resources once the redesign branches have merged -->
+    <UserControl.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+        <Style Selector="TextBox, ComboBox">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Background" Value="#16161A" />
+            <Setter Property="BorderBrush" Value="#44444D" />
+            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="10,0" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#44444D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#34343C" />
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#9146FF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#A06BFF" />
+        </Style>
+        <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#7B2FF0" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#B794FF" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#D4BFFF" />
+        </Style>
+        <Style Selector="Border.timecode">
+            <Setter Property="Background" Value="#BF000000" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Margin" Value="6" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+    </UserControl.Styles>
 
-        <Grid Grid.Row="1" Grid.IsSharedSizeScope="True">
-            <Grid.RowDefinitions>
-                <RowDefinition SharedSizeGroup="g1" />
-                <RowDefinition Height="10" />
-                <RowDefinition SharedSizeGroup="g1" />
-                <RowDefinition Height="10" />
-                <RowDefinition SharedSizeGroup="g1" />
-                <RowDefinition Height="10" />
-                <RowDefinition SharedSizeGroup="g1" />
-                <RowDefinition Height="5" />
-                <RowDefinition />
-                <RowDefinition Height="15" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="15" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Title:" VerticalAlignment="Center"
-                       HorizontalAlignment="Right" />
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding DownloadParams.Video.Title}" TextWrapping="NoWrap"
-                       TextTrimming="CharacterEllipsis" FontWeight="Bold" VerticalAlignment="Center" />
-
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Quality:" VerticalAlignment="Center"
-                       HorizontalAlignment="Right" />
-            <Grid Grid.Row="2" Grid.Column="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <ComboBox Name="cmbQuality" Grid.Column="0" HorizontalAlignment="Stretch"
-                          ItemsSource="{Binding DownloadParams.Qualities}"
-                          SelectedItem="{Binding DownloadParams.SelectedQuality}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="12"
-                           Text="{Binding DownloadParams.EstimatedSizeStr, StringFormat='Est. size: {0}'}"
-                           ToolTip.Tip="Estimate only, based on the quality's advertised bitrate and the selected length. The real file size can differ." />
-            </Grid>
-
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Folder:" VerticalAlignment="Center"
-                       HorizontalAlignment="Right" />
-            <Grid Grid.Row="4" Grid.Column="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Grid.Row="0" Text="{Binding DownloadParams.Folder, Mode=OneWay}"
-                         IsReadOnly="True" />
-                <Button Classes="TlMiniButton" Command="{Binding ChooseCommand}" Grid.Column="2"
-                        Grid.Row="0" Content="..." />
-            </Grid>
-
-            <TextBlock Grid.Row="6" Grid.Column="0" Text="Filename:" VerticalAlignment="Center"
-                       HorizontalAlignment="Right" />
-            <TextBox Grid.Row="6" Grid.Column="2"
-                     IsReadOnly="{Binding !UseCustomFilename, Mode=OneWay}"
-                     Text="{Binding DownloadParams.Filename}" />
-
-            <StackPanel Grid.Row="8" Grid.Column="2" Orientation="Horizontal">
-                <CheckBox IsChecked="{Binding UseCustomFilename}"
-                          Content="Use Custom Filename" HorizontalAlignment="Left" VerticalAlignment="Center"
-                          Margin="-1,0,0,0" FontSize="12" />
-                <!-- clips have no chat replay -->
-                <CheckBox IsChecked="{Binding DownloadParams.DownloadChat}" IsVisible="{Binding !DownloadParams.Video.IsClip}"
-                          Content="Save chat (.chat.txt)" HorizontalAlignment="Left" VerticalAlignment="Center"
-                          Margin="15,0,0,0" FontSize="12"
-                          ToolTip.Tip="Saves the chat next to the video as timestamped text, matching the crop range." />
-                <CheckBox IsChecked="{Binding DownloadParams.SaveVodInfo}"
-                          Content="Save VOD info (.info.json)" HorizontalAlignment="Left" VerticalAlignment="Center"
-                          Margin="15,0,0,0" FontSize="12"
-                          ToolTip.Tip="Writes title, channel, id, URL, recorded date, length and quality to a small JSON file next to the video." />
-            </StackPanel>
-
-            <Grid Grid.Row="10" Grid.Column="2"
-                  IsVisible="{Binding DownloadParams.CanCrop}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="0" Grid.Column="0" BorderThickness="0,0,0,1" Padding="0,0,0,5" Margin="0,0,0,5">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="2*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Crop Video" FontWeight="Bold" />
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding DownloadParams.Video.LengthStr, StringFormat='Total Length: {0}', FallbackValue='Total Length: 00:00:00'}"
-                                   HorizontalAlignment="Right" FontSize="12" VerticalAlignment="Bottom" />
-                    </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Border Width="620" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="#2A2A30" BorderBrush="#3A3A42" BorderThickness="1" CornerRadius="12"
+                TextElement.Foreground="#F2F2F5">
+            <DockPanel>
+                <!-- Header: thumbnail, title, channel · date · length -->
+                <Border DockPanel.Dock="Top" Padding="20,18" BorderBrush="#3A3A42" BorderThickness="0,0,0,1">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Left" Width="128" Height="72" CornerRadius="6" ClipToBounds="True"
+                                Background="#16161A" Margin="0,0,14,0">
+                            <Image Source="{Binding DownloadParams.Video.Thumbnail^}" Stretch="UniformToFill" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Top" Spacing="4">
+                            <TextBlock Text="{Binding DownloadParams.Video.Title}" FontSize="18" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding VideoDetails}" FontSize="13" Foreground="#A8A8B3" />
+                        </StackPanel>
+                    </DockPanel>
                 </Border>
 
-                <Grid Grid.Row="1" Grid.Column="0" Grid.IsSharedSizeScope="True" Margin="10,0,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition SharedSizeGroup="g2" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition SharedSizeGroup="g2" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="3" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="3" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="3" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="3" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <!-- Footer: Cancel, Download -->
+                <Border DockPanel.Dock="Bottom" Padding="20,14" BorderBrush="#3A3A42" BorderThickness="0,1,0,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+                        <Button Classes="primary" Content="⤓ Download" Command="{Binding DownloadCommand}" />
+                    </StackPanel>
+                </Border>
 
-                    <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding DownloadParams.CropStart}"
-                              Content="Start" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="0" Grid.Column="2" Classes="TlTimeUpDown"
-                                   Value="{Binding CropStartHours}"
-                                   IsEnabled="{Binding DownloadParams.CropStart}" Maximum="99" />
-                    <TextBlock Grid.Row="0" Grid.Column="4" Text=":" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="0" Grid.Column="6" Classes="TlTimeUpDown"
-                                   Value="{Binding CropStartMinutes}"
-                                   IsEnabled="{Binding DownloadParams.CropStart}" />
-                    <TextBlock Grid.Row="0" Grid.Column="8" Text=":" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="0" Grid.Column="10" Classes="TlTimeUpDown"
-                                   Value="{Binding CropStartSeconds}"
-                                   IsEnabled="{Binding DownloadParams.CropStart}" />
+                <StackPanel Margin="20,18" Spacing="16">
+                    <!-- Quality | Save to -->
+                    <Grid ColumnDefinitions="*,12,*">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Classes="label" Text="QUALITY" />
+                            <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Quality"
+                                      ItemsSource="{Binding DownloadParams.Qualities}"
+                                      SelectedItem="{Binding DownloadParams.SelectedQuality}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Classes="label" Text="SAVE TO" />
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Margin="6,0,0,0" Padding="10,0" FontSize="13"
+                                        Content="Change" Command="{Binding ChooseCommand}" />
+                                <TextBox Text="{Binding DownloadParams.Folder, Mode=OneWay}" IsReadOnly="True"
+                                         AutomationProperties.Name="Save to" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
 
-                    <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding  DownloadParams.CropEnd}" Content="End"
-                              VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="2" Grid.Column="2" Classes="TlTimeUpDown"
-                                   Value="{Binding CropEndHours}"
-                                   IsEnabled="{Binding DownloadParams.CropEnd}" Maximum="99" />
-                    <TextBlock Grid.Row="2" Grid.Column="4" Text=":" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="2" Grid.Column="6" Classes="TlTimeUpDown"
-                                   Value="{Binding CropEndMinutes}"
-                                   IsEnabled="{Binding DownloadParams.CropEnd}" />
-                    <TextBlock Grid.Row="2" Grid.Column="8" Text=":" VerticalAlignment="Center" />
-                    <NumericUpDown Grid.Row="2" Grid.Column="10" Classes="TlTimeUpDown"
-                                   Value="{Binding CropEndSeconds}"
-                                   IsEnabled="{Binding DownloadParams.CropEnd}" />
-                </Grid>
-            </Grid>
+                    <!-- File name, always editable, with reset to template -->
+                    <StackPanel>
+                        <TextBlock Classes="label" Text="FILE NAME" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Margin="6,0,0,0" Width="36" Padding="0"
+                                    HorizontalContentAlignment="Center" Content="↺"
+                                    Command="{Binding ResetFilenameCommand}"
+                                    ToolTip.Tip="Reset to the file name template from Settings"
+                                    AutomationProperties.Name="Reset file name to template" />
+                            <TextBox Text="{Binding DownloadParams.Filename}" AutomationProperties.Name="File name" />
+                        </DockPanel>
+                    </StackPanel>
 
-            <Border Grid.Row="11" Grid.Column="2"
-                    IsVisible="{Binding ShowMutedPartsWarning}"
-                    Margin="0,10,0,0" Padding="5" BorderThickness="1" CornerRadius="5">
-                <Border.BorderBrush>
-                    <SolidColorBrush Color="{DynamicResource TextForegroundErrorColor}" />
-                </Border.BorderBrush>
-                <Border.Background>
-                    <SolidColorBrush Color="{DynamicResource TextForegroundErrorColor}" Opacity="0.3" />
-                </Border.Background>
-                <TextBlock FontSize="11"
-                           Text="The video contains muted parts! This may cause problems during conversion. In case of a conversion error or audio issues, please try disabling converion in the preferences." />
-            </Border>
-        </Grid>
-    </Grid>
+                    <!-- Part to download (needs conversion; never for clips) -->
+                    <StackPanel Spacing="8" IsVisible="{Binding DownloadParams.CanCrop}">
+                        <TextBlock Classes="label" Text="PART TO DOWNLOAD" Margin="0" />
+
+                        <Grid ColumnDefinitions="*,10,*" IsVisible="{Binding HasPreviews}">
+                            <Border Grid.Column="0" Height="140" CornerRadius="6" BorderBrush="#9146FF"
+                                    BorderThickness="2" Background="#16161A" ClipToBounds="True">
+                                <Panel>
+                                    <Image Source="{Binding StartPreview}" Stretch="UniformToFill" />
+                                    <Border Classes="timecode" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <TextBlock Text="START" FontSize="11" FontWeight="Bold" />
+                                    </Border>
+                                    <Border Classes="timecode" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding RangeStartText}" FontSize="12" />
+                                    </Border>
+                                </Panel>
+                            </Border>
+                            <Border Grid.Column="2" Height="140" CornerRadius="6" BorderBrush="#9146FF"
+                                    BorderThickness="2" Background="#16161A" ClipToBounds="True">
+                                <Panel>
+                                    <Image Source="{Binding EndPreview}" Stretch="UniformToFill" />
+                                    <Border Classes="timecode" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <TextBlock Text="END" FontSize="11" FontWeight="Bold" />
+                                    </Border>
+                                    <Border Classes="timecode" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding RangeEndText}" FontSize="12" />
+                                    </Border>
+                                </Panel>
+                            </Border>
+                        </Grid>
+
+                        <controls:RangeStrip Height="44" Cursor="SizeWestEast"
+                                             AutomationProperties.Name="Part to download"
+                                             Frames="{Binding PreviewFrames}"
+                                             Duration="{Binding VideoSeconds}"
+                                             Start="{Binding RangeStart}"
+                                             End="{Binding RangeEnd}" />
+
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" FontSize="13"
+                                       FontWeight="SemiBold" Text="{Binding RangeSummary}"
+                                       ToolTip.Tip="Estimated size, based on the quality's advertised bitrate. The real file can differ." />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="From" VerticalAlignment="Center" FontSize="13" Foreground="#D0D0D8" />
+                                <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center"
+                                         Text="{Binding RangeStartText, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="From" />
+                                <TextBlock Text="to" VerticalAlignment="Center" FontSize="13" Foreground="#D0D0D8" />
+                                <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center"
+                                         Text="{Binding RangeEndText, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="To" />
+                                <Button Classes="link" Content="Whole video" VerticalAlignment="Center"
+                                        Command="{Binding WholeVideoCommand}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+
+                    <!-- Muted parts -->
+                    <Border IsVisible="{Binding ShowMutedPartsWarning}" Padding="10,8" CornerRadius="6"
+                            Background="#1FFFAA00" BorderBrush="#66FFAA00" BorderThickness="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Text="⚠" Foreground="#FFC14D" Margin="0,0,8,0"
+                                       VerticalAlignment="Center" />
+                            <Button DockPanel.Dock="Right" Classes="link" Content="What does this mean?"
+                                    VerticalAlignment="Center">
+                                <Button.Flyout>
+                                    <Flyout Placement="BottomEdgeAlignedRight">
+                                        <TextBlock MaxWidth="320" TextWrapping="Wrap" FontSize="13"
+                                                   Text="Twitch silenced these parts, usually because of copyrighted music. The download works, but those parts have no sound. If conversion fails or the audio is wrong, turn off conversion in Settings and download again." />
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
+                            <TextBlock Text="Some parts of this video are muted by Twitch." FontSize="13"
+                                       VerticalAlignment="Center" TextWrapping="Wrap" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Extras -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="label" Text="EXTRAS" Margin="0" />
+                        <!-- clips have no chat replay -->
+                        <CheckBox Content="Save chat as text" IsChecked="{Binding DownloadParams.DownloadChat}"
+                                  IsVisible="{Binding !DownloadParams.Video.IsClip}"
+                                  ToolTip.Tip="Saves the chat next to the video as timestamped text, matching the part you download." />
+                        <CheckBox Content="Save video details" IsChecked="{Binding DownloadParams.SaveVodInfo}"
+                                  ToolTip.Tip="Saves title, channel, id, link, date, length and quality in a small file next to the video." />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </ScrollViewer>
 </UserControl>
