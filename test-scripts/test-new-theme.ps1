@@ -85,6 +85,10 @@ Switch to "New", then to "Original". Each looks as before (grey with a purple / 
 One intended change: their progress bar is now green on light grey (their own theme colours) instead of Avalonia's blue.
 Then switch back to Coyote. Every page goes fully brown again, with no grey controls left behind.
 '@
+Ask 'Redesign keys (no crash)' @'
+Switch between all three themes several times. The app must not crash: Coyote and Shared both used to define ErrorBrush, which made the switch throw.
+If redesigned screens are merged in: in Coyote they use brown panels and cards, cream text, a red accent and a turquoise border on the active input.
+'@
 
 # --- Summary ---------------------------------------------------------------
 if (-not $p.HasExited) { Wait-AppClosed $p }

@@ -44,6 +44,18 @@ Written on a Mac with no .NET SDK, so **nothing here has been compiled or run ye
 - **Constraint for future tweaks:** the notification bar draws the normal text colour on top of `GlobalThemeColor`. The accent therefore has to stay dark enough for cream text, and bright enough to read as large text on the window.
 - **Don't** set `ThemeAccentBrush4` to a light colour. SimpleTheme uses it for the selected row in combo boxes, with cream text on top.
 
+## Redesign colour keys (cherry-picked f001555 from `ui-theme-keys`)
+- The `Shared` dictionary now has 17 `<Key>Brush` brushes (AppBackground, HeaderBackground, PanelBackground, CardBackground, Divider, ControlBorder, Input*, TextPrimary/Muted, Accent, AccentForeground, Success, Warning, Error). Every theme defines the matching `<Key>Color` values, Coyote included.
+- **Coyote values:**
+  - Backgrounds: browns `#24150E` / `#1A0F0A` / `#2D1A11` / `#3A2216`.
+  - Text: cream `#F5ECDC`, muted `#C9B49C`.
+  - Accent: `#C42A31` with cream text on it.
+  - Active input border: turquoise `#45C7D9`.
+- **Contrast:**
+  - TextPrimary on Card: 12.6. TextMuted on Card: 7.4. AccentForeground on Accent: 4.81.
+  - The red accent as a border or icon on a card is 2.62, below the 3:1 for non-text UI. Accepted, because it matches the existing borders.
+- **Bug fixed during the merge:** `Shared` now defines `ErrorBrush`, so Coyote's own `ErrorBrush` was removed. `SetTheme` adds Shared and the theme into one dictionary, so a key defined in both throws on `Resources.Add`. **No theme may define a key that Shared also defines.**
+
 ## To do on Windows
 ```
 git fetch origin
