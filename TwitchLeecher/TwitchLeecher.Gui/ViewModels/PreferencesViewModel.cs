@@ -43,8 +43,11 @@ namespace TwitchLeecher.Gui.ViewModels
             IDialogService dialogService,
             INotificationService notificationService,
             IPreferencesService preferencesService,
-            IThemeService themeService)
+            IThemeService themeService,
+            WatchedSearchesViewModel watchedSearches)
         {
+            WatchedSearches = watchedSearches;
+
             _dialogService = dialogService;
             _notificationService = notificationService;
             _preferencesService = preferencesService;
@@ -58,6 +61,11 @@ namespace TwitchLeecher.Gui.ViewModels
         #region Properties
         
         public Vector ScrollPosition { get; set; }
+
+        public WatchedSearchesViewModel WatchedSearches { get; }
+
+        // Set before navigating here to open the page at the Watched searches section; the view clears it.
+        public bool ScrollToWatchedSearches { get; set; }
 
         public Preferences CurrentPreferences
         {
@@ -196,17 +204,6 @@ namespace TwitchLeecher.Gui.ViewModels
         #endregion Properties
 
         #region Methods
-
-        [RelayCommand]
-        private void UseFavouritesForAutoDownload()
-        {
-            string[] channels = CurrentPreferences.GetAutoDownloadChannels()
-                .Concat(CurrentPreferences.SearchFavouriteChannels)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            CurrentPreferences.AutoDownloadChannels = string.Join(", ", channels);
-        }
 
         private void AddFavouriteChannel()
         {

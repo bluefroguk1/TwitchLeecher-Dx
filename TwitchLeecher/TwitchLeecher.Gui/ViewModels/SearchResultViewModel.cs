@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Windows.Input;
 using Avalonia;
 using CommunityToolkit.Mvvm.Input;
+using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
@@ -25,6 +26,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly ISearchService _searchService;
         private readonly IQuickDownloadService _quickDownloadService;
         private readonly INotificationService _notificationService;
+        private readonly IAutoDownloadService _autoDownloadService;
 
         private readonly object _commandLockObject;
 
@@ -43,8 +45,10 @@ namespace TwitchLeecher.Gui.ViewModels
             IPreferencesService preferencesService,
             ISearchService searchService,
             IQuickDownloadService quickDownloadService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IAutoDownloadService autoDownloadService)
         {
+            _autoDownloadService = autoDownloadService;
             _eventAggregator = eventAggregator;
             _dialogService = dialogService;
             _navigationService = navigationService;
@@ -264,6 +268,36 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
+        // Saves the current channel search as a watched search with default settings.
+        [RelayCommand]
+        private void WatchSearch()
+        {
+            try
+            {
+                SearchParameters searchParams = _searchService.LastSearchParams;
+
+                if (searchParams == null || searchParams.SearchType != SearchType.Channel ||
+                    string.IsNullOrWhiteSpace(searchParams.Channel))
+                {
+                    _notificationService.ShowNotification("Only a channel search can be watched");
+                    return;
+                }
+
+                bool wasOn = _autoDownloadService.Enabled;
+                WatchedSearch search = _autoDownloadService.Add(searchParams.Channel, searchParams.VideoType);
+
+                // asking to watch a search means wanting it to run
+                _autoDownloadService.Enabled = true;
+
+                _notificationService.ShowNotification("Watching " + search.Label +
+                    (wasOn ? "" : ", watched searches switched on") + ". Change it in Settings");
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowAndLogException(ex);
+            }
+        }
+
         public void ShowSearch()
         {
             try
@@ -290,6 +324,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
             menuCommands.Add(new MenuCommand(SeachCommnad, "New Search", "fa-solid fa-magnifying-glass"));
             menuCommands.Add(new MenuCommand(DownloadSelectedCommand, "Download Selected", "fa-solid fa-list-check", 190));
+            menuCommands.Add(new MenuCommand(WatchSearchCommand, "Watch this search", "fa-solid fa-eye", 190));
 
             return menuCommands;
         }

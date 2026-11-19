@@ -7,10 +7,12 @@ namespace TwitchLeecher.Services.Interfaces
     public interface IQuickDownloadService
     {
         // Network calls only, no UI: safe on a background thread. Returns null and sets problem if it can't be downloaded.
-        DownloadParameters CreateDownloadParams(TwitchVideo video, out string problem);
+        // quality: null uses the default quality from Settings.
+        DownloadParameters CreateDownloadParams(TwitchVideo video, out string problem, DefaultQuality quality = null);
 
         // Same checks as the download dialog, minus the questions: never overwrites. Returns why it was skipped, or null.
         // Changes the download queue, so call it on the UI thread.
-        string TryEnqueue(DownloadParameters downloadParams);
+        // startPaused: the item waits in Downloads until the user presses Resume.
+        string TryEnqueue(DownloadParameters downloadParams, bool startPaused = false);
     }
 }

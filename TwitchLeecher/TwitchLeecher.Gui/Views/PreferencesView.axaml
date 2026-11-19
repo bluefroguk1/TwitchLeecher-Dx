@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:TwitchLeecher.Gui.Converters"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:views="clr-namespace:TwitchLeecher.Gui.Views"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:enums="clr-namespace:TwitchLeecher.Core.Enums;assembly=TwitchLeecher.Core"
              x:DataType="viewModels:PreferencesViewModel">
@@ -567,104 +568,9 @@
                 </avalonia:Icon>
             </Grid>
 
-            <Border Grid.Row="6" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Auto Download" FontSize="21.333" FontWeight="Bold" />
-            </Border>
-
-            <Grid Grid.Row="7" Margin="15,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="g2" />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <CheckBox Grid.Row="0" Grid.Column="2"
-                          IsChecked="{Binding CurrentPreferences.AutoDownloadEnabled}"
-                          Content="Download new videos of these channels automatically"
-                          VerticalAlignment="Center" HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="0" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Auto Download" />
-                                <TextBlock TextAlignment="Left" TextWrapping="Wrap">
-                                    While Twitch Leecher is running, it checks the channels below and queues each new VOD with the default quality, folder and filename. Videos that already exist when a channel is first checked are only marked as seen, not downloaded. VODs still being streamed wait until the stream ends. Activity is written to auto_download.log in the settings folder.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Channels" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <Grid Grid.Row="2" Grid.Column="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Text="{Binding CurrentPreferences.AutoDownloadChannels}"
-                             Watermark="channel1, channel2" />
-                    <Button Grid.Column="2" Classes="TlMiniButton" Command="{Binding UseFavouritesForAutoDownloadCommand}"
-                            ToolTip.Tip="Add all favourite channels">
-                        <avalonia:Icon Value="fa-solid fa-star" Width="11" Height="11" RenderTransformOrigin="0.5,0.5" />
-                    </Button>
-                </Grid>
-                <avalonia:Icon Grid.Row="2" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Channels" />
-                                <TextBlock TextAlignment="Left" TextWrapping="Wrap">
-                                    The channels to watch, separated by commas. The star button adds all your favourite channels.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Check every" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <NumericUpDown Minimum="5" Maximum="1440" Width="80"
-                                   Value="{Binding CurrentPreferences.AutoDownloadInterval}"
-                                   HorizontalContentAlignment="Center" VerticalAlignment="Center" />
-                    <TextBlock Text="minutes" VerticalAlignment="Center" Margin="5,0,0,0" />
-                </StackPanel>
-
-                <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <CheckBox IsChecked="{Binding CurrentPreferences.AutoDownloadClips}"
-                              Content="Also clips with at least" VerticalAlignment="Center" />
-                    <NumericUpDown Minimum="0" Maximum="10000000" Width="100" Margin="5,0,0,0"
-                                   IsEnabled="{Binding CurrentPreferences.AutoDownloadClips}"
-                                   Value="{Binding CurrentPreferences.AutoDownloadClipMinViews}"
-                                   HorizontalContentAlignment="Center" VerticalAlignment="Center" />
-                    <TextBlock Text="views" VerticalAlignment="Center" Margin="5,0,0,0" />
-                </StackPanel>
-                <avalonia:Icon Grid.Row="6" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Clips" />
-                                <TextBlock TextAlignment="Left" TextWrapping="Wrap">
-                                    Also queue clips made in the last 7 days once they reach this many views.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-            </Grid>
+            <!-- Watched searches: a self-contained page with its own view model (saved straight away, not by Save). -->
+            <views:WatchedSearchesView Grid.Row="6" Grid.RowSpan="2" x:Name="WatchedSearchesSection"
+                                       DataContext="{Binding WatchedSearches}" Margin="0,30,0,0" />
 
             <Border Grid.Row="8" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
                 <TextBlock Text="Miscellaneous" FontSize="21.333" FontWeight="Bold" />

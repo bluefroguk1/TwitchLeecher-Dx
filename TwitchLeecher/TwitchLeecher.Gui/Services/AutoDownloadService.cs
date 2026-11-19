@@ -1,3 +1,6 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Text.Json;
 using Avalonia.Threading;
 using TwitchLeecher.Core.Enums;
@@ -7,11 +10,12 @@ using TwitchLeecher.Services.Interfaces;
 
 namespace TwitchLeecher.Gui.Services
 {
-    // Channel monitoring: every few minutes, queues new VODs (and optionally clips) of the watched channels.
+    // Watched searches: every few minutes, re-runs saved channel searches and queues new results.
     internal class AutoDownloadService : IAutoDownloadService
     {
         #region Constants
 
+        private const string SEARCHES_FILE = "watched_searches.json";
         private const string SEEN_FILE = "auto_download_seen.json";
         private const string LOG_FILE = "auto_download.log";
         private const long LOG_MAX_BYTES = 1024 * 1024;
@@ -19,6 +23,7 @@ namespace TwitchLeecher.Gui.Services
         private const int VODS_PER_CHECK = 20;
         private const int CLIP_DAYS = 7;
         private const int MIN_INTERVAL = 5;
+        private const int DEFAULT_INTERVAL = 15;
 
         #endregion Constants
 
@@ -31,11 +36,20 @@ namespace TwitchLeecher.Gui.Services
         private readonly ILogService _logService;
         private readonly INotificationService _notificationService;
 
-        private int _started;
+        // released to wake the loop early (Check now, switched on)
+        private readonly SemaphoreSlim _wake = new SemaphoreSlim(0);
 
-        // key: lower-case channel name for VODs, plus "#clips" for clips; value: handled video/clip ids.
-        // Only touched by the loop task, so no locking.
+        private bool _enabled;
+        private int _interval = DEFAULT_INTERVAL;
+        private int _started;
+        private int _checkNow;
+        private DateTime? _lastCheck;
+
+        // key: WatchedSearch.Key; value: handled video/clip ids. Only touched by the loop task, so no locking.
         private Dictionary<string, HashSet<string>> _seen;
+
+        // live VODs already logged as WAITING, so each is logged once instead of every check
+        private readonly HashSet<string> _waitingLogged = new HashSet<string>();
 
         #endregion Fields
 
@@ -55,9 +69,73 @@ namespace TwitchLeecher.Gui.Services
             _folderService = folderService;
             _logService = logService;
             _notificationService = notificationService;
+
+            Searches = new ObservableCollection<WatchedSearch>();
+            LoadSearches();
+
+            foreach (WatchedSearch search in Searches)
+            {
+                search.PropertyChanged += Search_PropertyChanged;
+            }
+
+            Searches.CollectionChanged += Searches_CollectionChanged;
         }
 
         #endregion Constructors
+
+        #region Properties
+
+        public ObservableCollection<WatchedSearch> Searches { get; }
+
+        public bool Enabled
+        {
+            get => _enabled;
+            set
+            {
+                if (_enabled == value)
+                {
+                    return;
+                }
+
+                _enabled = value;
+                SaveSearches();
+
+                if (value)
+                {
+                    // check straight away once it is switched on
+                    _wake.Release();
+                }
+            }
+        }
+
+        public int Interval
+        {
+            get => _interval;
+            set
+            {
+                int interval = Math.Max(MIN_INTERVAL, value);
+
+                if (_interval != interval)
+                {
+                    _interval = interval;
+                    SaveSearches();
+                }
+            }
+        }
+
+        public DateTime? LastCheck => _lastCheck;
+
+        public event EventHandler Changed;
+
+        private string AppDataFolder => _folderService.GetAppDataFolder();
+
+        private string SearchesFile => Path.Combine(AppDataFolder, SEARCHES_FILE);
+
+        private string SeenFile => Path.Combine(AppDataFolder, SEEN_FILE);
+
+        private string LogFile => Path.Combine(AppDataFolder, LOG_FILE);
+
+        #endregion Properties
 
         #region Methods
 
@@ -69,104 +147,178 @@ namespace TwitchLeecher.Gui.Services
             }
         }
 
+        public void CheckNow()
+        {
+            Interlocked.Exchange(ref _checkNow, 1);
+            _wake.Release();
+        }
+
+        public WatchedSearch Add(string channel, VideoType videoType)
+        {
+            WatchedSearch search = new WatchedSearch { Channel = channel, VideoType = videoType };
+
+            WatchedSearch existing = string.IsNullOrEmpty(search.Channel)
+                ? null
+                : Searches.FirstOrDefault(s => s.Key == search.Key);
+
+            if (existing != null)
+            {
+                existing.Active = true;
+                return existing;
+            }
+
+            Searches.Add(search);
+            return search;
+        }
+
+        public List<WatchedActivity> ReadActivity(int max)
+        {
+            List<WatchedActivity> activity = new List<WatchedActivity>();
+
+            try
+            {
+                if (!File.Exists(LogFile))
+                {
+                    return activity;
+                }
+
+                string[] lines = File.ReadAllLines(LogFile);
+
+                for (int i = lines.Length - 1; i >= 0 && activity.Count < max; i--)
+                {
+                    // time \t KIND \t search \t message; lines from the old channel-list format have no tabs and are skipped
+                    string[] parts = lines[i].Split('\t', 4);
+
+                    if (parts.Length == 4 && DateTime.TryParse(parts[0], out DateTime time))
+                    {
+                        activity.Add(new WatchedActivity(time, parts[1], parts[2], parts[3]));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex);
+            }
+
+            return activity;
+        }
+
         private async Task RunAsync()
         {
-            DateTime lastCheck = DateTime.MinValue;
+            DateTime lastRun = DateTime.MinValue;
 
             while (true)
             {
                 try
                 {
-                    Preferences prefs = _preferencesService.CurrentPreferences;
+                    bool force = Interlocked.Exchange(ref _checkNow, 0) == 1;
 
-                    if (!prefs.AutoDownloadEnabled)
+                    if (!Enabled && !force)
                     {
                         // check straight away once it is switched on
-                        lastCheck = DateTime.MinValue;
+                        lastRun = DateTime.MinValue;
                     }
-                    else if (DateTime.Now >= lastCheck.AddMinutes(Math.Max(MIN_INTERVAL, prefs.AutoDownloadInterval)))
+                    else if (force || DateTime.Now >= lastRun.AddMinutes(Interval))
                     {
-                        lastCheck = DateTime.Now;
-                        await CheckChannels(prefs);
+                        lastRun = DateTime.Now;
+                        await CheckSearches();
+                        _lastCheck = DateTime.Now;
+                        RaiseChanged();
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log("Check failed, retrying next time: " + ex.Message);
+                    Log("ERROR", "All searches", "Check failed, retrying next time: " + ex.Message);
                     _logService.LogException(ex);
                 }
 
-                // wake every minute so settings changes apply without a restart
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                // wake every minute so interval changes apply without a restart
+                await _wake.WaitAsync(TimeSpan.FromMinutes(1));
             }
         }
 
-        private async Task CheckChannels(Preferences prefs)
+        private async Task CheckSearches()
         {
             _seen ??= LoadSeen();
 
-            string[] channels = prefs.GetAutoDownloadChannels();
+            // the collection is bound to the UI, so take the snapshot there
+            List<WatchedSearch> searches = await Dispatcher.UIThread.InvokeAsync(() =>
+                Searches.Where(s => s.Active && !string.IsNullOrEmpty(s.Channel)).ToList());
 
-            if (channels.Length == 0)
+            foreach (WatchedSearch search in searches)
             {
-                Log("Auto download is on but no channels are set");
-                return;
-            }
-
-            foreach (string channel in channels)
-            {
-                // one failing channel (network error, renamed channel) must not stop the others
+                // one failing search (network error, renamed channel) must not stop the others
                 try
                 {
-                    await CheckVideos(channel, channel.ToLowerInvariant(), VideoType.Broadcast, v => !v.Live);
-
-                    if (prefs.AutoDownloadClips)
-                    {
-                        int minViews = prefs.AutoDownloadClipMinViews;
-                        await CheckVideos(channel, channel.ToLowerInvariant() + "#clips", VideoType.Clip, v => v.Views >= minViews);
-                    }
+                    await CheckSearch(search);
                 }
                 catch (Exception ex)
                 {
-                    Log($"{channel}: check failed, retrying next time: {ex.Message}");
+                    Log("ERROR", search.Label, "Check failed, retrying next time: " + ex.Message);
                 }
             }
         }
 
-        // isReady == false leaves the video unseen so a later check picks it up (live VOD, clip below the view threshold).
-        private async Task CheckVideos(string channel, string key, VideoType videoType, Func<TwitchVideo, bool> isReady)
+        private async Task CheckSearch(WatchedSearch search)
         {
+            // read once: the user may edit the search on the UI thread while this runs
+            string channel = search.Channel;
+            string key = search.Key;
+            string label = search.Label;
+            VideoType videoType = search.VideoType;
+            int minViews = search.MinViews;
+            bool startPaused = search.StartPaused;
+            DefaultQuality quality = search.GetQuality();
+            bool isClip = videoType == VideoType.Clip;
+
             SearchParameters searchParams = new SearchParameters(SearchType.Channel)
             {
                 Channel = channel,
                 VideoType = videoType,
                 // without dates Helix lists clips by all-time views, so ask for recent ones
-                LoadLimitType = videoType == VideoType.Clip ? LoadLimitType.Timespan : LoadLimitType.LastVods,
+                LoadLimitType = isClip ? LoadLimitType.Timespan : LoadLimitType.LastVods,
                 LoadFrom = DateTime.Now.Date.AddDays(-CLIP_DAYS),
                 LoadTo = DateTime.Now.Date,
                 LoadLastVods = VODS_PER_CHECK
             };
 
             List<TwitchVideo> videos = _apiService.Search(searchParams).ToList();
-            string what = videoType == VideoType.Clip ? "clip" : "VOD";
 
             if (!_seen.TryGetValue(key, out HashSet<string> seen))
             {
-                // first check of this channel: what is there already is history, only newer videos get downloaded
+                // first check of this search: what is there already is history, only newer videos get downloaded
                 _seen[key] = new HashSet<string>(videos.Select(v => v.Id));
                 SaveSeen();
-                Log($"{channel}: now watching, {videos.Count} existing {what}(s) marked as seen, not downloaded");
+                Log("FIRST RUN", label, $"{videos.Count} existing videos marked as seen, not downloaded");
                 return;
             }
 
-            foreach (TwitchVideo video in videos.Where(v => !seen.Contains(v.Id) && isReady(v)))
+            foreach (TwitchVideo video in videos.Where(v => !seen.Contains(v.Id)))
             {
-                DownloadParameters downloadParams = _quickDownloadService.CreateDownloadParams(video, out string problem);
+                // not ready: left unseen so a later check picks it up
+                if (isClip ? video.Views < minViews : video.Live)
+                {
+                    if (!isClip && _waitingLogged.Add(video.Id))
+                    {
+                        Log("WAITING", label, $"{video.Title} (still live, retry next check)");
+                    }
+
+                    continue;
+                }
+
+                DownloadParameters downloadParams =
+                    _quickDownloadService.CreateDownloadParams(video, out string problem, quality);
+
+                if (downloadParams != null)
+                {
+                    downloadParams.FromWatchedSearch = true;
+                }
 
                 // the download queue is bound to the UI
                 string notQueued = downloadParams == null
                     ? problem
-                    : await Dispatcher.UIThread.InvokeAsync(() => _quickDownloadService.TryEnqueue(downloadParams));
+                    : await Dispatcher.UIThread.InvokeAsync(() =>
+                        _quickDownloadService.TryEnqueue(downloadParams, startPaused));
 
                 // shortcut: a skipped video (sub-only, file exists, bad download settings) is not retried, the log says why; add a retry list if users ask
                 seen.Add(video.Id);
@@ -174,20 +326,161 @@ namespace TwitchLeecher.Gui.Services
 
                 if (notQueued != null)
                 {
-                    Log($"{channel}: skipped {what} {video.Id} \"{video.Title}\": {notQueued}");
+                    Log("SKIPPED", label, $"{video.Title}: {notQueued}");
                     continue;
                 }
 
-                Log($"{channel}: queued {what} {video.Id} \"{video.Title}\"");
+                if (startPaused)
+                {
+                    Log("PAUSED", label, $"{video.Title} (waiting for you in Downloads)");
+                }
+                else
+                {
+                    Log("STARTED", label, video.Title);
+                }
 
-                string message = $"Auto download: {channel} - {video.Title}";
+                string message = $"Watched search {label}: {video.Title}";
                 Dispatcher.UIThread.Post(() => _notificationService.ShowNotification(message));
 
                 // DESKTOP NOTIFICATION: call the tray/desktop notification service here once it exists.
             }
         }
 
-        private string SeenFile => Path.Combine(_folderService.GetAppDataFolder(), SEEN_FILE);
+        private void RaiseChanged()
+        {
+            Dispatcher.UIThread.Post(() => Changed?.Invoke(this, EventArgs.Empty));
+        }
+
+        private void Searches_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            foreach (WatchedSearch search in e.OldItems?.OfType<WatchedSearch>() ?? Enumerable.Empty<WatchedSearch>())
+            {
+                search.PropertyChanged -= Search_PropertyChanged;
+            }
+
+            foreach (WatchedSearch search in e.NewItems?.OfType<WatchedSearch>() ?? Enumerable.Empty<WatchedSearch>())
+            {
+                search.PropertyChanged += Search_PropertyChanged;
+            }
+
+            SaveSearches();
+        }
+
+        private void Search_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // LatestResult and IsEditing are display-only
+            if (e.PropertyName is nameof(WatchedSearch.Channel) or nameof(WatchedSearch.VideoType)
+                or nameof(WatchedSearch.MinViews) or nameof(WatchedSearch.Quality)
+                or nameof(WatchedSearch.Active) or nameof(WatchedSearch.StartPaused))
+            {
+                SaveSearches();
+            }
+        }
+
+        private void LoadSearches()
+        {
+            try
+            {
+                if (File.Exists(SearchesFile))
+                {
+                    SearchesData data = JsonSerializer.Deserialize<SearchesData>(File.ReadAllText(SearchesFile));
+
+                    if (data != null)
+                    {
+                        _enabled = data.Enabled;
+                        _interval = Math.Max(MIN_INTERVAL, data.Interval);
+
+                        foreach (WatchedSearch search in data.Searches ?? new List<WatchedSearch>())
+                        {
+                            Searches.Add(search);
+                        }
+
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // keep the unreadable file for the user instead of overwriting it with the migrated list
+                _logService.LogException(ex);
+                TryBackup(SearchesFile);
+            }
+
+            MigrateFromChannelList();
+        }
+
+        // Before watched searches there was one comma-separated channel list plus global clip settings in config.xml.
+        // Each old channel becomes a Broadcasts search, plus a Clips search if clips were on. config.xml is left as it was,
+        // so an older build still finds its settings.
+        private void MigrateFromChannelList()
+        {
+            try
+            {
+                Preferences prefs = _preferencesService.CurrentPreferences;
+
+                _enabled = prefs.AutoDownloadEnabled;
+                _interval = Math.Max(MIN_INTERVAL, prefs.AutoDownloadInterval);
+
+                foreach (string channel in prefs.GetAutoDownloadChannels())
+                {
+                    Searches.Add(new WatchedSearch { Channel = channel, VideoType = VideoType.Broadcast });
+
+                    if (prefs.AutoDownloadClips)
+                    {
+                        Searches.Add(new WatchedSearch
+                        {
+                            Channel = channel,
+                            VideoType = VideoType.Clip,
+                            MinViews = prefs.AutoDownloadClipMinViews
+                        });
+                    }
+                }
+
+                SaveSearches();
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex);
+            }
+        }
+
+        private static void TryBackup(string file)
+        {
+            try
+            {
+                File.Copy(file, file + ".bak", true);
+            }
+            catch
+            {
+                // nothing more to do; the original is still there until the next save
+            }
+        }
+
+        private void SaveSearches()
+        {
+            try
+            {
+                SearchesData data = new SearchesData
+                {
+                    Enabled = _enabled,
+                    Interval = _interval,
+                    Searches = Searches.ToList()
+                };
+
+                Directory.CreateDirectory(AppDataFolder);
+
+                // write then rename, so a crash mid-save never leaves a half-written file
+                string tempFile = SearchesFile + ".tmp";
+                File.WriteAllText(tempFile, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+                File.Move(tempFile, SearchesFile, true);
+            }
+            catch (Exception ex)
+            {
+                _logService.LogException(ex);
+            }
+
+            RaiseChanged();
+        }
 
         private Dictionary<string, HashSet<string>> LoadSeen()
         {
@@ -201,8 +494,8 @@ namespace TwitchLeecher.Gui.Services
             }
             catch (Exception ex)
             {
-                // starting empty is safe: every channel counts as new, so its videos are marked seen, not downloaded again
-                Log("Could not read " + SEEN_FILE + ", starting fresh: " + ex.Message);
+                // starting empty is safe: every search counts as new, so its videos are marked seen, not downloaded again
+                Log("ERROR", "All searches", "Could not read " + SEEN_FILE + ", starting fresh: " + ex.Message);
             }
 
             return new Dictionary<string, HashSet<string>>();
@@ -211,30 +504,46 @@ namespace TwitchLeecher.Gui.Services
         // shortcut: the seen ids are never pruned (a few bytes per video), prune by date if the file ever gets big
         private void SaveSeen()
         {
-            Directory.CreateDirectory(_folderService.GetAppDataFolder());
+            Directory.CreateDirectory(AppDataFolder);
             File.WriteAllText(SeenFile, JsonSerializer.Serialize(_seen));
         }
 
-        private void Log(string message)
+        // One tab-separated line per event; ReadActivity parses it back for the Recent activity list.
+        private void Log(string kind, string search, string message)
         {
             try
             {
-                string logFile = Path.Combine(_folderService.GetAppDataFolder(), LOG_FILE);
-
-                if (File.Exists(logFile) && new FileInfo(logFile).Length > LOG_MAX_BYTES)
+                if (File.Exists(LogFile) && new FileInfo(LogFile).Length > LOG_MAX_BYTES)
                 {
-                    File.Delete(logFile);
+                    File.Delete(LogFile);
                 }
 
-                Directory.CreateDirectory(_folderService.GetAppDataFolder());
-                File.AppendAllText(logFile, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}{Environment.NewLine}");
+                Directory.CreateDirectory(AppDataFolder);
+                string line = string.Join("\t", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), kind, search,
+                    message.Replace('\t', ' ').Replace('\n', ' ').Replace('\r', ' '));
+                File.AppendAllText(LogFile, line + Environment.NewLine);
             }
             catch
             {
                 // logging must never stop the loop
             }
+
+            RaiseChanged();
         }
 
         #endregion Methods
+
+        #region Nested Types
+
+        private class SearchesData
+        {
+            public bool Enabled { get; set; }
+
+            public int Interval { get; set; } = DEFAULT_INTERVAL;
+
+            public List<WatchedSearch> Searches { get; set; }
+        }
+
+        #endregion Nested Types
     }
 }

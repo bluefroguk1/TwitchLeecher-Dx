@@ -39,6 +39,16 @@
             <Setter Property="Margin" Value="0,0,6,0" />
         </Style>
 
+        <Style Selector="Button.dl.pill">
+            <Setter Property="CornerRadius" Value="15" />
+        </Style>
+        <Style Selector="Ellipse.dot">
+            <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="Ellipse.dot.on">
+            <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+
         <Style Selector="ProgressBar.dl">
             <Setter Property="MinHeight" Value="0" />
             <Setter Property="MinWidth" Value="0" />
@@ -111,13 +121,23 @@
         <Border DockPanel.Dock="Top" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}"
                 BorderThickness="0,0,0,1" Padding="16,14">
             <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                     <TextBlock Grid.Column="0" Text="{Binding SummaryCounts}" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="{Binding SummarySize}" FontSize="13" Margin="10,0,0,0"
                                Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis" />
-                    <Button Grid.Column="2" Classes="dl bar" Command="{Binding PauseAllCommand}"
+                    <!-- Watched searches pill: opens Settings at that section -->
+                    <Button Grid.Column="2" Classes="dl bar pill" Command="{Binding OpenWatchedSearchesCommand}"
+                            IsVisible="{Binding WatchedSearchesText, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            ToolTip.Tip="Watched searches queue new videos while the app is open">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Classes="dot" Classes.on="{Binding WatchedSearchesOn}" Width="8" Height="8"
+                                     VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{Binding WatchedSearchesText}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="3" Classes="dl bar" Command="{Binding PauseAllCommand}"
                             IsEnabled="{Binding HasDownloads}">
                         <StackPanel Orientation="Horizontal">
                             <avalonia:Icon Value="fa-solid fa-pause" IsVisible="{Binding CanPauseAll}" />
@@ -125,7 +145,7 @@
                             <TextBlock Text="{Binding PauseAllText}" />
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="3" Classes="dl bar" Content="Clear finished"
+                    <Button Grid.Column="4" Classes="dl bar" Content="Clear finished"
                             Command="{Binding ClearFinishedCommand}" IsEnabled="{Binding HasDownloads}" />
                 </Grid>
                 <ProgressBar Classes="dl" Height="4" CornerRadius="2" Minimum="0" Maximum="100"

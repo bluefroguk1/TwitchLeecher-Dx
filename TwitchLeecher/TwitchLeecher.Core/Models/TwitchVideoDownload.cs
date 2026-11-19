@@ -213,12 +213,16 @@ namespace TwitchLeecher.Core.Models
         {
             get
             {
+                string chip;
+
                 switch (DownloadState)
                 {
-                    case DownloadState.CompletedWithWarning: return "DONE · WARNINGS";
-                    case DownloadState.Error: return "FAILED";
-                    default: return DownloadState.ToString().ToUpperInvariant();
+                    case DownloadState.CompletedWithWarning: chip = "DONE · WARNINGS"; break;
+                    case DownloadState.Error: chip = "FAILED"; break;
+                    default: chip = DownloadState.ToString().ToUpperInvariant(); break;
                 }
+
+                return DownloadParams.FromWatchedSearch ? chip + " · WATCHED" : chip;
             }
         }
 
@@ -274,7 +278,9 @@ namespace TwitchLeecher.Core.Models
                     case DownloadState.Paused:
                         return BytesDownloaded > 0
                             ? "Paused at " + Progress.ToString("0") + "%"
-                            : "Paused, waiting for you";
+                            : DownloadParams.FromWatchedSearch
+                                ? "Found by a watched search, waiting for you"
+                                : "Paused, waiting for you";
 
                     case DownloadState.Done:
                         return "Saved to " + DownloadParams.Folder;

@@ -38,7 +38,7 @@ namespace TwitchLeecher.Services.Services
 
         #region Methods
 
-        public DownloadParameters CreateDownloadParams(TwitchVideo video, out string problem)
+        public DownloadParameters CreateDownloadParams(TwitchVideo video, out string problem, DefaultQuality quality = null)
         {
             Dictionary<TwitchVideoQuality, string> playlistInfo;
 
@@ -65,7 +65,7 @@ namespace TwitchLeecher.Services.Services
 
             Preferences currentPrefs = _preferencesService.CurrentPreferences.Clone();
 
-            TwitchVideoQuality selectedQuality = GetSelectedQuality(qualities, currentPrefs.DownloadDefaultQuality);
+            TwitchVideoQuality selectedQuality = GetSelectedQuality(qualities, quality ?? currentPrefs.DownloadDefaultQuality);
 
             string folder = currentPrefs.DownloadSubfoldersForFav &&
                             _preferencesService.IsChannelInFavourites(video.Channel)
@@ -91,7 +91,7 @@ namespace TwitchLeecher.Services.Services
             return downloadParams;
         }
 
-        public string TryEnqueue(DownloadParameters downloadParams)
+        public string TryEnqueue(DownloadParameters downloadParams, bool startPaused = false)
         {
             downloadParams.Validate();
 
@@ -110,7 +110,7 @@ namespace TwitchLeecher.Services.Services
                 return "File already exists";
             }
 
-            _downloadService.Enqueue(downloadParams);
+            _downloadService.Enqueue(downloadParams, startPaused);
             return null;
         }
 

@@ -22,6 +22,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly IDownloadService _downloadService;
         private readonly INavigationService _navigationService;
         private readonly IPreferencesService _preferencesService;
+        private readonly IAutoDownloadService _autoDownloadService;
 
         private ICommand _retryDownloadCommand;
         private ICommand _cancelDownloadCommand;
@@ -38,6 +39,8 @@ namespace TwitchLeecher.Gui.ViewModels
         private double _overallProgress;
         private bool _hasDownloads;
         private bool _canPauseAll;
+        private string _watchedSearchesText;
+        private bool _watchedSearchesOn;
 
         #endregion Fields
 
@@ -47,8 +50,10 @@ namespace TwitchLeecher.Gui.ViewModels
             IDialogService dialogService,
             IDownloadService downloadService,
             INavigationService navigationService,
-            IPreferencesService preferencesService)
+            IPreferencesService preferencesService,
+            IAutoDownloadService autoDownloadService)
         {
+            _autoDownloadService = autoDownloadService;
             _dialogService = dialogService;
             _downloadService = downloadService;
             _navigationService = navigationService;
@@ -65,6 +70,7 @@ namespace TwitchLeecher.Gui.ViewModels
             PlayCommand = new DelegateCommand<string>(Play);
             PauseAllCommand = new DelegateCommand(PauseOrResumeAll);
             ClearFinishedCommand = new DelegateCommand(ClearFinished);
+            OpenWatchedSearchesCommand = new DelegateCommand(() => _navigationService.ShowWatchedSearches());
 
             // Speed, time left and the summary bar all refresh on this one-second tick.
             _refreshTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background,
@@ -98,6 +104,21 @@ namespace TwitchLeecher.Gui.ViewModels
         public ICommand PauseAllCommand { get; }
 
         public ICommand ClearFinishedCommand { get; }
+
+        public ICommand OpenWatchedSearchesCommand { get; }
+
+        /// <summary>The summary bar pill, for example "3 watched searches"; null hides it.</summary>
+        public string WatchedSearchesText
+        {
+            get { return _watchedSearchesText; }
+            private set { SetProperty(ref _watchedSearchesText, value); }
+        }
+
+        public bool WatchedSearchesOn
+        {
+            get { return _watchedSearchesOn; }
+            private set { SetProperty(ref _watchedSearchesOn, value); }
+        }
 
         /// <summary>For example "1 downloading · 1 queued · 1 paused · 1 done".</summary>
         public string SummaryCounts
@@ -212,6 +233,14 @@ namespace TwitchLeecher.Gui.ViewModels
             AddCount(counts, downloads.Count(d => d.DownloadState == DownloadState.Error), "failed");
             AddCount(counts, downloads.Count(d => d.DownloadState == DownloadState.Canceled), "canceled");
             SummaryCounts = counts.Count > 0 ? string.Join(" · ", counts) : "No downloads";
+
+            int watched = _autoDownloadService.Searches.Count(s => s.Active && !string.IsNullOrEmpty(s.Channel));
+            WatchedSearchesOn = _autoDownloadService.Enabled && watched > 0;
+            WatchedSearchesText = _autoDownloadService.Searches.Count == 0
+                ? null
+                : !_autoDownloadService.Enabled
+                    ? "Watched searches off"
+                    : watched == 1 ? "1 watched search" : watched + " watched searches";
 
             // shortcut: sizes are only known once an item has fetched a chunk, so items still waiting are left
             // out of the totals and time left; upgrade when a size estimate exists before the download starts.
