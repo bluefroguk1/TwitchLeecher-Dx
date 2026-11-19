@@ -67,6 +67,7 @@ public partial class App : Application
         kernel.Bind<MainWindow>().ToSelf().InSingletonScope();
         kernel.Bind<MainWindowVM>().ToSelf().InSingletonScope();
         kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
+        kernel.Bind<IDesktopNotificationService>().To<DesktopNotificationService>().InSingletonScope();
     }
 
     private void LoadModules(IKernel kernel)
@@ -96,6 +97,16 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void TrayIcon_OnClicked(object sender, EventArgs e) => _kernel.Get<MainWindow>().BringToFront();
+
+    private void TrayOpen_OnClick(object sender, EventArgs e) => _kernel.Get<MainWindow>().BringToFront();
+
+    private void TrayExit_OnClick(object sender, EventArgs e)
+    {
+        // same path as the close button: saves window state, then the app exits with its last window
+        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Close();
     }
 
     private void SetTheme(string name)

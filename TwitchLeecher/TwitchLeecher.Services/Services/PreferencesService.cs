@@ -30,6 +30,8 @@ namespace TwitchLeecher.Services.Services
         private const string APP_THEME = "Theme";
         private const string APP_CHECKFORUPDATES_EL = "CheckForUpdates";
         private const string APP_SHOWDONATIONBUTTON_EL = "ShowDonationButton";
+        private const string APP_MINIMISETOTRAY_EL = "MinimiseToTray";
+        private const string APP_SHOWNOTIFICATIONS_EL = "ShowNotifications";
 
         private const string SEARCH_EL = "Search";
         private const string SEARCH_FAVCHANNELS_EL = "FavChannels";
@@ -166,6 +168,14 @@ namespace TwitchLeecher.Services.Services
                 XElement appShowDonationButtonEl = new XElement(APP_SHOWDONATIONBUTTON_EL);
                 appShowDonationButtonEl.SetValue(preferences.AppShowDonationButton);
                 appEl.Add(appShowDonationButtonEl);
+
+                XElement appMinimiseToTrayEl = new XElement(APP_MINIMISETOTRAY_EL);
+                appMinimiseToTrayEl.SetValue(preferences.AppMinimiseToTray);
+                appEl.Add(appMinimiseToTrayEl);
+
+                XElement appShowNotificationsEl = new XElement(APP_SHOWNOTIFICATIONS_EL);
+                appShowNotificationsEl.SetValue(preferences.AppShowNotifications);
+                appEl.Add(appShowNotificationsEl);
 
                 // Search
                 RangeObservableCollection<string> favChannels = preferences.SearchFavouriteChannels;
@@ -332,6 +342,34 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     preferences.AppShowDonationButton = appShowDonationButtonEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appMinimiseToTrayEl = appEl.Element(APP_MINIMISETOTRAY_EL);
+
+                            if (appMinimiseToTrayEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppMinimiseToTray = appMinimiseToTrayEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appShowNotificationsEl = appEl.Element(APP_SHOWNOTIFICATIONS_EL);
+
+                            if (appShowNotificationsEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppShowNotifications = appShowNotificationsEl.GetValueAsBool();
                                 }
                                 catch
                                 {
@@ -664,6 +702,8 @@ namespace TwitchLeecher.Services.Services
                 Version = _tlVersion,
                 AppCheckForUpdates = true,
                 AppShowDonationButton = true,
+                AppMinimiseToTray = false,
+                AppShowNotifications = true,
                 SearchChannelName = null,
                 SearchVideoType = VideoType.Broadcast,
                 SearchLoadLimitType = LoadLimitType.Timespan,
