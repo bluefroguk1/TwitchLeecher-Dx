@@ -1,4 +1,4 @@
-# Handoff: "Eye Stripe" colour theme (branch `claude/feature-new-theme-645696`)
+# Handoff: "Coyote" colour theme (designed as "Eye Stripe" in the mockups) (branch `claude/feature-new-theme-645696`)
 
 Written on a Mac with no .NET SDK, so **nothing here has been compiled or run yet**. You're on the Windows PC: build, test, fix.
 
@@ -10,7 +10,7 @@ Written on a Mac with no .NET SDK, so **nothing here has been compiled or run ye
 - Mockup of the intended look: https://claude.ai/artifact/R6MAtnxzoDPGSpbnY3PnxG. The candidate palettes it was picked from: https://claude.ai/artifact/JxBtPs9JgBaYvcTTo6RmEX. Both are private to the user.
 
 ## How theming works (read before changing colours)
-- Themes are `ResourceDictionary` blocks in `TwitchLeecher/TwitchLeecher/App.axaml`, keyed `New`, `Original` and `Eye Stripe`, plus a `Shared` dictionary. `App.axaml.cs` registers them in `_themes`. `SetTheme` clears `Application.Resources` and copies in Shared plus the chosen theme. `PreferencesService.AvailableThemes` is the Settings list. Unknown names fall back to "New".
+- Themes are `ResourceDictionary` blocks in `TwitchLeecher/TwitchLeecher/App.axaml`, keyed `New`, `Original` and `Coyote`, plus a `Shared` dictionary. `App.axaml.cs` registers them in `_themes`. `SetTheme` clears `Application.Resources` and copies in Shared plus the chosen theme. `PreferencesService.AvailableThemes` is the Settings list. Unknown names fall back to "New".
 - **Only 6 of the 33 app colour keys reach the screen:**
   - `GlobalThemeColor`: every `Border`, the notification bar and the loading ring/text.
   - `WindowBackgroundGradientTop/BottomColor`: the title bar, search/download cards and, since this branch, the message box.
@@ -18,15 +18,15 @@ Written on a Mac with no .NET SDK, so **nothing here has been compiled or run ye
   - `TextForegroundLightColor`: all text.
   - `TextForegroundErrorColor`: the download error box.
 - The rest (`TextControl*`, `Button*`, `Scrollbar*`, …) are left over from the WPF version and unused, except `ProgressBar*`, which this branch wires up.
-- **Buttons, text boxes, combo boxes, checkboxes and scrollbars use SimpleTheme's brushes** (`ThemeControlMidBrush`, `ThemeAccentBrush`, `HighlightBrush`, …). SimpleTheme defines those brushes from colours with `StaticResource`, so overriding the *Color* keys does nothing. You have to override the *Brush* keys. Eye Stripe defines 19 of them. App resources win over the theme's own, and Original/New don't define them, so they keep SimpleTheme's defaults.
+- **Buttons, text boxes, combo boxes, checkboxes and scrollbars use SimpleTheme's brushes** (`ThemeControlMidBrush`, `ThemeAccentBrush`, `HighlightBrush`, …). SimpleTheme defines those brushes from colours with `StaticResource`, so overriding the *Color* keys does nothing. You have to override the *Brush* keys. Coyote defines 19 of them. App resources win over the theme's own, and Original/New don't define them, so they keep SimpleTheme's defaults.
 
 ## What changed (commit 12155ab)
 1. `App.axaml`:
-   - The new `Eye Stripe` dictionary: all 33 app keys, plus the 19 SimpleTheme brush overrides.
+   - The new `Coyote` dictionary: all 33 app keys, plus the 19 SimpleTheme brush overrides.
    - `Shared` gains `TlProgressBarForeground`/`TlProgressBarBackground`, built from each theme's `ProgressBarProgressColor`/`ProgressBarBackgroundColor`.
    - A global `ProgressBar` style uses them, because the download % text in `DownloadsView.axaml` is hard-coded black. **Side effect:** Original/New now show a green `#06B025` bar on a `#E6E6E6` track instead of SimpleTheme's blue on a dark track.
-2. `App.axaml.cs`: `_themes.Add("Eye Stripe", …)`.
-3. `PreferencesService.cs`: `AvailableThemes` now includes `"Eye Stripe"`.
+2. `App.axaml.cs`: `_themes.Add("Coyote", …)`.
+3. `PreferencesService.cs`: `AvailableThemes` now includes `"Coyote"`.
 4. `MessageBoxWindow.axaml`: the hard-coded grey gradient now uses `DynamicResource WindowBackgroundGradientTop/BottomColor`. Original/New use the same grey values, so they look unchanged.
 5. `test-scripts/test-new-theme.ps1`: y/n/s walk-through of every page. Results go to `%TEMP%\twitchleecher-new-theme-results-*.txt`.
 
@@ -54,8 +54,7 @@ powershell -ExecutionPolicy Bypass -File test-scripts\test-new-theme.ps1
 - Ask the user for the results file and fix any FAIL. Screenshots help: compare against the mockup.
 
 ## Watch for
-- **x:Key with a space** (`"Eye Stripe"`) should be fine in Avalonia XAML. If the compiler complains, rename the key (for example `EyeStripe`) and keep the display name in `_themes`/`AvailableThemes`.
-- **Grey controls left behind after switching** Eye Stripe → Original → Eye Stripe: the brush overrides are removed and re-added through `Resources.Clear()`/`Add`, and controls use `DynamicResource`, so they should refresh. If some stay stale, a restart after a theme change is the fallback.
+- **Grey controls left behind after switching** Coyote → Original → Coyote: the brush overrides are removed and re-added through `Resources.Clear()`/`Add`, and controls use `DynamicResource`, so they should refresh. If some stay stale, a restart after a theme change is the fallback.
 - **Progress bar still blue:** the `ProgressBar` style in `Application.Styles` should beat SimpleTheme's ControlTheme setters. If it doesn't, check the `DynamicResource` chain `TlProgressBar*` → `ProgressBar*Color`.
 - **Not themed:**
   - Download state colours: `DownloadStateToColorConverter`, hard-coded yellow/red/green.

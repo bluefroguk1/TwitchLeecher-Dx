@@ -1,4 +1,4 @@
-# Test script for the "Eye Stripe" theme branch.
+# Test script for the "Coyote" theme branch.
 # Builds the app, then walks you through switching to the new theme and checking every page.
 # Windows:  powershell -ExecutionPolicy Bypass -File test-scripts\test-new-theme.ps1
 # Linux:    pwsh test-scripts/test-new-theme.ps1
@@ -37,7 +37,7 @@ $p = Start-App
 
 # --- 1. Switch theme ------------------------------------------------------
 Ask 'Theme listed + applies' @'
-Open Settings (gear icon). In "Theme" pick "Eye Stripe" and save.
+Open Settings (gear icon). In "Theme" pick "Coyote" and save.
 Expected: the app turns dark chocolate brown with red borders straight away, with no restart needed. Text is cream.
 '@
 
@@ -79,11 +79,11 @@ Ask 'Message box' 'Trigger any message box (a confirmation or error popup, e.g. 
 # --- 6. Persistence + other themes still fine -----------------------------
 Wait-AppClosed $p
 $p = Start-App
-Ask 'Theme remembered' 'The app has restarted. Is it still in Eye Stripe?'
+Ask 'Theme remembered' 'The app has restarted. Is it still in Coyote?'
 Ask 'Original + New unchanged' @'
 Switch to "New", then to "Original". Each looks as before (grey with a purple / gold accent).
 One intended change: their progress bar is now green on light grey (their own theme colours) instead of Avalonia's blue.
-Then switch back to Eye Stripe. Every page goes fully brown again, with no grey controls left behind.
+Then switch back to Coyote. Every page goes fully brown again, with no grey controls left behind.
 '@
 
 # --- Summary ---------------------------------------------------------------

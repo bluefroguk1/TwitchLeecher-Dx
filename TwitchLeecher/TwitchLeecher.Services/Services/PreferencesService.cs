@@ -99,7 +99,7 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
-        public IEnumerable<string> AvailableThemes => new[] { "Original", "New", "Eye Stripe" };
+        public IEnumerable<string> AvailableThemes => new[] { "Original", "New", "Coyote" };
 
         #endregion Properties
 

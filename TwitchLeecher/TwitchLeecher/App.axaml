@@ -134,8 +134,8 @@
             <Color x:Key="ProgressBarProgressColor">#FF06B025</Color>
             <Color x:Key="ProgressBarBackgroundColor">#FFE6E6E6</Color>
         </ResourceDictionary>
-        <!-- Eye Stripe: chocolate eye-patch base, varsity-red accent, turquoise eye stripe for progress/focus -->
-        <ResourceDictionary x:Key="Eye Stripe">
+        <!-- Coyote: chocolate eye-patch base, varsity-red accent, turquoise eye stripe for progress/focus -->
+        <ResourceDictionary x:Key="Coyote">
             <Color x:Key="GlobalThemeColor">#FFC42A31</Color>
             <Color x:Key="GlobalThemeBorderColor">#FF6E4A34</Color>
 
