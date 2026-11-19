@@ -314,6 +314,14 @@
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="CornerRadius" Value="6" />
                 <Setter Property="MinHeight" Value="36" />
+            </Style>
+            <Style Selector="TextBox">
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style Selector="ComboBox">
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style Selector="NumericUpDown">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
             </Style>
             <Style Selector="TextBox, ComboBox">
