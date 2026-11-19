@@ -1,4 +1,7 @@
-﻿using System.Collections.Specialized;
+﻿using System.Collections;
+using System.Linq;
+using System.Reflection;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
@@ -94,7 +97,8 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
-        // shortcut: any edit counts, even one changed back by hand; compare against saved values if that bothers anyone
+        // true only while the edited copy differs from the saved preferences, so values a control writes back
+        // while the page loads (or a value changed back by hand) do not show the save bar
         public bool HasChanges
         {
             get => _hasChanges;
@@ -541,7 +545,7 @@ namespace TwitchLeecher.Gui.ViewModels
                 return;
             }
 
-            HasChanges = true;
+            HasChanges = !SameValues(_currentPreferences, _preferencesService.CurrentPreferences);
             FirePropertyChanged(nameof(FilenamePreview));
 
             // once a save failed, keep the message in step with the fixes
@@ -549,6 +553,48 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 ValidateForSaveBar();
             }
+        }
+
+        // Compares the settings themselves (not validation state from the base class); null and "" count as equal.
+        private static bool SameValues(Preferences edited, Preferences saved)
+        {
+            if (edited == null || saved == null)
+            {
+                return ReferenceEquals(edited, saved);
+            }
+
+            foreach (PropertyInfo property in typeof(Preferences).GetProperties(
+                         BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (!property.CanRead || property.GetIndexParameters().Length > 0)
+                {
+                    continue;
+                }
+
+                object a = property.GetValue(edited);
+                object b = property.GetValue(saved);
+
+                if (a is string || b is string)
+                {
+                    if (!string.Equals(a as string ?? string.Empty, b as string ?? string.Empty))
+                    {
+                        return false;
+                    }
+                }
+                else if (a is IEnumerable ea && b is IEnumerable eb)
+                {
+                    if (!ea.Cast<object>().SequenceEqual(eb.Cast<object>()))
+                    {
+                        return false;
+                    }
+                }
+                else if (!Equals(a, b))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void ValidateForSaveBar()
