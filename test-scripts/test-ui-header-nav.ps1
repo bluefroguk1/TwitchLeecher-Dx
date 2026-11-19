@@ -82,7 +82,14 @@ Expected: the toast stays visible for a full 5 seconds after the SECOND click (i
 
 Ask 'Toast does not block clicks' 'After the toast has faded, click a button that was under it (e.g. Save/Cancel). Does the click work?'
 
-# --- 8. Narrow window --------------------------------------------------------
+# --- 8. Theme switch --------------------------------------------------------
+Ask 'Theme switch' @'
+In Settings, switch the theme New -> Original (and back to New), saving each time.
+Expected: the header, tab underline, Sub-only/Settings/Account buttons, badge and the toast all change colours with the theme,
+and every label stays readable in both themes.
+'@
+
+# --- 9. Narrow window --------------------------------------------------------
 Ask 'Narrow window' 'Resize the window to its minimum width. Is the header still readable, with nothing overlapping?'
 
 # --- Summary ---------------------------------------------------------------
