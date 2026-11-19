@@ -1,26 +1,41 @@
-﻿using Avalonia.Controls;
-using Avalonia.Threading;
-using TwitchLeecher.Gui.ViewModels;
+﻿using System;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace TwitchLeecher.Gui.Views
 {
     public partial class PreferencesView : UserControl
     {
+        // until the box has had focus its caret sits at 0, and the end is the better guess
+        private bool _fileNameBoxFocused;
+
         public PreferencesView()
         {
             InitializeComponent();
-            ScrollPositionRestorer.Attach(this, Scroller);
+            FileNameBox.GotFocus += (_, _) => _fileNameBoxFocused = true;
+        }
 
-            // Downloads' "watched searches" pill opens Settings at that section. Background priority runs
-            // after layout, so this wins over the restored scroll position.
-            AttachedToVisualTree += (_, _) =>
+        // Puts the clicked chip's wildcard (its Tag) at the caret, replacing any selection.
+        private void InsertWildcard(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Control { Tag: string wildcard })
             {
-                if (DataContext is PreferencesViewModel { ScrollToWatchedSearches: true } vm)
-                {
-                    vm.ScrollToWatchedSearches = false;
-                    Dispatcher.UIThread.Post(() => WatchedSearchesSection.BringIntoView(), DispatcherPriority.Background);
-                }
-            };
+                return;
+            }
+
+            string text = FileNameBox.Text ?? string.Empty;
+
+            if (!_fileNameBoxFocused)
+            {
+                FileNameBox.SelectionStart = FileNameBox.SelectionEnd = text.Length;
+            }
+
+            int start = Math.Clamp(Math.Min(FileNameBox.SelectionStart, FileNameBox.SelectionEnd), 0, text.Length);
+            int end = Math.Clamp(Math.Max(FileNameBox.SelectionStart, FileNameBox.SelectionEnd), 0, text.Length);
+
+            FileNameBox.Text = text.Substring(0, start) + wildcard + text.Substring(end);
+            FileNameBox.CaretIndex = start + wildcard.Length;
+            FileNameBox.Focus();
         }
     }
 }

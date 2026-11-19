@@ -1,5 +1,9 @@
-﻿using System.Windows.Input;
-using Avalonia;
+﻿using System.Collections;
+using System.Linq;
+using System.Reflection;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using ReactiveUI;
 using TwitchLeecher.Core.Models;
@@ -11,7 +15,7 @@ using TwitchLeecher.Shared.Commands;
 
 namespace TwitchLeecher.Gui.ViewModels
 {
-    public partial class PreferencesViewModel : ViewModelBase, INavigationState
+    public partial class PreferencesViewModel : ViewModelBase
     {
         #region Fields
 
@@ -19,6 +23,15 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly INotificationService _notificationService;
         private readonly IPreferencesService _preferencesService;
         private readonly IThemeService _themeService;
+        private readonly IFilenameService _filenameService;
+
+        // what the file name preview is rendered with
+        private static readonly TwitchVideo SampleVideo = new TwitchVideo("somestreamer", "Speedrun practice",
+            "2290012345", 0, new TimeSpan(3, 0, 0), new DateTime(2026, 11, 16, 19, 30, 5), null, null, true, false,
+            false);
+
+        private static readonly TwitchVideoQuality SampleQuality =
+            new TwitchVideoQuality("chunked", "Source", "1920x1080");
 
         private Preferences _currentPreferences;
 
@@ -34,6 +47,9 @@ namespace TwitchLeecher.Gui.ViewModels
 
         private readonly object _commandLockObject;
         private bool _isChannelDropDownOpen;
+        private bool _hasChanges;
+        private string _validationMessage;
+        private int _selectedSectionIndex;
 
         #endregion Fields
 
@@ -44,14 +60,15 @@ namespace TwitchLeecher.Gui.ViewModels
             INotificationService notificationService,
             IPreferencesService preferencesService,
             IThemeService themeService,
+            IFilenameService filenameService,
             WatchedSearchesViewModel watchedSearches)
         {
-            WatchedSearches = watchedSearches;
-
             _dialogService = dialogService;
             _notificationService = notificationService;
             _preferencesService = preferencesService;
             _themeService = themeService;
+            _filenameService = filenameService;
+            WatchedSearches = watchedSearches;
 
             _commandLockObject = new object();
         }
@@ -60,26 +77,86 @@ namespace TwitchLeecher.Gui.ViewModels
 
         #region Properties
         
-        public Vector ScrollPosition { get; set; }
-
-        public WatchedSearchesViewModel WatchedSearches { get; }
-
-        // Set before navigating here to open the page at the Watched searches section; the view clears it.
-        public bool ScrollToWatchedSearches { get; set; }
-
         public Preferences CurrentPreferences
         {
             get
             {
                 if (_currentPreferences == null)
                 {
-                    _currentPreferences = _preferencesService.CurrentPreferences.Clone();
+                    _currentPreferences = Track(_preferencesService.CurrentPreferences.Clone());
                 }
 
                 return _currentPreferences;
             }
 
-            private set { SetProperty(ref _currentPreferences, value); }
+            // null reloads the saved preferences on next read, so there is nothing unsaved any more
+            private set
+            {
+                SetProperty(ref _currentPreferences, value);
+                HasChanges = false;
+                ValidationMessage = null;
+                FirePropertyChanged(nameof(FilenamePreview));
+            }
+        }
+
+        // true only while the edited copy differs from the saved preferences, so values a control writes back
+        // while the page loads (or a value changed back by hand) do not show the save bar
+        public bool HasChanges
+        {
+            get => _hasChanges;
+            private set => SetProperty(ref _hasChanges, value);
+        }
+
+        // shown in the save bar, because the field with the error may be in another section
+        public string ValidationMessage
+        {
+            get => _validationMessage;
+            private set => SetProperty(ref _validationMessage, value);
+        }
+
+        // Watched searches live in their own section and save straight away (not through the Save bar).
+        public WatchedSearchesViewModel WatchedSearches { get; }
+
+        // position of the "Watched searches" TabItem in PreferencesView
+        private const int WatchedSearchesSectionIndex = 3;
+
+        // The Downloads pill sets this before navigating here, to open Settings on the Watched searches section.
+        public bool ScrollToWatchedSearches
+        {
+            get => false;
+            set
+            {
+                if (value)
+                {
+                    SelectedSectionIndex = WatchedSearchesSectionIndex;
+                }
+            }
+        }
+
+        // kept here so the page reopens on the section it was left on
+        public int SelectedSectionIndex
+        {
+            get => _selectedSectionIndex;
+            set => SetProperty(ref _selectedSectionIndex, value);
+        }
+
+        public string FilenamePreview
+        {
+            get
+            {
+                try
+                {
+                    string filename = _filenameService.SubstituteWildcards(CurrentPreferences.DownloadFileName,
+                        SampleVideo, SampleQuality, new TimeSpan(0, 12, 0), new TimeSpan(3, 0, 0));
+
+                    return _filenameService.EnsureExtension(filename, CurrentPreferences.DownloadDisableConversion);
+                }
+                catch (Exception)
+                {
+                    // a preview must never break the page
+                    return string.Empty;
+                }
+            }
         }
 
         public IEnumerable<string> AvailableThemes => _preferencesService.AvailableThemes;
@@ -382,7 +459,7 @@ namespace TwitchLeecher.Gui.ViewModels
                 lock (_commandLockObject)
                 {
                     _dialogService.SetBusy();
-                    Validate();
+                    ValidateForSaveBar();
 
                     if (!HasErrors)
                     {
@@ -428,10 +505,9 @@ namespace TwitchLeecher.Gui.ViewModels
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    _dialogService.SetBusy();
-                    _preferencesService.Save(_preferencesService.CreateDefault());
-                    _themeService.SetTheme(_preferencesService.CurrentPreferences.Theme);
-                    CurrentPreferences = null;
+                    // loaded as unsaved changes: the save bar's Save keeps them, Undo drops them
+                    CurrentPreferences = Track(_preferencesService.CreateDefault());
+                    HasChanges = true;
                 }
             }
             catch (Exception ex)
@@ -469,26 +545,91 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
+        private Preferences Track(Preferences preferences)
+        {
+            preferences.PropertyChanged += PreferencesEdited;
+            preferences.SearchFavouriteChannels.CollectionChanged += FavouritesEdited;
+            return preferences;
+        }
+
+        private void FavouritesEdited(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            PreferencesEdited(sender, null);
+        }
+
+        private void PreferencesEdited(object sender, PropertyChangedEventArgs e)
+        {
+            // edits to a copy that was already swapped out are not ours any more
+            if (!ReferenceEquals(sender, _currentPreferences) &&
+                !ReferenceEquals(sender, _currentPreferences?.SearchFavouriteChannels))
+            {
+                return;
+            }
+
+            HasChanges = !SameValues(_currentPreferences, _preferencesService.CurrentPreferences);
+            FirePropertyChanged(nameof(FilenamePreview));
+
+            // once a save failed, keep the message in step with the fixes
+            if (ValidationMessage != null)
+            {
+                ValidateForSaveBar();
+            }
+        }
+
+        // Compares the settings themselves (not validation state from the base class); null and "" count as equal.
+        private static bool SameValues(Preferences edited, Preferences saved)
+        {
+            if (edited == null || saved == null)
+            {
+                return ReferenceEquals(edited, saved);
+            }
+
+            foreach (PropertyInfo property in typeof(Preferences).GetProperties(
+                         BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (!property.CanRead || property.GetIndexParameters().Length > 0)
+                {
+                    continue;
+                }
+
+                object a = property.GetValue(edited);
+                object b = property.GetValue(saved);
+
+                if (a is string || b is string)
+                {
+                    if (!string.Equals(a as string ?? string.Empty, b as string ?? string.Empty))
+                    {
+                        return false;
+                    }
+                }
+                else if (a is IEnumerable ea && b is IEnumerable eb)
+                {
+                    if (!ea.Cast<object>().SequenceEqual(eb.Cast<object>()))
+                    {
+                        return false;
+                    }
+                }
+                else if (!Equals(a, b))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void ValidateForSaveBar()
+        {
+            Validate();
+            ValidationMessage = HasErrors
+                ? string.Join(" ", CurrentPreferences.GetErrors().Cast<string>())
+                : null;
+        }
+
         public bool IsChannelDropDownOpen
         {
             get => _isChannelDropDownOpen;
             set => SetProperty(ref _isChannelDropDownOpen, value);
-        }
-
-        protected override List<MenuCommand> BuildMenu()
-        {
-            List<MenuCommand> menuCommands = base.BuildMenu();
-
-            if (menuCommands == null)
-            {
-                menuCommands = new List<MenuCommand>();
-            }
-
-            menuCommands.Add(new MenuCommand(SaveCommand, "Save", "fa-solid fa-floppy-disk"));
-            menuCommands.Add(new MenuCommand(UndoCommand, "Undo", "fa-solid fa-rotate-left"));
-            menuCommands.Add(new MenuCommand(DefaultsCommand, "Default", "fa-solid fa-wrench"));
-
-            return menuCommands;
         }
 
         [RelayCommand]
