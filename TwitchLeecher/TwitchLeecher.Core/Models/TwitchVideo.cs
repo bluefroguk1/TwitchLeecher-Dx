@@ -60,6 +60,42 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _isSelected, value); }
         }
 
+        private bool _isQueued;
+
+        // search results badges, set by the results view model
+        public bool IsQueued
+        {
+            get { return _isQueued; }
+            set { SetProperty(ref _isQueued, value); }
+        }
+
+        private bool _isDownloaded;
+
+        public bool IsDownloaded
+        {
+            get { return _isDownloaded; }
+            set { SetProperty(ref _isDownloaded, value); }
+        }
+
+        // "Clip by X · 9 Nov · 1.8K views · muted parts"
+        public string MetaStr
+        {
+            get
+            {
+                string views = Views >= 1_000_000 ? (Views / 1_000_000.0).ToString("0.#") + "M"
+                    : Views >= 1_000 ? (Views / 1_000.0).ToString("0.#") + "K"
+                    : Views.ToString();
+                string meta = RecordedDate.ToString("d MMM") + " · " + views + " views";
+
+                if (IsClip && !string.IsNullOrWhiteSpace(ClipCreator))
+                {
+                    meta = "Clip by " + ClipCreator + " · " + meta;
+                }
+
+                return Muted ? meta + " · muted parts" : meta;
+            }
+        }
+
         public string Channel { get; }
 
         public string Title { get; }
@@ -96,6 +132,9 @@ namespace TwitchLeecher.Core.Models
 
         // Clips are a single mp4 identified by their slug (Id), not a VOD playlist (#37)
         public bool IsClip { get; init; }
+
+        // who clipped it, empty for VODs
+        public string ClipCreator { get; init; }
 
         #endregion Properties
     }
