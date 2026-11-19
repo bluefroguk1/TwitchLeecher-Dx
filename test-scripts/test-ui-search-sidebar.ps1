@@ -23,7 +23,8 @@ $checks = @(
  'Links / IDs: an invalid line shows an error on the box',
  'Back on Search: Recent searches lists the last searches (max 5), clicking one re-runs it',
  'Restart the app: recent searches are still there',
- 'With "Search on Start" on in Settings, restart: the default search runs immediately'
+ 'With "Search on Start" on in Settings, restart: the default search runs immediately',
+ 'Switch theme New <-> Original in Settings and back to Search: sidebar, chips, switch and empty state follow the theme, all text readable (incl. on the accent)'
 )
 $results = foreach ($c in $checks) {
   do { $a = Read-Host "$c  [y/n/s]" } while ($a -notin 'y','n','s')

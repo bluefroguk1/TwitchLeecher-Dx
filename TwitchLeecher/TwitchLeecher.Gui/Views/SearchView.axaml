@@ -7,8 +7,8 @@
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              x:DataType="viewModels:SearchViewModel"
-             Background="#1F1F23"
-             Foreground="#F2F2F5">
+             Background="{DynamicResource AppBackgroundBrush}"
+             Foreground="{DynamicResource TextPrimaryBrush}">
     <Design.DataContext>
         <viewModels:SearchViewModel />
     </Design.DataContext>
@@ -28,7 +28,7 @@
         <Style Selector="TextBlock.label">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
 
         <!-- Segmented switch and filter chips: radio buttons drawn as pills -->
@@ -52,11 +52,11 @@
             <Setter Property="Height" Value="32" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
         <Style Selector="RadioButton.seg:checked">
-            <Setter Property="Background" Value="#9146FF" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="RadioButton.chip">
@@ -65,23 +65,23 @@
             <Setter Property="Margin" Value="0,0,6,6" />
             <Setter Property="CornerRadius" Value="15" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="#44444D" />
-            <Setter Property="Foreground" Value="#D0D0D8" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="FontSize" Value="13" />
         </Style>
         <Style Selector="RadioButton.chip:pointerover">
-            <Setter Property="BorderBrush" Value="#6E6E78" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}" />
         </Style>
         <Style Selector="RadioButton.chip:checked">
-            <Setter Property="BorderBrush" Value="#9146FF" />
-            <Setter Property="Background" Value="#339146FF" />
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <Style Selector="Button.favchip">
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Background" Value="#2A2A30" />
-            <Setter Property="Foreground" Value="#D0D0D8" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="8,3" />
@@ -90,8 +90,8 @@
         </Style>
         <Style Selector="Button.recent">
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Background" Value="#2A2A30" />
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="10,8" />
@@ -105,11 +105,11 @@
     <Grid ColumnDefinitions="300,*">
 
         <!-- Sidebar: the search form -->
-        <Border Grid.Column="0" Background="#222227" BorderBrush="#34343C" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="20" Spacing="16">
 
-                    <Border Background="#16161A" CornerRadius="8" Padding="3">
+                    <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="8" Padding="3">
                         <Grid ColumnDefinitions="*,*">
                             <RadioButton Grid.Column="0" Classes="seg" GroupName="SearchSource" Content="Channel"
                                          AutomationProperties.Name="Search a channel"
@@ -133,8 +133,8 @@
                                              Text="{Binding SearchParams.Channel}"
                                              IsTextCompletionEnabled="True" />
                             <Button Grid.Column="2" Width="36" Height="36" Padding="0"
-                                    Background="#16161A" BorderBrush="#44444D" BorderThickness="1" CornerRadius="6"
-                                    Foreground="#FFC94D" FontSize="16"
+                                    Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6"
+                                    Foreground="{DynamicResource WarningBrush}" FontSize="16"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                     Content="&#x2605;"
                                     ToolTip.Tip="Pick a favourite"
@@ -158,7 +158,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button Classes="favchip" Foreground="#FFC94D" HorizontalAlignment="Left"
+                            <Button Classes="favchip" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Left"
                                     Content="&#x2605; All favourites"
                                     ToolTip.Tip="Search every favourite channel at once"
                                     Command="{Binding SearchFavouritesCommand}" />
@@ -223,7 +223,7 @@
                     <StackPanel Spacing="8">
                         <Button Height="40" HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                Background="#9146FF" Foreground="#FFFFFF" BorderThickness="0" CornerRadius="6"
+                                Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentForegroundBrush}" BorderThickness="0" CornerRadius="6"
                                 FontWeight="SemiBold"
                                 Command="{Binding SearchCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -231,9 +231,9 @@
                                 <TextBlock Text="Search" />
                             </StackPanel>
                         </Button>
-                        <TextBlock FontSize="12" Foreground="#8C8C96" HorizontalAlignment="Center"
+                        <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
                                    Text="Press Enter to search" IsVisible="{Binding !IsLinksMode}" />
-                        <TextBlock FontSize="12" Foreground="#8C8C96" HorizontalAlignment="Center"
+                        <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
                                    Text="One link or video ID per line" IsVisible="{Binding IsLinksMode}" />
                     </StackPanel>
                 </StackPanel>
@@ -247,7 +247,7 @@
                 <TextBlock Margin="0,4,0,0" FontSize="24" FontWeight="Bold"
                            HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
                            Text="{Binding ProductTitle, Mode=OneTime}" />
-                <TextBlock Text="The Broadcast Downloader" Foreground="#A8A8B3" HorizontalAlignment="Center" />
+                <TextBlock Text="The Broadcast Downloader" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
 
                 <StackPanel Width="280" Margin="0,28,0,0" Spacing="6" IsVisible="{Binding HasRecentSearches}">
                     <TextBlock Classes="label" Text="RECENT SEARCHES" />
@@ -260,7 +260,7 @@
                                         CommandParameter="{Binding Params}">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Grid.Column="0" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1" Text="&#x2192;" Foreground="#8C8C96" Margin="8,0,0,0" />
+                                        <TextBlock Grid.Column="1" Text="&#x2192;" Foreground="{DynamicResource TextMutedBrush}" Margin="8,0,0,0" />
                                     </Grid>
                                 </Button>
                             </DataTemplate>
