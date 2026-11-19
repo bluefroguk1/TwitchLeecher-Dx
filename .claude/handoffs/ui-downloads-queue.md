@@ -1,6 +1,6 @@
 # ui-downloads-queue (redesign branch 3: Downloads queue)
 
-Branch: `claude/ui-downloads-queue-3f488b`.
+Branch: `claude/ui-downloads-queue-themed` (based on ui-theme-keys). The old `claude/ui-downloads-queue-3f488b` on origin is the pre-theme version; ignore it.
 
 **Depends on:** ui-theme-keys (branch is based on it; merge that first).
  Not compiled here (no .NET SDK on the Mac).
