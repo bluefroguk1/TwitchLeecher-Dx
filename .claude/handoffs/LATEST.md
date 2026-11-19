@@ -12,7 +12,7 @@ Everything was written on a Mac with no .NET SDK, so **nothing below has been co
 - Mark known limits in code as `// shortcut: <limit>, <when to upgrade>`.
 - Ask before merging branches into each other or opening PRs to upstream.
 - **Each change is its own branch and its own upstream PR**, so the developer can pick and choose. Don't bundle changes.
-- **Views use theme brushes only:** `{DynamicResource <Key>Brush}` from `ui-theme-keys`, never hex colours. The only exception is translucent black overlays. Every theme (New, Original, Coyote) must define all 17 keys.
+- **Views use theme brushes only:** `{DynamicResource <Key>Brush}` from `ui-theme-keys`, never hex colours. The only exception is translucent black overlays. Every theme (New, Original, Coyote) must define all 17 keys **twice: as a `...Color` and as a `...Brush` with the literal colour.** A brush whose colour is a `DynamicResource` renders transparent after a theme switch (found in testing, fixed on every redesign branch).
 
 ## Project
 
