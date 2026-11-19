@@ -47,6 +47,7 @@ Everything was written on a Mac with no .NET SDK, so **nothing below has been co
 | `claude/ui-download-dialog-themed` | Thumbnail, **crop preview frames and filmstrip**, editable filename | `combined` | ui-theme-keys, #35, #50, #71, #37 |
 | `claude/ui-settings-sections-v2` | Settings side menu, wildcard chips, filename preview, save bar | `combined` | ui-theme-keys, #96, #86 |
 | `claude/ui-watched-searches` | Auto-download reworked as "watched searches", per-search "Download now / Add paused", Downloads pill, "Watch this search" | auto-download branch + downloads-queue merged in | auto-download, ui-downloads-queue, ui-theme-keys |
+| `claude/in-app-signin` | Sign in to Twitch inside the app (web view); optional "Also enable sub-only downloads" in the same login; tokens in protected storage | `master` (+ theme keys picked in) | ui-theme-keys; conflicts with login-page-and-icon in `AuthListener.cs` |
 
 The branches that start from `combined` must be **rebased onto `master` once their upstream PRs merge**, before their own PR is opened. Their handoffs say how.
 
@@ -73,6 +74,7 @@ powershell -ExecutionPolicy Bypass -File test-scripts\<script>.ps1
 | 5 | `claude/ui-search-sidebar-93487b` | `test-ui-search-sidebar.ps1` | Opens on Search; a search needs sign-in only, no download |
 | 6 | `claude/ui-results-toolbar-themed` | `test-ui-results-toolbar.ps1` | Run the layout, sort, toggle and select steps now. Its QUEUED/DOWNLOADED badge steps need a quick download, so skip them until Tier 2. |
 | 7 | `claude/login-page-and-icon-8b7b57` | `test-login-and-icon.ps1` | Sign out and back in; checks the process name and icon |
+| 7b | `claude/in-app-signin` | `test-in-app-signin.ps1` | Sign-in only; the optional last step needs a subscriber-only VOD from a channel you subscribe to. Its handoff explains the web view choice. |
 
 ### Tier 2: needs a quick download (a short cropped VOD, about 1–2 minutes)
 
