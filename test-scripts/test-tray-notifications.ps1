@@ -1,7 +1,7 @@
-# Test script for the "feature-tray-notifications" branch.
-# Builds the app, then walks you through the tray icon, minimise-to-tray and desktop notification checks.
+﻿# Test script for the "feature-tray-notifications" branch.
+# Builds the app, then walks you through the tray icon and minimise-to-tray checks (desktop notifications were removed).
 # Windows:  powershell -ExecutionPolicy Bypass -File test-scripts\test-tray-notifications.ps1
-# Linux:    pwsh test-scripts/test-tray-notifications.ps1   (needs ffmpeg on PATH and a notification daemon)
+# Linux:    pwsh test-scripts/test-tray-notifications.ps1   (needs ffmpeg on PATH)
 param([switch]$SkipBuild)
 
 $ErrorActionPreference = 'Stop'
@@ -55,26 +55,7 @@ if (-not $p.HasExited) { $p.Kill() }
 $p = Start-App
 Ask 'window position kept' 'The app restarted. Is the window where you left it before the tray Exit (window state still saved)?'
 
-# --- 3. Notifications ------------------------------------------------------------
-Ask 'show notifications default' 'Settings > Application: is "Show notifications" ticked (it is on by default)?'
-Ask 'single download toast' @'
-Download ONE short VOD (Crop: Start 00:00:00, End 00:01:00).
-When it reaches Done, does a desktop notification appear: "Download finished" with the video title?
-(On Windows the first one may take a few seconds while the app registers itself.)
-'@
-Ask 'batch toast' @'
-Queue THREE short VODs (crop each to 1 minute) so they run one after another.
-Expected: a "Download finished" notification for each, and after the last one also "All 3 downloads finished".
-'@
-Ask 'no batch toast for one' 'After a single download on its own (the first check), there was NO "All N downloads finished" notification?'
-Ask 'notifications off' @'
-Untick "Show notifications" and save. Download one more short VOD.
-Expected: it finishes with NO desktop notification. Tick the setting again afterwards.
-'@
-Ask 'app fine without backend' @'
-Linux only (s on Windows): stop the notification daemon (e.g. kill dunst/mako) and download a short VOD.
-Expected: the download still completes and the app shows no error.
-'@
+# (desktop notifications were removed from this branch; Windows toasts did not show, revisit later)
 
 if (-not $p.HasExited) { Write-Host 'Close Twitch Leecher to finish.' -ForegroundColor Yellow; $p.WaitForExit() }
 $report = ($results.GetEnumerator() | ForEach-Object { '{0,-40} {1}' -f $_.Key, $_.Value }) -join [Environment]::NewLine

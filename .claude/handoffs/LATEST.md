@@ -1,7 +1,13 @@
-# Handoff: tray icon + desktop notifications
+﻿# Handoff: tray icon + desktop notifications
 
 Branch: `claude/feature-tray-notifications-963477`, cut from `combined`.
 Written on a Mac with no .NET SDK, so **this code has never been compiled or run**. The first job on Windows is to build and test it.
+
+> **Update 2026-11-19: desktop notifications were removed from this branch.** On the Windows PC the toast backend initialised and
+> `ShowNotification` returned without error, but no toast ever appeared (Do Not Disturb was checked). The tray icon and "Minimise to tray"
+> were tested and work. Removed: `IDesktopNotificationService`/`DesktopNotificationService`, the "Show notifications" setting, the
+> download hooks, the `DesktopNotifications*` packages and the Windows-specific target framework (back to `net10.0`).
+> To revisit: toast identity (AppUserModelID + Start Menu shortcut) for an unpackaged exe, or a packaged/MSIX build.
 
 ## First steps on Windows
 

@@ -35,8 +35,6 @@ namespace TwitchLeecher.Core.Models
 
         private bool _appMinimiseToTray;
 
-        private bool _appShowNotifications;
-
         private RangeObservableCollection<string> _searchFavouriteChannels;
 
         private string _searchChannelName;
@@ -101,12 +99,6 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _appMinimiseToTray; }
             set { SetProperty(ref _appMinimiseToTray, value); }
-        }
-
-        public bool AppShowNotifications
-        {
-            get { return _appShowNotifications; }
-            set { SetProperty(ref _appShowNotifications, value); }
         }
 
         public bool MiscUseExternalPlayer
@@ -356,7 +348,6 @@ namespace TwitchLeecher.Core.Models
                 AppCheckForUpdates = AppCheckForUpdates,
                 AppShowDonationButton = AppShowDonationButton,
                 AppMinimiseToTray = AppMinimiseToTray,
-                AppShowNotifications = AppShowNotifications,
                 MiscUseExternalPlayer = MiscUseExternalPlayer,
                 MiscExternalPlayer = MiscExternalPlayer,
                 SearchChannelName = SearchChannelName,

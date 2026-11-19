@@ -43,7 +43,6 @@ namespace TwitchLeecher.Services.Services
         private readonly IPreferencesService _preferencesService;
         private readonly IProcessingService _processingService;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IDesktopNotificationService _desktopNotificationService;
 
         private readonly Timer _downloadTimer;
 
@@ -55,10 +54,6 @@ namespace TwitchLeecher.Services.Services
 
         private volatile bool _paused;
 
-        // downloads that ended since the queue was last empty
-        // shortcut: removing the last queued items by hand skips the reset, so the next batch count is too high; reset on Remove if anyone notices
-        private int _batchFinishedCount;
-
         #endregion Fields
 
         #region Constructors
@@ -67,14 +62,12 @@ namespace TwitchLeecher.Services.Services
             IApiService apiService,
             IPreferencesService preferencesService,
             IProcessingService processingService,
-            IEventAggregator eventAggregator,
-            IDesktopNotificationService desktopNotificationService)
+            IEventAggregator eventAggregator)
         {
             _apiService = apiService;
             _preferencesService = preferencesService;
             _processingService = processingService;
             _eventAggregator = eventAggregator;
-            _desktopNotificationService = desktopNotificationService;
 
             _downloads = new ObservableCollection<TwitchVideoDownload>();
             _downloads.CollectionChanged += Downloads_CollectionChanged;
@@ -376,25 +369,6 @@ namespace TwitchLeecher.Services.Services
                             if (success && _preferencesService.CurrentPreferences.DownloadRemoveCompleted)
                             {
                                 _eventAggregator.GetEvent<RemoveDownloadEvent>().Publish(downloadId);
-                            }
-
-                            if (success)
-                            {
-                                _desktopNotificationService.Notify("Download finished", downloadParams.Video.Title);
-                            }
-
-                            int finishedCount = Interlocked.Increment(ref _batchFinishedCount);
-
-                            // nothing queued or running any more: the batch is over
-                            if (CanShutdown())
-                            {
-                                Interlocked.Exchange(ref _batchFinishedCount, 0);
-
-                                if (finishedCount > 1)
-                                {
-                                    _desktopNotificationService.Notify("Twitch Leecher",
-                                        $"All {finishedCount} downloads finished");
-                                }
                             }
                         });
 
@@ -960,8 +934,6 @@ namespace TwitchLeecher.Services.Services
             {
                 Remove(id);
             }
-
-            Interlocked.Exchange(ref _batchFinishedCount, 0);
         }
 
         public bool IsFileNameUsed(string fullPath)
