@@ -196,7 +196,15 @@ namespace TwitchLeecher.Services.Services
                             if (downloadParams.Video.IsClip)
                             {
                                 DownloadClip(log, setStatus, setIsIndeterminate, downloadParams, outputFile);
-                                return new List<string>();
+
+                                List<string> clipWarnings = new List<string>();
+
+                                if (downloadParams.SaveVodInfo)
+                                {
+                                    SaveVodInfo(log, downloadParams, outputFile, clipWarnings);
+                                }
+
+                                return clipWarnings;
                             }
 
                             log(Environment.NewLine + Environment.NewLine + "Retrieving VOD access information...");
@@ -296,6 +304,12 @@ namespace TwitchLeecher.Services.Services
                                 cancellationToken.ThrowIfCancellationRequested();
                                 SaveChat(log, setStatus, setProgress, setIsIndeterminate, downloadParams, outputFile,
                                     warnings, cancellationToken);
+                            }
+
+                            if (downloadParams.SaveVodInfo)
+                            {
+                                cancellationToken.ThrowIfCancellationRequested();
+                                SaveVodInfo(log, downloadParams, outputFile, warnings);
                             }
 
                             return warnings;
@@ -758,6 +772,47 @@ namespace TwitchLeecher.Services.Services
             }
 
             setProgress(100);
+        }
+
+        private void SaveVodInfo(Action<string> log, DownloadParameters downloadParams, string outputFile,
+            List<string> warnings)
+        {
+            string infoFile = Path.ChangeExtension(outputFile, ".info.json");
+
+            log(Environment.NewLine + Environment.NewLine + "Saving VOD info to '" + infoFile + "'...");
+
+            try
+            {
+                TwitchVideo video = downloadParams.Video;
+
+                var info = new
+                {
+                    title = video.Title,
+                    channel = video.Channel,
+                    id = video.Id,
+                    url = video.Url?.ToString(),
+                    recordedDate = video.RecordedDate.ToString("o"),
+                    length = video.Length.ToString(@"hh\:mm\:ss"),
+                    lengthSeconds = (int)video.Length.TotalSeconds,
+                    views = video.Views,
+                    quality = downloadParams.SelectedQuality.DisplayString,
+                    cropStart = downloadParams.CropStart ? downloadParams.CropStartTime.ToString(@"hh\:mm\:ss") : null,
+                    cropEnd = downloadParams.CropEnd ? downloadParams.CropEndTime.ToString(@"hh\:mm\:ss") : null,
+                    downloadedLength = downloadParams.CroppedLength.ToString(@"hh\:mm\:ss"),
+                    videoFile = Path.GetFileName(outputFile)
+                };
+
+                File.WriteAllText(infoFile, System.Text.Json.JsonSerializer.Serialize(info,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+
+                log(" done!");
+            }
+            catch (Exception ex)
+            {
+                // the video is already saved; losing the info file should not fail the download
+                warnings.Add("VOD info could not be saved");
+                log(Environment.NewLine + "Saving VOD info failed:" + Environment.NewLine + ex);
+            }
         }
 
         private void CleanUp(string directory, Action<string> log)
