@@ -23,8 +23,13 @@
             <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
             <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Padding" Value="10,0" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="TextBox:focus /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
