@@ -15,7 +15,7 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Download Log" FontSize="21.333" FontWeight="Bold" />
+                <TextBlock Text="Download Log" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <Border Grid.Row="1" BorderThickness="1">
