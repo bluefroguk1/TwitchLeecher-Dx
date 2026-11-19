@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -39,6 +39,11 @@ namespace TwitchLeecher.Gui.Controls
         private static readonly IBrush DimBrush = new SolidColorBrush(Color.FromArgb(184, 15, 15, 18));
 
         private bool? _draggingStart;
+
+        // handles closer than this overlap on screen, so which one is meant is decided by the drag direction
+        private const double OverlapPixels = 12;
+        private bool _directionPending;
+        private double _pressX;
 
         static RangeStrip()
         {
@@ -154,19 +159,41 @@ namespace TwitchLeecher.Gui.Controls
             }
 
             double x = e.GetPosition(this).X;
-            _draggingStart = Math.Abs(x - ToX(Start)) <= Math.Abs(x - ToX(End));
             e.Pointer.Capture(this);
-            MoveHandle(x);
             e.Handled = true;
+
+            if (Math.Abs(ToX(End) - ToX(Start)) < OverlapPixels)
+            {
+                // both handles are under the pointer: dragging left pulls Start out, dragging right pulls End out
+                _directionPending = true;
+                _pressX = x;
+                return;
+            }
+
+            _draggingStart = Math.Abs(x - ToX(Start)) <= Math.Abs(x - ToX(End));
+            MoveHandle(x);
         }
 
         protected override void OnPointerMoved(PointerEventArgs e)
         {
             base.OnPointerMoved(e);
 
+            double x = e.GetPosition(this).X;
+
+            if (_directionPending)
+            {
+                if (Math.Abs(x - _pressX) < 2)
+                {
+                    return;
+                }
+
+                _directionPending = false;
+                _draggingStart = x < _pressX;
+            }
+
             if (_draggingStart != null)
             {
-                MoveHandle(e.GetPosition(this).X);
+                MoveHandle(x);
             }
         }
 
@@ -174,6 +201,7 @@ namespace TwitchLeecher.Gui.Controls
         {
             base.OnPointerReleased(e);
             _draggingStart = null;
+            _directionPending = false;
             e.Pointer.Capture(null);
         }
 
@@ -181,6 +209,7 @@ namespace TwitchLeecher.Gui.Controls
         {
             base.OnPointerCaptureLost(e);
             _draggingStart = null;
+            _directionPending = false;
         }
 
         private void MoveHandle(double x)

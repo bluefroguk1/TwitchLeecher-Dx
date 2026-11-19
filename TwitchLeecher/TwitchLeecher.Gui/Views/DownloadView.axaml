@@ -204,10 +204,12 @@
                                        ToolTip.Tip="Estimated size, based on the quality's advertised bitrate. The real file can differ." />
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Text="From" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" />
-                                <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center"
+                                <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center" MaxLength="8"
+                                         TextInput="TimeBox_TextInput"
                                          Text="{Binding RangeStartText, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="From" />
                                 <TextBlock Text="to" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" />
-                                <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center"
+                                <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center" MaxLength="8"
+                                         TextInput="TimeBox_TextInput"
                                          Text="{Binding RangeEndText, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="To" />
                                 <Button Classes="link" Content="Whole video" VerticalAlignment="Center"
                                         Command="{Binding WholeVideoCommand}" />
