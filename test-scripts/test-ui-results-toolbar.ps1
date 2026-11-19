@@ -16,7 +16,8 @@ $questions = @(
   'Clip search: cards show CLIP badge and "Clip by X" in the meta line?',
   'Click Download on one video: card shows QUEUED badge?',
   'After that download finishes, return to results: card shows DOWNLOADED, and Hide downloaded hides it?',
-  'Download N videos queues the ticked videos?'
+  'Download N videos queues the ticked videos?',
+  'Switch theme New <-> Original in Settings and return to results: colours follow the theme, text on the accent button and CLIP badge is readable?'
 )
 $results = foreach ($q in $questions) { $a = Read-Host "$q (y/n/s)"; "$a`t$q" }
 $results | Out-File $out

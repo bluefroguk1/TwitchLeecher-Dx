@@ -8,16 +8,16 @@
              FontFamily="fonts:Inter#Inter"
              FontSize="14">
     <UserControl.Styles>
-        <!-- redesign palette, kept local so other screens are unaffected -->
+        <!-- theme colour keys only (ui-theme-keys), so New and Original themes both work -->
         <Style Selector="TextBlock.muted">
-            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
         <Style Selector="Button.outline">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="#44444D" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -26,17 +26,17 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Foreground" Value="#B794FF" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#D4BFFF" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="#9146FF" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Height" Value="36" />
@@ -44,12 +44,13 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#A066FF" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+            <Setter Property="Opacity" Value="0.9" />
         </Style>
         <Style Selector="Button.toggle">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="0" />
             <Setter Property="Width" Value="30" />
@@ -59,18 +60,18 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.toggle.active">
-            <Setter Property="Background" Value="#34343C" />
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
         <Style Selector="Border.card">
-            <Setter Property="Background" Value="#2A2A30" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="ClipToBounds" Value="True" />
         </Style>
         <Style Selector="Border.card.selected">
-            <Setter Property="BorderBrush" Value="#9146FF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="Border.badge">
             <Setter Property="CornerRadius" Value="4" />
@@ -80,17 +81,21 @@
         <Style Selector="Border.badge > TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <!-- status colours are light in every theme, so dark text -->
+            <Setter Property="Foreground" Value="{DynamicResource HeaderBackgroundBrush}" />
+        </Style>
+        <Style Selector="Border.badge.accent > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
         </Style>
     </UserControl.Styles>
 
-    <DockPanel Background="#1F1F23">
+    <DockPanel Background="{DynamicResource AppBackgroundBrush}">
         <!-- search summary bar -->
-        <Border DockPanel.Dock="Top" Background="#222227" BorderBrush="#34343C" BorderThickness="0,0,0,1"
+        <Border DockPanel.Dock="Top" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
                 Padding="16,12">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                 <TextBlock Grid.Column="0" Text="{Binding SearchTitle}" FontSize="16" FontWeight="SemiBold"
-                           Foreground="#F2F2F5" VerticalAlignment="Center" />
+                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="10,0"
                             VerticalAlignment="Center" ClipToBounds="True">
                     <TextBlock Classes="muted" FontSize="13" Text="{Binding SearchSummary}"
@@ -98,18 +103,18 @@
                     <Button Classes="link" Content="Edit search" Command="{Binding SeachCommnad}"
                             VerticalAlignment="Center" />
                 </StackPanel>
-                <CheckBox Grid.Column="2" Content="Hide downloaded" FontSize="13" Foreground="#D0D0D8"
+                <CheckBox Grid.Column="2" Content="Hide downloaded" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
                           Margin="0,0,10,0" IsChecked="{Binding HideDownloaded}"
                           ToolTip.Tip="Hide videos already saved in your download folder" />
                 <ComboBox Grid.Column="3" Height="30" MinWidth="130" FontSize="13" Margin="0,0,10,0"
-                          VerticalAlignment="Center" Background="#16161A" BorderBrush="#44444D" CornerRadius="6"
+                          VerticalAlignment="Center" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource InputBorderBrush}" CornerRadius="6"
                           SelectedIndex="{Binding SortIndex}" AutomationProperties.Name="Sort">
                     <ComboBoxItem Content="Newest first" />
                     <ComboBoxItem Content="Oldest first" />
                     <ComboBoxItem Content="Longest" />
                     <ComboBoxItem Content="Most viewed" />
                 </ComboBox>
-                <Border Grid.Column="4" BorderBrush="#44444D" BorderThickness="1" CornerRadius="6"
+                <Border Grid.Column="4" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6"
                         ClipToBounds="True" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <Button Classes="toggle" Classes.active="{Binding !IsListView}"
@@ -128,7 +133,7 @@
         </Border>
 
         <!-- selection footer -->
-        <Border DockPanel.Dock="Bottom" Background="#18181B" BorderBrush="#34343C" BorderThickness="0,1,0,0"
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource HeaderBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
                 Padding="16,12">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Classes="primary" Command="{Binding DownloadSelectedCommand}"
@@ -138,7 +143,7 @@
                         <TextBlock Text="{Binding DownloadSelectedLabel}" />
                     </StackPanel>
                 </Button>
-                <CheckBox Content="Select all" FontSize="13" Foreground="#F2F2F5" Margin="0,0,12,0"
+                <CheckBox Content="Select all" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,12,0"
                           IsChecked="{Binding AllSelected}" />
                 <TextBlock Classes="muted" FontSize="13" VerticalAlignment="Center"
                            Text="{Binding SelectionSummary}" />
@@ -175,28 +180,28 @@
                                         </Border>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                                     VerticalAlignment="Top" Margin="0,6,6,0">
-                                            <Border Classes="badge" Background="#EB0400" IsVisible="{Binding Live}">
+                                            <Border Classes="badge" Background="{DynamicResource ErrorBrush}" IsVisible="{Binding Live}">
                                                 <TextBlock Text="LIVE" />
                                             </Border>
-                                            <Border Classes="badge" Background="#1A7F5A" IsVisible="{Binding IsClip}">
+                                            <Border Classes="badge accent" Background="{DynamicResource AccentBrush}" IsVisible="{Binding IsClip}">
                                                 <TextBlock Text="CLIP" />
                                             </Border>
-                                            <Border Classes="badge" Background="#6B5B00" IsVisible="{Binding IsQueued}">
+                                            <Border Classes="badge" Background="{DynamicResource WarningBrush}" IsVisible="{Binding IsQueued}">
                                                 <TextBlock Text="QUEUED" />
                                             </Border>
-                                            <Border Classes="badge" Background="#2D8A3E" IsVisible="{Binding IsDownloaded}">
+                                            <Border Classes="badge" Background="{DynamicResource SuccessBrush}" IsVisible="{Binding IsDownloaded}">
                                                 <TextBlock Text="DOWNLOADED" />
                                             </Border>
                                         </StackPanel>
                                         <Border Background="#BF000000" CornerRadius="4" Padding="6,1"
                                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6"
                                                 IsHitTestVisible="False">
-                                            <TextBlock Text="{Binding LengthStr}" FontSize="12" Foreground="#F2F2F5" />
+                                            <TextBlock Text="{Binding LengthStr}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
                                         </Border>
                                     </Grid>
                                     <StackPanel Margin="10" Spacing="4">
                                         <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
-                                                   Foreground="#F2F2F5" LineHeight="17.5" Height="35"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" LineHeight="17.5" Height="35"
                                                    TextWrapping="Wrap" MaxLines="2"
                                                    TextTrimming="CharacterEllipsis"
                                                    ToolTip.Tip="{Binding Title}" />
@@ -232,23 +237,23 @@
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
                                                 VerticalAlignment="Center" ClipToBounds="True">
                                         <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
-                                                   Foreground="#F2F2F5" MaxWidth="340" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" MaxWidth="340" VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
                                         <TextBlock Classes="muted" FontSize="12" Text="{Binding MetaStr}"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                                                 Margin="8,0">
-                                        <Border Classes="badge" Background="#EB0400" IsVisible="{Binding Live}">
+                                        <Border Classes="badge" Background="{DynamicResource ErrorBrush}" IsVisible="{Binding Live}">
                                             <TextBlock Text="LIVE" />
                                         </Border>
-                                        <Border Classes="badge" Background="#1A7F5A" IsVisible="{Binding IsClip}">
+                                        <Border Classes="badge accent" Background="{DynamicResource AccentBrush}" IsVisible="{Binding IsClip}">
                                             <TextBlock Text="CLIP" />
                                         </Border>
-                                        <Border Classes="badge" Background="#6B5B00" IsVisible="{Binding IsQueued}">
+                                        <Border Classes="badge" Background="{DynamicResource WarningBrush}" IsVisible="{Binding IsQueued}">
                                             <TextBlock Text="QUEUED" />
                                         </Border>
-                                        <Border Classes="badge" Background="#2D8A3E" IsVisible="{Binding IsDownloaded}">
+                                        <Border Classes="badge" Background="{DynamicResource SuccessBrush}" IsVisible="{Binding IsDownloaded}">
                                             <TextBlock Text="DOWNLOADED" />
                                         </Border>
                                     </StackPanel>
