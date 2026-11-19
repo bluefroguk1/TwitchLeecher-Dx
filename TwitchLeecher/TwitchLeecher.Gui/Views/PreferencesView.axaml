@@ -6,680 +6,515 @@
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:enums="clr-namespace:TwitchLeecher.Core.Enums;assembly=TwitchLeecher.Core"
              x:DataType="viewModels:PreferencesViewModel">
-    <Design.DataContext>
-        <viewModels:PreferencesViewModel />
-    </Design.DataContext>
     <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary>
-                    <converters:VideoTypeToBooleanConverter x:Key="videoTypeToBooleanConverter" />
-                    <converters:LoadLimitToBooleanConverter x:Key="loadLimitToBooleanConverter" />
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
+        <converters:VideoTypeToBooleanConverter x:Key="videoTypeToBooleanConverter" />
+        <converters:LoadLimitToBooleanConverter x:Key="loadLimitToBooleanConverter" />
+        <SolidColorBrush x:Key="SettingsPanelBrush" Color="#222227" />
+        <SolidColorBrush x:Key="SettingsCardBrush" Color="#2A2A30" />
+        <SolidColorBrush x:Key="SettingsBorderBrush" Color="#34343C" />
+        <SolidColorBrush x:Key="SettingsStrongBorderBrush" Color="#44444D" />
+        <SolidColorBrush x:Key="SettingsTextBrush" Color="#F2F2F5" />
+        <SolidColorBrush x:Key="SettingsMenuTextBrush" Color="#D0D0D8" />
+        <SolidColorBrush x:Key="SettingsMutedBrush" Color="#A8A8B3" />
+        <SolidColorBrush x:Key="SettingsAccentBrush" Color="#9146FF" />
+        <SolidColorBrush x:Key="SettingsErrorBrush" Color="#FF8A80" />
     </UserControl.Resources>
 
-    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto">
-        <Grid VerticalAlignment="Center" Margin="20" HorizontalAlignment="Center" Grid.IsSharedSizeScope="True"
-              Width="550">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
+    <UserControl.Styles>
+        <!-- side menu: one TabItem per section -->
+        <Style Selector="TabControl#Sections TabItem">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsMenuTextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+        <Style Selector="TabControl#Sections TabItem:pointerover">
+            <Setter Property="Background" Value="{StaticResource SettingsCardBrush}" />
+        </Style>
+        <Style Selector="TabControl#Sections TabItem:selected">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="{StaticResource SettingsBorderBrush}" />
+        </Style>
+        <Style Selector="TabControl#Sections TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SettingsBorderBrush}" />
+        </Style>
 
-            <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Application" FontSize="21.333" FontWeight="Bold" />
-            </Border>
+        <!-- section pages would otherwise inherit the menu item's selected look -->
+        <Style Selector="TabControl#Sections > TabItem > ScrollViewer">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+        </Style>
 
-            <Grid Grid.Row="1" Margin="15,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <Style Selector="StackPanel.section">
+            <Setter Property="Margin" Value="24,20" />
+            <Setter Property="Spacing" Value="18" />
+            <Setter Property="MaxWidth" Value="640" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+        <Style Selector="StackPanel.field">
+            <Setter Property="Spacing" Value="6" />
+        </Style>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsMutedBrush}" />
+        </Style>
+        <Style Selector="TextBlock.sub">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsMutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="Button.chip">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource SettingsStrongBorderBrush}" />
+            <Setter Property="Background" Value="{StaticResource SettingsCardBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsMenuTextBrush}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <!-- keeps keyboard focus (and the caret) in the file name box -->
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#B794FF" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.wildcard">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.outline">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource SettingsStrongBorderBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.quiet">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsMutedBrush}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{StaticResource SettingsAccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
 
-                <CheckBox Grid.Row="0" Grid.Column="0" Content="Check for Updates"
-                          IsChecked="{Binding CurrentPreferences.AppCheckForUpdates}" VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="0" Grid.Column="2" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
+    <Grid RowDefinitions="*,Auto">
+        <!-- side menu background; the TabControl strip sits on top of it -->
+        <Border Grid.Row="0" Width="190" HorizontalAlignment="Left" Background="{StaticResource SettingsPanelBrush}"
+                BorderBrush="{StaticResource SettingsBorderBrush}" BorderThickness="0,0,1,0" />
+
+        <!-- Adding a section = one more <TabItem Header="..."> holding a StackPanel.section. -->
+        <TabControl Grid.Row="0" x:Name="Sections" TabStripPlacement="Left" Padding="0" Background="Transparent"
+                    SelectedIndex="{Binding SelectedSectionIndex}">
+            <TabControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Vertical" Spacing="2" Width="170" Margin="10,16" />
+                </ItemsPanelTemplate>
+            </TabControl.ItemsPanel>
+
+            <TabItem Header="General">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Classes="section">
+                        <TextBlock Classes="h1" Text="General" />
+
+                        <CheckBox IsChecked="{Binding CurrentPreferences.AppCheckForUpdates}">
                             <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Check for Updates" />
-                                <TextBlock TextAlignment="Left">
-                                    You will automatically be informed if a new version
-                                    of Twitch Leecher is available for download.
-                                </TextBlock>
+                                <TextBlock Text="Check for updates" />
+                                <TextBlock Classes="sub" Text="Tell me when a new version of Twitch Leecher is out" />
                             </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <CheckBox Grid.Row="2" Grid.Column="0" Content="Show Donation Button"
-                          IsChecked="{Binding CurrentPreferences.AppShowDonationButton}" VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="2" Grid.Column="2" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding CurrentPreferences.AppShowDonationButton}">
                             <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Show Donation Button" />
-                                <TextBlock TextAlignment="Left">
-                                    Show or hide the donation button ($) in the titlebar
-                                </TextBlock>
+                                <TextBlock Text="Show the donation button" />
+                                <TextBlock Classes="sub" Text="The $ button in the title bar" />
                             </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-                <Grid Grid.Row="4" Grid.Column="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Theme" VerticalAlignment="Center"
-                               HorizontalAlignment="Right" Margin="0 0 20 0" />
-                    <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableThemes}"
-                              SelectedValue="{Binding CurrentPreferences.Theme}">
-                    </ComboBox>
-                </Grid>
-            </Grid>
+                        </CheckBox>
 
-            <Border Grid.Row="2" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Search" FontSize="21.333" FontWeight="Bold" />
-            </Border>
+                        <StackPanel Classes="field">
+                            <CheckBox IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}">
+                                <StackPanel>
+                                    <TextBlock Text="Play videos in an external player" />
+                                    <TextBlock Classes="sub" Text="For example VLC, instead of opening them in the browser" />
+                                </StackPanel>
+                            </CheckBox>
+                            <TextBlock Classes="label" Text="VIDEO PLAYER" Margin="0,6,0,0" />
+                            <Grid ColumnDefinitions="*,6,Auto,6,Auto">
+                                <TextBox Grid.Column="0" IsReadOnly="True"
+                                         Text="{Binding CurrentPreferences.MiscExternalPlayer, Mode=OneWay}" />
+                                <Button Grid.Column="2" Classes="outline" Content="Browse"
+                                        Command="{Binding ChooseExternalPlayerCommand}" />
+                                <Button Grid.Column="4" Classes="outline" ToolTip.Tip="Clear"
+                                        Command="{Binding ClearExternalPlayerCommand}">
+                                    <avalonia:Icon Value="fa-solid fa-eraser" Width="14" Height="14" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
 
-            <Grid Grid.Row="3" Margin="15,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="5" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="5" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="g2" />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                        <!-- the save bar only shows once something changed, so reset needs a way in from a clean state -->
+                        <Button Classes="link" Content="Reset all settings to defaults…" FontSize="13"
+                                Command="{Binding DefaultsCommand}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Favourite Channels" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <Grid Grid.Row="0" Grid.Column="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <AutoCompleteBox Grid.Column="0" Grid.Row="0"
-                                     ItemsSource="{Binding CurrentPreferences.SearchFavouriteChannels, Mode=OneWay}"
-                                     MinimumPrefixLength="0"
-                                     IsDropDownOpen="{Binding IsChannelDropDownOpen, Mode=TwoWay}"
-                                     Text="{Binding CurrentPreferences.SearchChannelName}"
-                                     IsTextCompletionEnabled="True" />
-                    <Button Grid.Column="2" Classes="TlMiniButton"
-                            Command="{Binding OpenDropdownCommand}">
-                        <avalonia:Icon Value="fa-solid fa-bars" Width="11" Height="11" RenderTransformOrigin="0.5,0.5" />
-                    </Button>
-                    <Button Grid.Column="4" Classes="TlMiniButton"
-                            Command="{Binding AddFavouriteChannelCommand}">
-                        <avalonia:Icon Value="fa-solid fa-plus" Width="11" Height="11" RenderTransformOrigin="0.5,0.5" />
-                    </Button>
-                    <Button Grid.Column="6" Classes="TlMiniButton"
-                            Command="{Binding RemoveFavouriteChannelCommand}">
-                        <avalonia:Icon Value="fa-solid fa-minus" Width="11" Height="11" RenderTransformOrigin="0.5,0.5" />
-                    </Button>
-                </Grid>
-                <avalonia:Icon Grid.Row="0" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
+            <TabItem Header="Search">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Classes="section">
+                        <TextBlock Classes="h1" Text="Search" />
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="FAVOURITE CHANNELS" />
+                            <Grid ColumnDefinitions="*,6,Auto,6,Auto,6,Auto">
+                                <AutoCompleteBox Grid.Column="0"
+                                                 ItemsSource="{Binding CurrentPreferences.SearchFavouriteChannels, Mode=OneWay}"
+                                                 MinimumPrefixLength="0"
+                                                 IsDropDownOpen="{Binding IsChannelDropDownOpen, Mode=TwoWay}"
+                                                 Text="{Binding CurrentPreferences.SearchChannelName}"
+                                                 IsTextCompletionEnabled="True" />
+                                <Button Grid.Column="2" Classes="TlMiniButton" ToolTip.Tip="Show favourites"
+                                        Command="{Binding OpenDropdownCommand}">
+                                    <avalonia:Icon Value="fa-solid fa-bars" Width="11" Height="11" />
+                                </Button>
+                                <Button Grid.Column="4" Classes="TlMiniButton" ToolTip.Tip="Add to favourites"
+                                        Command="{Binding AddFavouriteChannelCommand}">
+                                    <avalonia:Icon Value="fa-solid fa-plus" Width="11" Height="11" />
+                                </Button>
+                                <Button Grid.Column="6" Classes="TlMiniButton" ToolTip.Tip="Remove from favourites"
+                                        Command="{Binding RemoveFavouriteChannelCommand}">
+                                    <avalonia:Icon Value="fa-solid fa-minus" Width="11" Height="11" />
+                                </Button>
+                            </Grid>
+                            <TextBlock Classes="sub"
+                                       Text="The channel shown here is pre-selected on the Search page. Use + and − to add or remove it." />
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="VIDEO TYPE" />
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <RadioButton GroupName="VideoType" Content="Broadcast"
+                                             IsChecked="{Binding CurrentPreferences.SearchVideoType, Converter={StaticResource videoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Broadcast}}" />
+                                <RadioButton GroupName="VideoType" Content="Highlight"
+                                             IsChecked="{Binding CurrentPreferences.SearchVideoType, Converter={StaticResource videoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Highlight}}" />
+                                <RadioButton GroupName="VideoType" Content="Upload"
+                                             IsChecked="{Binding CurrentPreferences.SearchVideoType, Converter={StaticResource videoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Upload}}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="LOAD" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <RadioButton GroupName="LoadLimit" Content="Last" VerticalAlignment="Center"
+                                             IsChecked="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}" />
+                                <NumericUpDown Minimum="1" Maximum="999" Width="110" VerticalAlignment="Center"
+                                               IsEnabled="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
+                                               Value="{Binding CurrentPreferences.SearchLoadLastDays}" />
+                                <TextBlock Text="days" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <RadioButton GroupName="LoadLimit" Content="Last" VerticalAlignment="Center"
+                                             IsChecked="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.LastVods}}" />
+                                <NumericUpDown Minimum="1" Maximum="999" Width="110" VerticalAlignment="Center"
+                                               IsEnabled="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.LastVods}}"
+                                               Value="{Binding CurrentPreferences.SearchLoadLastVods}" />
+                                <TextBlock Text="videos" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <RadioButton GroupName="LoadLimit" Content="Only today"
+                                         IsChecked="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.OnlyToday}}" />
+                        </StackPanel>
+
+                        <CheckBox IsChecked="{Binding CurrentPreferences.SearchOnStartup}">
                             <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Favourite Channels" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a list of your favourite channels for the search dialog. The one selected here will be pre-selected in the search dialog. Use the +/- buttons in order to add/remove channels to/from the dropdown list.
-                                </TextBlock>
+                                <TextBlock Text="Search when the app starts" />
+                                <TextBlock Classes="sub" Text="Runs a search with the settings above as soon as Twitch Leecher opens" />
                             </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding CurrentPreferences.SearchDefaultFavourites}">
+                            <StackPanel>
+                                <TextBlock Text="Search all favourite channels by default" />
+                                <TextBlock Classes="sub"
+                                           Text="The Search page opens on Favourites, and searching on start lists videos from all of them" />
+                            </StackPanel>
+                        </CheckBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Video Type" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
-                    <RadioButton GroupName="VideoType" Content="Broadcast"
-                                 IsChecked="{Binding CurrentPreferences.SearchVideoType, Converter={StaticResource videoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Broadcast}}"
-                                 HorizontalAlignment="Left" VerticalAlignment="Center" />
-                    <RadioButton GroupName="VideoType" Content="Highlight"
-                                 IsChecked="{Binding CurrentPreferences.SearchVideoType, Converter={StaticResource videoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Highlight}}"
-                                 VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
-                    <RadioButton GroupName="VideoType" Content="Upload"
-                                 IsChecked="{Binding CurrentPreferences.SearchVideoType, Converter={StaticResource videoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Upload}}"
-                                 VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
+            <TabItem Header="Download">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Classes="section">
+                        <TextBlock Classes="h1" Text="Download" />
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="DOWNLOAD FOLDER" />
+                            <Grid ColumnDefinitions="*,6,Auto">
+                                <TextBox Grid.Column="0" IsReadOnly="True"
+                                         Text="{Binding CurrentPreferences.DownloadFolder, Mode=OneWay}" />
+                                <Button Grid.Column="2" Classes="outline" Content="Browse"
+                                        Command="{Binding ChooseDownloadFolderCommand}" />
+                            </Grid>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadSubfoldersForFav}"
+                                      Content="Put favourite channels in their own subfolder" FontSize="13" />
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="FILE NAME" />
+                            <TextBox x:Name="FileNameBox" FontFamily="Consolas,Menlo,DejaVu Sans Mono,monospace"
+                                     FontSize="13" Text="{Binding CurrentPreferences.DownloadFileName}" />
+                            <WrapPanel Orientation="Horizontal">
+                                <WrapPanel.Styles>
+                                    <Style Selector="Button.chip">
+                                        <Setter Property="Margin" Value="0,0,6,6" />
+                                    </Style>
+                                </WrapPanel.Styles>
+                                <Button Classes="chip" Content="+ Channel" Tag="{}{channel}" Click="InsertWildcard" />
+                                <Button Classes="chip" Content="+ Title" Tag="{}{title}" Click="InsertWildcard" />
+                                <Button Classes="chip" Content="+ Date" Tag="{}{year}-{month}-{day}" Click="InsertWildcard" />
+                                <Button Classes="chip" Content="+ Quality" Tag="{}{res}" Click="InsertWildcard" />
+                                <Button Classes="chip" Content="+ Video ID" Tag="{}{id}" Click="InsertWildcard" />
+                                <Button Classes="chip" Content="+ Crop start" Tag="{}{start}" Click="InsertWildcard" />
+                                <Button Classes="link" Content="All wildcards…" Margin="4,0,0,6">
+                                    <Button.Flyout>
+                                        <Flyout Placement="BottomEdgeAlignedLeft">
+                                            <StackPanel Width="380">
+                                                <TextBlock Classes="sub" Margin="6,0,6,6"
+                                                           Text="Click one to insert it at the cursor." />
+                                                <Button Classes="wildcard" Tag="{}{id}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{id}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Video ID" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="54869708" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{channel}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{channel}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Channel name" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="somestreamer" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{title}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{title}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Video title" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="Speedrun practice" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{res}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{res}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Resolution" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="1920x1080" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{year}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{year}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Year" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="2026" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{month}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{month}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Month" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="11" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{day}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{day}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Day" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="16" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{hr24}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{hr24}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Hour (00-23)" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="19" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{hr}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{hr}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Hour (01-12)" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="07" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{min}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{min}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Minutes" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="30" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{sec}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{sec}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Seconds" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="05" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{apm}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{apm}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="AM/PM" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="PM" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{start}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{start}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Crop start (HHmmss)" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="001200" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Classes="wildcard" Tag="{}{end}" Click="InsertWildcard">
+                                                    <Grid ColumnDefinitions="70,*,Auto">
+                                                        <TextBlock Text="{}{end}" FontFamily="Consolas,Menlo,monospace" />
+                                                        <TextBlock Grid.Column="1" Text="Crop end (HHmmss)" />
+                                                        <TextBlock Grid.Column="2" Classes="sub" Text="030000" />
+                                                    </Grid>
+                                                </Button>
+                                            </StackPanel>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </WrapPanel>
+                            <TextBlock FontSize="13" TextWrapping="Wrap">
+                                <Run Text="Preview: " Foreground="{StaticResource SettingsMutedBrush}" />
+                                <Run Text="{Binding FilenamePreview}" Foreground="{StaticResource SettingsTextBrush}" />
+                            </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="DEFAULT QUALITY" />
+                            <ComboBox Width="220"
+                                      ItemsSource="{Binding CurrentPreferences.DownloadDefaultQualities}"
+                                      SelectedItem="{Binding CurrentPreferences.DownloadDefaultQuality}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Classes="sub"
+                                       Text="If a video doesn't have it, the next lower quality is picked (or the next higher if there is none lower)" />
+                        </StackPanel>
+
+                        <!-- shortcut: box sits left of the label (whole label clickable), the mockup has it right-aligned; restyle if the look matters -->
+                        <StackPanel Spacing="12" Margin="0,4,0,0">
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadQuickDownload}">
+                                <StackPanel>
+                                    <TextBlock Text="Quick download" />
+                                    <TextBlock Classes="sub" Text="Skip the download dialog and use these defaults" />
+                                </StackPanel>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadRemoveCompleted}">
+                                <TextBlock Text="Remove finished downloads from the queue" />
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadDisableConversion}">
+                                <StackPanel>
+                                    <TextBlock Text="Keep the original stream file" />
+                                    <TextBlock Classes="sub" Text="Skips conversion to mp4; cropping is not available" />
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+
+                        <Expander Header="Advanced: temporary folder and connections" HorizontalAlignment="Stretch">
+                            <StackPanel Spacing="18" Margin="0,8,0,0">
+                                <StackPanel Classes="field">
+                                    <TextBlock Classes="label" Text="TEMPORARY FOLDER" />
+                                    <Grid ColumnDefinitions="*,6,Auto">
+                                        <TextBox Grid.Column="0" IsReadOnly="True"
+                                                 Text="{Binding CurrentPreferences.DownloadTempFolder, Mode=OneWay}" />
+                                        <Button Grid.Column="2" Classes="outline" Content="Browse"
+                                                Command="{Binding ChooseDownloadTempFolderCommand}" />
+                                    </Grid>
+                                    <TextBlock Classes="sub"
+                                               Text="Holds the video parts while they download. Needs write access." />
+                                </StackPanel>
+                                <StackPanel Classes="field">
+                                    <TextBlock Classes="label" Text="MAX CONNECTIONS (EXPERIMENTAL)" />
+                                    <NumericUpDown Minimum="1" Maximum="25" Width="110" HorizontalAlignment="Left"
+                                                   Value="{Binding CurrentPreferences.MaxConnectionCount}" />
+                                    <TextBlock Classes="sub"
+                                               Text="More can be faster but may crash on some networks. Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Appearance">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Classes="section">
+                        <TextBlock Classes="h1" Text="Appearance" />
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="THEME" />
+                            <ComboBox Width="220" ItemsSource="{Binding AvailableThemes}"
+                                      SelectedValue="{Binding CurrentPreferences.Theme}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- save bar: only while there are unsaved changes -->
+        <Border Grid.Row="1" IsVisible="{Binding HasChanges}" Padding="16,12"
+                Background="{StaticResource SettingsCardBrush}"
+                BorderBrush="{StaticResource SettingsStrongBorderBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto,10,Auto,10,Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="You have unsaved changes" FontSize="13"
+                               Foreground="{StaticResource SettingsTextBrush}" />
+                    <TextBlock Text="{Binding ValidationMessage}" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource SettingsErrorBrush}"
+                               IsVisible="{Binding ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </StackPanel>
-                <avalonia:Icon Grid.Row="2" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Video Type" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a default video type to use in the search dialog.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Load Limit" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton GroupName="LoadLimit" Content="Last"
-                                 IsChecked="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                 HorizontalAlignment="Left" />
-                    <NumericUpDown Minimum="1" Maximum="999" Width="60"
-                                   IsEnabled="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                   Value="{Binding CurrentPreferences.SearchLoadLastDays}" Margin="5,0,0,0"
-                                   HorizontalContentAlignment="Center" HorizontalAlignment="Left"
-                                   VerticalAlignment="Center" />
-                    <TextBlock Text="days" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,0,0,0" />
-                </StackPanel>
-                <avalonia:Icon Grid.Row="4" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question"
-                               VerticalAlignment="Center">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Load Limit" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a default video load limit to use in the search dialog.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton GroupName="LoadLimit" Content="Last"
-                                 IsChecked="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.LastVods}}"
-                                 HorizontalAlignment="Left" />
-                    <NumericUpDown Minimum="1" Maximum="999" Width="60"
-                                   IsEnabled="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.LastVods}}"
-                                   Value="{Binding CurrentPreferences.SearchLoadLastVods}" Margin="5,0,0,0"
-                                   HorizontalContentAlignment="Center" HorizontalAlignment="Left"
-                                   VerticalAlignment="Center" />
-                    <TextBlock Text="VODs" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,0,0,0" />
-                </StackPanel>
-
-                <RadioButton Grid.Row="8" Grid.Column="2" GroupName="LoadLimit" Content="Only today"
-                             IsChecked="{Binding CurrentPreferences.SearchLoadLimitType, Converter={StaticResource loadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.OnlyToday}}"
-                             VerticalAlignment="Center" HorizontalAlignment="Left" />
-
-                <StackPanel Grid.Row="10" Grid.Column="2" Spacing="5">
-                    <CheckBox IsChecked="{Binding CurrentPreferences.SearchOnStartup}"
-                              Content="Search on Start" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                    <CheckBox IsChecked="{Binding CurrentPreferences.SearchDefaultFavourites}"
-                              Content="Use Favourites as the default search" VerticalAlignment="Center"
-                              HorizontalAlignment="Left"
-                              ToolTip.Tip="The Search page opens on the Favorites tab, and 'Search on Start' lists the videos of all favourite channels instead of a single channel." />
-                </StackPanel>
-                <avalonia:Icon Grid.Row="12" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Search on Start" />
-                                <TextBlock TextAlignment="Left">
-                                    If enabled, Twitch Leecher performs a search with the above settings on application startup.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
+                <Button Grid.Column="1" Classes="quiet" Content="Reset to defaults" Command="{Binding DefaultsCommand}" />
+                <Button Grid.Column="3" Classes="outline" Content="Undo" Command="{Binding UndoCommand}" />
+                <Button Grid.Column="5" Classes="primary" Content="Save" Command="{Binding SaveCommand}" />
             </Grid>
-
-            <Border Grid.Row="4" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Download" FontSize="21.333" FontWeight="Bold" />
-            </Border>
-
-            <Grid Grid.Row="5" Margin="15,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="g2" />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Temporary Folder" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <Grid Grid.Column="2" Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Grid.Row="0"
-                             Text="{Binding CurrentPreferences.DownloadTempFolder, Mode=OneWay}"
-                             IsReadOnly="True" />
-                    <Button Classes="TlMiniButton" Command="{Binding ChooseDownloadTempFolderCommand}"
-                            Grid.Column="2" Grid.Row="0" Content="..." />
-                </Grid>
-                <avalonia:Icon Grid.Row="0" Grid.Column="4" Classes="Img_Help"
-                               Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Temporary Folder" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a temporary download folder. This folder will be used to store temporary files during the download process. You need write permissions on this folder.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Column="0" Grid.Row="2" Text="Download Folder" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <Grid Grid.Column="2" Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Grid.Row="0"
-                             Text="{Binding CurrentPreferences.DownloadFolder, Mode=OneWay}"
-                             IsReadOnly="True" />
-                    <Button Classes="TlMiniButton" Command="{Binding ChooseDownloadFolderCommand}"
-                            Grid.Column="2" Grid.Row="0" Content="..." />
-                </Grid>
-                <avalonia:Icon Grid.Row="2" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Download Folder" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a default download folder to use in the download dialog. You need write permissions on this folder.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Filename Template" VerticalAlignment="Center" />
-                <TextBox Grid.Row="4" Grid.Column="2"
-                         Text="{Binding CurrentPreferences.DownloadFileName}"
-                         VerticalAlignment="Center" />
-                <avalonia:Icon Grid.Row="4" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="415">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Filename Template" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a default filename template for your downloads.
-                                </TextBlock>
-                                <Grid Margin="0,5,0,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                        <RowDefinition Height="5" />
-                                        <RowDefinition SharedSizeGroup="r2" />
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="15" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="15" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Wildcard" FontWeight="Bold" />
-                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Description" FontWeight="Bold" />
-                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Example" FontWeight="Bold" />
-
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{}{id}" />
-                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Twitch Video ID" />
-                                    <TextBlock Grid.Row="2" Grid.Column="4" Text="54869708" />
-
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{}{channel}" />
-                                    <TextBlock Grid.Row="4" Grid.Column="2" Text="Channel Name" />
-                                    <TextBlock Grid.Row="4" Grid.Column="4" Text="FakeSmileRevolution" />
-
-                                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{}{title}" />
-                                    <TextBlock Grid.Row="6" Grid.Column="2" Text="Video Title" />
-                                    <TextBlock Grid.Row="6" Grid.Column="4" Text="Best Strim Evr!!!" />
-
-                                    <TextBlock Grid.Row="8" Grid.Column="0" Text="{}{res}" />
-                                    <TextBlock Grid.Row="8" Grid.Column="2" Text="Video Resolution" />
-                                    <TextBlock Grid.Row="8" Grid.Column="4" Text="1920x1080" />
-
-                                    <TextBlock Grid.Row="10" Grid.Column="0" Text="{}{year}" />
-                                    <TextBlock Grid.Row="10" Grid.Column="2" Text="Year" />
-                                    <TextBlock Grid.Row="10" Grid.Column="4" Text="2022" />
-
-                                    <TextBlock Grid.Row="12" Grid.Column="0" Text="{}{month}" />
-                                    <TextBlock Grid.Row="12" Grid.Column="2" Text="Month" />
-                                    <TextBlock Grid.Row="12" Grid.Column="4" Text="07" />
-
-                                    <TextBlock Grid.Row="14" Grid.Column="0" Text="{}{day}" />
-                                    <TextBlock Grid.Row="14" Grid.Column="2" Text="Day" />
-                                    <TextBlock Grid.Row="14" Grid.Column="4" Text="25" />
-
-                                    <TextBlock Grid.Row="16" Grid.Column="0" Text="{}{hr24}" />
-                                    <TextBlock Grid.Row="16" Grid.Column="2" Text="Hour (00-23)" />
-                                    <TextBlock Grid.Row="16" Grid.Column="4" Text="07" />
-
-                                    <TextBlock Grid.Row="18" Grid.Column="0" Text="{}{hr}" />
-                                    <TextBlock Grid.Row="18" Grid.Column="2" Text="Hour (00-11)" />
-                                    <TextBlock Grid.Row="18" Grid.Column="4" Text="19" />
-
-                                    <TextBlock Grid.Row="20" Grid.Column="0" Text="{}{min}" />
-                                    <TextBlock Grid.Row="20" Grid.Column="2" Text="Minutes" />
-                                    <TextBlock Grid.Row="20" Grid.Column="4" Text="47" />
-
-                                    <TextBlock Grid.Row="22" Grid.Column="0" Text="{}{sec}" />
-                                    <TextBlock Grid.Row="22" Grid.Column="2" Text="Seconds" />
-                                    <TextBlock Grid.Row="22" Grid.Column="4" Text="55" />
-
-                                    <TextBlock Grid.Row="24" Grid.Column="0" Text="{}{apm}" />
-                                    <TextBlock Grid.Row="24" Grid.Column="2" Text="AM/PM" />
-                                    <TextBlock Grid.Row="24" Grid.Column="4" Text="PM" />
-
-                                    <TextBlock Grid.Row="26" Grid.Column="0" Text="{}{start}" />
-                                    <TextBlock Grid.Row="26" Grid.Column="2" Text="Crop start time (HHmmss)" />
-                                    <TextBlock Grid.Row="26" Grid.Column="4" Text="012744" />
-
-                                    <TextBlock Grid.Row="28" Grid.Column="0" Text="{}{end}" />
-                                    <TextBlock Grid.Row="28" Grid.Column="2" Text="Crop end time (HHmmss)" />
-                                    <TextBlock Grid.Row="28" Grid.Column="4" Text="025317" />
-                                </Grid>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="Default Quality" VerticalAlignment="Center" />
-                <ComboBox Grid.Row="6" Grid.Column="2"
-                          ItemsSource="{Binding CurrentPreferences.DownloadDefaultQualities}"
-                          SelectedItem="{Binding CurrentPreferences.DownloadDefaultQuality}" VerticalAlignment="Center">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <avalonia:Icon Grid.Row="6" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="415">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Default Quality" />
-                                <TextBlock TextAlignment="Left">
-                                    Specify a default quality you want to have pre-selected in the download dialog. If the desired quality is not available, the next lower quality will be selected. If there is no lower quality, the next higher quality will be selected.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <CheckBox Grid.Row="8" Grid.Column="2"
-                          IsChecked="{Binding CurrentPreferences.DownloadSubfoldersForFav}"
-                          Content="Create subfolders for favourite channels" VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="8" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText"
-                                           Text="Create subfolders for favourite channels" />
-                                <TextBlock TextAlignment="Left">
-                                    If enabled, VODs of your favorite channels will be downloaded to their own subfolders within the download folder.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <CheckBox Grid.Row="10" Grid.Column="2"
-                          IsChecked="{Binding CurrentPreferences.DownloadRemoveCompleted}"
-                          Content="Remove successful downloads from queue" VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="10" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText"
-                                           Text="Remove Successful Downloads" />
-                                <TextBlock TextAlignment="Left">
-                                    If enabled, successfully downloaded VODs get removed from the download queue.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <CheckBox Grid.Row="12" Grid.Column="2"
-                          IsChecked="{Binding CurrentPreferences.DownloadDisableConversion}"
-                          VerticalAlignment="Center"
-                          HorizontalAlignment="Left">
-                    <TextBlock Text="Disable conversion to mp4/mkv (also disables cropping)" TextWrapping="Wrap" />
-                </CheckBox>
-                <avalonia:Icon Grid.Row="12" Grid.Column="4" Classes="Img_Help"
-                               Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText"
-                                           Text="Disable conversion" />
-                                <TextBlock TextAlignment="Left">
-                                    Depending on the video containing muted parts, frame drops or the encoding settings of the streamer, the conversion to mp4 or mkv can introduce A/V desync in rare cases. If you want to download the raw .ts video file from Twitch, enable this option. Cropping is not available in this mode.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <CheckBox Grid.Row="14" Grid.Column="2"
-                          IsChecked="{Binding CurrentPreferences.DownloadQuickDownload}"
-                          Content="Quick download (skip the download dialog)"
-                          VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="14" Grid.Column="4" Classes="Img_Help"
-                               Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText"
-                                           Text="Quick download" />
-                                <TextBlock TextAlignment="Justify">
-                                    If enabled, the download button in the search results adds the video to the download queue straight away, using the default quality, folder and filename settings above. "Download Selected" always works this way.
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-            </Grid>
-
-            <Border Grid.Row="6" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Miscellaneous" FontSize="21.333" FontWeight="Bold" />
-            </Border>
-
-            <Grid Grid.Row="7" Margin="15,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition SharedSizeGroup="r1" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition SharedSizeGroup="r1" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="g2" />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <CheckBox Grid.Row="0" Grid.Column="2" Content="Use external video player"
-                          IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}" VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
-                <avalonia:Icon Grid.Row="0" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText"
-                                           Text="Use external video player" />
-                                <TextBlock TextAlignment="Left">
-                                    Use an external video player (e.g. VLC) to watch the videos instead of opening them in the browser
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Video Player" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <Grid Grid.Row="2" Grid.Column="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBox Grid.Row="0" Grid.Column="0"
-                             Text="{Binding CurrentPreferences.MiscExternalPlayer, Mode=OneWay}"
-                             IsReadOnly="True" />
-                    <Button Grid.Row="0" Grid.Column="2" Classes="TlMiniButton"
-                            Command="{Binding ChooseExternalPlayerCommand}" Content="..." />
-                    <Button Grid.Row="0" Grid.Column="4" Classes="TlMiniButton"
-                            Command="{Binding ClearExternalPlayerCommand}" ToolTip.Tip="Clear">
-                        <avalonia:Icon Value="fa-solid fa-eraser" Width="16" Height="16"
-                                       RenderTransformOrigin="0.5,0.5" />
-                    </Button>
-                </Grid>
-                <avalonia:Icon Grid.Row="2" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Video Player" />
-                                <TextBlock TextAlignment="Left">
-                                    The external video player to use (preferably VLC because it works great with Twitch streams)
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-            </Grid>
-            <Border Grid.Row="8" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Experimental" FontSize="21.333" FontWeight="Bold" />
-            </Border>
-
-            <Grid Grid.Row="9" Margin="15,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition SharedSizeGroup="r1" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="g2" />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="15" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Max Connections" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-                <Grid Grid.Row="0" Grid.Column="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <NumericUpDown Minimum="1" Maximum="25" Width="60"
-                                   Value="{Binding CurrentPreferences.MaxConnectionCount}" Margin="5,0,0,0"
-                                   HorizontalContentAlignment="Center" HorizontalAlignment="Left"
-                                   VerticalAlignment="Center" />
-                </Grid>
-                <avalonia:Icon Grid.Row="0" Grid.Column="4" Classes="Img_Help" Value="fa-solid fa-circle-question">
-                    <ToolTip.Tip>
-                        <ToolTip Width="350">
-                            <StackPanel>
-                                <TextBlock Classes="TlToolTipHeadlineText" Text="Maximum download connections" />
-                                <TextBlock TextAlignment="Left">
-                                    How many connections can be open at the same time to download videos.
-                                    A higher value might get faster downloads, but a greater risk for
-                                    crashes depending on your network. If unsure try 10. When experiencing
-                                    crashes while downloading, try 3. A value over 15 is not recommended
-                                </TextBlock>
-                            </StackPanel>
-                        </ToolTip>
-                    </ToolTip.Tip>
-                </avalonia:Icon>
-            </Grid>
-        </Grid>
-    </ScrollViewer>
+        </Border>
+    </Grid>
 </UserControl>
