@@ -122,6 +122,7 @@ Noted 2026-11-19. Discuss these with the user before building; each would be its
    - **HTML chat log:** names in their chat colours, timestamps and Twitch emotes as images. The chat data already includes emote IDs, and the images come from Twitch's emote image server. Either link the images (needs internet to view) or embed them in the file (works offline, bigger). Third-party emote sets (7TV, BTTV, FFZ) are optional extras.
    - **JSON:** the raw messages, for other tools.
    - **Chat burned into the video, or rendered as a separate chat video:** much bigger, needs image rendering plus ffmpeg work.
+5. **Ask about the tray on first minimise.** The first time the user minimises the window, ask "Minimise to the system tray instead?" with Yes/No and a "Remember my choice" tick box. The answer sets the existing "Minimise to tray" setting, so it shows up in Settings, and the question isn't asked again. Builds on the tray branch (`claude/feature-tray-notifications-963477`); it needs a stored "asked already" flag in preferences.
 
 ## Known bugs not yet fixed
 
