@@ -21,7 +21,7 @@ Only three files: `TwitchLeecher.Gui/Views/PreferencesView.axaml` (+ `.axaml.cs`
 
 ## Known limits (marked `// shortcut:` where in code)
 
-- `HasChanges` is set by any edit, even if you change a value back by hand. Upgrade: compare against the saved preferences.
+- `HasChanges` compares the edited copy with the saved preferences (null and empty text count as equal).
 - Toggles are `CheckBox`es with the label on the right of the box, not right-aligned switches as in the mockup; that keeps the whole label clickable.
 - Leaving the Settings page still discards unsaved changes (old behaviour: `OnBeforeHidden`).
 - The scroll position is no longer restored for this page (each section scrolls on its own and is short). `PreferencesViewModel` no longer implements `INavigationState`.
