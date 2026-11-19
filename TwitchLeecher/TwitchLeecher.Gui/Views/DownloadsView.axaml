@@ -2,144 +2,272 @@
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:models="clr-namespace:TwitchLeecher.Core.Models;assembly=TwitchLeecher.Core"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             xmlns:converters="clr-namespace:TwitchLeecher.Gui.Converters"
              x:DataType="viewModels:DownloadsViewModel">
     <Design.DataContext>
         <viewModels:DownloadsViewModel />
     </Design.DataContext>
     <UserControl.Resources>
-        <converters:DownloadStateToColorConverter x:Key="DownloadStateToColorConverter" />
+        <!-- Redesign palette, kept local so this screen doesn't depend on shared theme changes. -->
+        <SolidColorBrush x:Key="DlPage" Color="#1F1F23" />
+        <SolidColorBrush x:Key="DlPanel" Color="#222227" />
+        <SolidColorBrush x:Key="DlCard" Color="#2A2A30" />
+        <SolidColorBrush x:Key="DlBorder" Color="#34343C" />
+        <SolidColorBrush x:Key="DlBorderStrong" Color="#44444D" />
+        <SolidColorBrush x:Key="DlTrack" Color="#16161A" />
+        <SolidColorBrush x:Key="DlText" Color="#F2F2F5" />
+        <SolidColorBrush x:Key="DlMuted" Color="#A8A8B3" />
+        <SolidColorBrush x:Key="DlAccent" Color="#9146FF" />
+        <SolidColorBrush x:Key="DlSuccess" Color="#3FB950" />
+        <SolidColorBrush x:Key="DlError" Color="#FF8A80" />
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Offset="{Binding ScrollPosition, Mode=TwoWay}">
-        <ItemsControl ItemsSource="{Binding Downloads}" Margin="0,0,0,20">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Margin="20, 20, 20, 0" Padding="10" BorderThickness="1" CornerRadius="5">
-                        <Border.Background>
-                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                                <GradientStop Color="{DynamicResource WindowBackgroundGradientTopColor}" Offset="0" />
-                                <GradientStop Color="{DynamicResource WindowBackgroundGradientBottomColor}"
-                                              Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <Border Grid.Row="0" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,10">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition />
-                                        <ColumnDefinition Width="10" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding DownloadParams.Video.Title}"
-                                               FontWeight="Bold" TextTrimming="CharacterEllipsis"
-                                               VerticalAlignment="Center" />
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button Classes="TlMiniButton"
-                                                Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).RetryDownloadCommand}"
-                                                CommandParameter="{Binding Id}"
-                                                Padding="5"
-                                                VerticalAlignment="Center"
-                                                HorizontalAlignment="Stretch"
-                                                IsVisible="{Binding CanRetry}">
-                                            <avalonia:Icon Value="fa-solid fa-arrows-rotate" Width="16" Height="16" />
-                                        </Button>
-                                        <Button CommandParameter="{Binding Id}"
-                                                Margin="5,0,0,0"
-                                                Padding="5"
-                                                VerticalAlignment="Center"
-                                                Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).CancelDownloadCommand}"
-                                                HorizontalAlignment="Stretch">
-                                            <avalonia:Icon Width="16" Height="16" Value="{Binding Icon}" />
-                                        </Button>
-                                        <Button Classes="TlMiniButton"
-                                                Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).ShowLogCommand}"
-                                                CommandParameter="{Binding Id}"
-                                                Margin="5,0,0,0"
-                                                Padding="5"
-                                                VerticalAlignment="Center"
-                                                HorizontalAlignment="Stretch">
-                                            <avalonia:Icon Value="fa-solid fa-file-lines" Width="16" Height="16" />
-                                        </Button>
-                                        <Button Classes="TlMiniButton"
-                                                Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).OpenDownloadFolderCommand}"
-                                                CommandParameter="{Binding Id}"
-                                                Margin="5,0,0,0"
-                                                Padding="5"
-                                                VerticalAlignment="Center"
-                                                HorizontalAlignment="Stretch"
-                                                IsVisible="{Binding IsDone}">
-                                            <avalonia:Icon Value="fa-solid fa-folder-open" Width="16" Height="16" />
-                                        </Button>
+    <UserControl.Styles>
+        <Style Selector="Button.dl">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource DlBorderStrong}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource DlText}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+        </Style>
+        <Style Selector="Button.dl.bar">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+        </Style>
+        <Style Selector="Button.dl:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource DlBorder}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DlBorderStrong}" />
+            <Setter Property="Foreground" Value="{StaticResource DlText}" />
+        </Style>
+        <Style Selector="Button.dl avalonia|Icon">
+            <Setter Property="Width" Value="11" />
+            <Setter Property="Height" Value="11" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+
+        <Style Selector="ProgressBar.dl">
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Background" Value="{StaticResource DlTrack}" />
+            <Setter Property="Foreground" Value="{StaticResource DlAccent}" />
+        </Style>
+        <Style Selector="ProgressBar.dl.done">
+            <Setter Property="Foreground" Value="{StaticResource DlSuccess}" />
+        </Style>
+        <Style Selector="ProgressBar.dl.failed">
+            <Setter Property="Foreground" Value="{StaticResource DlError}" />
+        </Style>
+
+        <!-- Status chip: queued is the default look, the other states override it. -->
+        <Style Selector="Border.chip">
+            <Setter Property="Background" Value="#34343C" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="8,2" />
+        </Style>
+        <Style Selector="Border.chip TextBlock">
+            <Setter Property="Foreground" Value="#D0D0D8" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.chip.downloading">
+            <Setter Property="Background" Value="#409146FF" />
+        </Style>
+        <Style Selector="Border.chip.paused">
+            <Setter Property="Background" Value="#2E9146FF" />
+        </Style>
+        <Style Selector="Border.chip.downloading TextBlock, Border.chip.paused TextBlock">
+            <Setter Property="Foreground" Value="#D4BFFF" />
+        </Style>
+        <Style Selector="Border.chip.done">
+            <Setter Property="Background" Value="#333FB950" />
+        </Style>
+        <Style Selector="Border.chip.done TextBlock">
+            <Setter Property="Foreground" Value="#7EE08B" />
+        </Style>
+        <Style Selector="Border.chip.warning">
+            <Setter Property="Background" Value="#33FFC14D" />
+        </Style>
+        <Style Selector="Border.chip.warning TextBlock">
+            <Setter Property="Foreground" Value="#FFC14D" />
+        </Style>
+        <Style Selector="Border.chip.failed">
+            <Setter Property="Background" Value="#33FF8A80" />
+        </Style>
+        <Style Selector="Border.chip.failed TextBlock">
+            <Setter Property="Foreground" Value="#FF8A80" />
+        </Style>
+
+        <Style Selector="TextBlock.detail">
+            <Setter Property="Foreground" Value="{StaticResource DlMuted}" />
+        </Style>
+        <Style Selector="TextBlock.detail.downloading">
+            <Setter Property="Foreground" Value="{StaticResource DlText}" />
+        </Style>
+        <Style Selector="TextBlock.detail.failed">
+            <Setter Property="Foreground" Value="{StaticResource DlError}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel Background="{StaticResource DlPage}">
+        <!-- Summary bar -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource DlPanel}" BorderBrush="{StaticResource DlBorder}"
+                BorderThickness="0,0,0,1" Padding="16,14">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <TextBlock Grid.Column="0" Text="{Binding SummaryCounts}" FontWeight="SemiBold"
+                               Foreground="{StaticResource DlText}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding SummarySize}" FontSize="13" Margin="10,0,0,0"
+                               Foreground="{StaticResource DlMuted}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                    <Button Grid.Column="2" Classes="dl bar" Command="{Binding PauseAllCommand}"
+                            IsEnabled="{Binding HasDownloads}">
+                        <StackPanel Orientation="Horizontal">
+                            <avalonia:Icon Value="fa-solid fa-pause" IsVisible="{Binding CanPauseAll}" />
+                            <avalonia:Icon Value="fa-solid fa-play" IsVisible="{Binding !CanPauseAll}" />
+                            <TextBlock Text="{Binding PauseAllText}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="3" Classes="dl bar" Content="Clear finished"
+                            Command="{Binding ClearFinishedCommand}" IsEnabled="{Binding HasDownloads}" />
+                </Grid>
+                <ProgressBar Classes="dl" Height="4" CornerRadius="2" Minimum="0" Maximum="100"
+                             Value="{Binding OverallProgress}" />
+            </StackPanel>
+        </Border>
+
+        <Panel>
+            <TextBlock Text="No downloads yet. Pick a video in Search to add it here."
+                       Foreground="{StaticResource DlMuted}" HorizontalAlignment="Center"
+                       VerticalAlignment="Center" IsVisible="{Binding !HasDownloads}" />
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Offset="{Binding ScrollPosition, Mode=TwoWay}">
+                <ItemsControl ItemsSource="{Binding Downloads}" Margin="16,12">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="10" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:TwitchVideoDownload">
+                            <Border Background="{StaticResource DlCard}" CornerRadius="8" Padding="12">
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Border Grid.Column="0" Width="96" Height="54" CornerRadius="4" ClipToBounds="True"
+                                            Background="{StaticResource DlTrack}" VerticalAlignment="Top"
+                                            Margin="0,0,12,0">
+                                        <Image Source="{Binding DownloadParams.Video.Thumbnail^}"
+                                               Stretch="UniformToFill" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Grid.Column="0" Text="{Binding DownloadParams.Video.Title}"
+                                                       FontWeight="SemiBold" Foreground="{StaticResource DlText}"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <Border Grid.Column="1" Classes="chip" Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Classes.downloading="{Binding IsDownloading}"
+                                                    Classes.paused="{Binding IsPaused}"
+                                                    Classes.done="{Binding IsDone}"
+                                                    Classes.warning="{Binding HasWarnings}"
+                                                    Classes.failed="{Binding IsFailed}">
+                                                <TextBlock Text="{Binding StatusChip}" />
+                                            </Border>
+                                        </Grid>
+                                        <TextBlock Text="{Binding MetaLine}" FontSize="12"
+                                                   Foreground="{StaticResource DlMuted}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <ProgressBar Classes="dl" Height="6" CornerRadius="3" Minimum="0"
+                                                     Maximum="100"
+                                                     Classes.done="{Binding IsDone}"
+                                                     Classes.failed="{Binding IsFailed}"
+                                                     Value="{Binding Progress, Mode=OneWay}"
+                                                     IsIndeterminate="{Binding IsIndeterminate}" />
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Grid.Column="0" Classes="detail" FontSize="12"
+                                                       Classes.downloading="{Binding IsDownloading}"
+                                                       Classes.failed="{Binding IsFailed}"
+                                                       Text="{Binding DetailLine}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <!-- Downloading -->
+                                                <Button Classes="dl" IsVisible="{Binding IsDownloading}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).PauseDownloadCommand}"
+                                                        CommandParameter="{Binding Id}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:Icon Value="fa-solid fa-pause" />
+                                                        <TextBlock Text="Pause" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Classes="dl" Content="Cancel" IsVisible="{Binding IsDownloading}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).CancelDownloadCommand}"
+                                                        CommandParameter="{Binding Id}" />
+                                                <!-- Queued -->
+                                                <Button Classes="dl" IsVisible="{Binding IsQueued}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).MoveUpCommand}"
+                                                        CommandParameter="{Binding Id}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:Icon Value="fa-solid fa-arrow-up" />
+                                                        <TextBlock Text="Move up" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <!-- Paused -->
+                                                <Button Classes="dl" IsVisible="{Binding IsPaused}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).ResumeDownloadCommand}"
+                                                        CommandParameter="{Binding Id}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:Icon Value="fa-solid fa-play" />
+                                                        <TextBlock Text="Resume" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <!-- Queued and paused -->
+                                                <Button Classes="dl" Content="Remove"
+                                                        IsVisible="{Binding IsQueued}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).RemoveDownloadCommand}"
+                                                        CommandParameter="{Binding Id}" />
+                                                <Button Classes="dl" Content="Remove"
+                                                        IsVisible="{Binding IsPaused}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).RemoveDownloadCommand}"
+                                                        CommandParameter="{Binding Id}" />
+                                                <!-- Done -->
+                                                <Button Classes="dl" IsVisible="{Binding IsDone}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).PlayCommand}"
+                                                        CommandParameter="{Binding Id}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:Icon Value="fa-solid fa-play" />
+                                                        <TextBlock Text="Play" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Classes="dl" Content="Open folder" IsVisible="{Binding IsDone}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).OpenDownloadFolderCommand}"
+                                                        CommandParameter="{Binding Id}" />
+                                                <!-- Failed or canceled -->
+                                                <Button Classes="dl" IsVisible="{Binding IsFailed}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).RetryDownloadCommand}"
+                                                        CommandParameter="{Binding Id}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:Icon Value="fa-solid fa-arrows-rotate" />
+                                                        <TextBlock Text="Retry" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Classes="dl" Content="View log" IsVisible="{Binding IsFailed}"
+                                                        Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).ShowLogCommand}"
+                                                        CommandParameter="{Binding Id}" />
+                                            </StackPanel>
+                                        </Grid>
                                     </StackPanel>
                                 </Grid>
                             </Border>
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="20" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="{Binding DownloadParams.Video.Thumbnail^}"
-                                       VerticalAlignment="Center" MaxWidth="195" MaxHeight="110" Width="195"
-                                       Height="110" Stretch="Uniform" />
-                                <Grid Grid.Column="2" Grid.IsSharedSizeScope="True" VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="15" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition SharedSizeGroup="g1" />
-                                        <RowDefinition Height="10" />
-                                        <RowDefinition SharedSizeGroup="g1" />
-                                        <RowDefinition Height="10" />
-                                        <RowDefinition SharedSizeGroup="g1" />
-                                        <RowDefinition Height="10" />
-                                        <RowDefinition SharedSizeGroup="g1" />
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Status:" FontWeight="Bold" />
-                                    <TextBlock Grid.Column="2" Grid.Row="0" FontWeight="Bold"
-                                               Text="{Binding Status}"
-                                               Foreground="{Binding DownloadState, Converter={StaticResource DownloadStateToColorConverter}}" />
-
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Length:" FontWeight="Bold" />
-                                    <TextBlock Grid.Column="2" Grid.Row="2"
-                                               Text="{Binding DownloadParams.CroppedLengthStr}" />
-
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Quality:" FontWeight="Bold" />
-                                    <TextBlock Grid.Column="2" Grid.Row="4"
-                                               Text="{Binding DownloadParams.SelectedQuality.DisplayString}" />
-
-                                    <TextBlock Grid.Column="0" Grid.Row="6" Text="Recorded:" FontWeight="Bold" />
-                                    <TextBlock Grid.Column="2" Grid.Row="6"
-                                               Text="{Binding DownloadParams.Video.RecordedDate, StringFormat=G}" />
-                                </Grid>
-                            </Grid>
-                            <Border Grid.Row="2" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,10,0,0">
-                                <Grid Height="26">
-                                    <ProgressBar Value="{Binding Progress, Mode=OneWay}"
-                                                 IsIndeterminate="{Binding IsIndeterminate}" />
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
-                                               IsVisible="{Binding !IsIndeterminate}">
-                                        <TextBlock.Foreground>
-                                            <SolidColorBrush Color="Black" />
-                                        </TextBlock.Foreground>
-                                        <Run Text="{Binding Progress, Mode=OneWay, StringFormat=N1}" /><Run Text="%" />
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </ScrollViewer>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
 </UserControl>
