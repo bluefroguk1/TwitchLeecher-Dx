@@ -19,13 +19,11 @@ namespace TwitchLeecher.Gui.ViewModels
         #region Fields
 
         private readonly IEventAggregator _eventAggregator;
-        private readonly IApiService _apiService;
         private readonly IDialogService _dialogService;
         private readonly INavigationService _navigationService;
         private readonly IPreferencesService _preferencesService;
         private readonly ISearchService _searchService;
-        private readonly IFilenameService _filenameService;
-        private readonly IDownloadService _downloadService;
+        private readonly IQuickDownloadService _quickDownloadService;
         private readonly INotificationService _notificationService;
 
         private readonly object _commandLockObject;
@@ -34,41 +32,31 @@ namespace TwitchLeecher.Gui.ViewModels
         private ICommand _downloadCommand;
         private ICommand _seachCommand;
 
-        private bool _isAuthenticatedSubOnly;
-
         #endregion Fields
 
         #region Constructors
 
         public SearchResultViewModel(
             IEventAggregator eventAggregator,
-            IApiService apiService,
-            IAuthService authService,
             IDialogService dialogService,
             INavigationService navigationService,
             IPreferencesService preferencesService,
             ISearchService searchService,
-            IFilenameService filenameService,
-            IDownloadService downloadService,
+            IQuickDownloadService quickDownloadService,
             INotificationService notificationService)
         {
             _eventAggregator = eventAggregator;
-            _apiService = apiService;
             _dialogService = dialogService;
             _navigationService = navigationService;
             _preferencesService = preferencesService;
             _searchService = searchService;
-            _filenameService = filenameService;
-            _downloadService = downloadService;
+            _quickDownloadService = quickDownloadService;
             _notificationService = notificationService;
 
             _searchService.PropertyChanged += SearchService_PropertyChanged;
 
             _commandLockObject = new object();
 
-            _eventAggregator.GetEvent<SubOnlyAuthChangedEvent>().Subscribe(SubOnlyAuthChanged);
-
-            _isAuthenticatedSubOnly = authService.IsAuthenticatedSubOnly;
         }
 
         #endregion Constructors
@@ -124,11 +112,6 @@ namespace TwitchLeecher.Gui.ViewModels
         #endregion Properties
 
         #region Methods
-
-        private void SubOnlyAuthChanged(bool isAuthenticatedSubOnly)
-        {
-            _isAuthenticatedSubOnly = isAuthenticatedSubOnly;
-        }
 
         private void ViewVideo(string id)
         {
@@ -194,7 +177,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
                         if (video != null)
                         {
-                            DownloadParameters downloadParams = CreateDownloadParams(video, out string problem);
+                            DownloadParameters downloadParams = _quickDownloadService.CreateDownloadParams(video, out string problem);
 
                             if (downloadParams == null)
                             {
@@ -206,7 +189,7 @@ namespace TwitchLeecher.Gui.ViewModels
                             if (_preferencesService.CurrentPreferences.DownloadQuickDownload)
                             {
                                 // #96: skip the dialog and queue with the default settings
-                                string notQueued = TryEnqueue(downloadParams);
+                                string notQueued = _quickDownloadService.TryEnqueue(downloadParams);
                                 _notificationService.ShowNotification(notQueued ?? "Download added");
                             }
                             else
@@ -221,84 +204,6 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 _dialogService.ShowAndLogException(ex);
             }
-        }
-
-        // Network calls only, no UI: also runs on a background thread for "Download Selected".
-        private DownloadParameters CreateDownloadParams(TwitchVideo video, out string problem)
-        {
-            Dictionary<TwitchVideoQuality, string> playlistInfo;
-
-            if (video.IsClip)
-            {
-                playlistInfo = _apiService.GetClipQualities(video.Id);
-            }
-            else
-            {
-                TwitchVideoAuthInfo vodAuthInfo = _apiService.GetVodAuthInfo(video.Id);
-
-                if (!vodAuthInfo.Privileged && vodAuthInfo.SubOnly)
-                {
-                    problem = _isAuthenticatedSubOnly
-                        ? "This video is sub-only but you are not subscribed to the channel!"
-                        : "This video is sub-only! You need to enable sub-only video download support first!";
-                    return null;
-                }
-
-                playlistInfo = _apiService.GetPlaylistInfo(video.Id, vodAuthInfo);
-            }
-
-            List<TwitchVideoQuality> qualities = playlistInfo.Keys.OrderBy(q => q).ToList();
-
-            Preferences currentPrefs = _preferencesService.CurrentPreferences.Clone();
-
-            TwitchVideoQuality selectedQuality = GetSelectedQuality(qualities, currentPrefs.DownloadDefaultQuality);
-
-            string folder = currentPrefs.DownloadSubfoldersForFav &&
-                            _preferencesService.IsChannelInFavourites(video.Channel)
-                ? Path.Combine(currentPrefs.DownloadFolder, video.Channel)
-                : currentPrefs.DownloadFolder;
-
-            // clips are always a ready-made mp4
-            bool disableConversion = currentPrefs.DownloadDisableConversion && !video.IsClip;
-
-            string filename = _filenameService.SubstituteWildcards(currentPrefs.DownloadFileName, video,
-                selectedQuality);
-            filename = _filenameService.EnsureExtension(filename, disableConversion);
-
-            DownloadParameters downloadParams = new DownloadParameters(video, qualities,
-                selectedQuality, folder, filename, disableConversion);
-
-            if (video.StartTime.HasValue)
-            {
-                downloadParams.CropStartTime = video.StartTime.Value;
-            }
-
-            problem = null;
-            return downloadParams;
-        }
-
-        // Same checks as the download dialog, minus the questions: never overwrites. Returns why it was skipped, or null.
-        private string TryEnqueue(DownloadParameters downloadParams)
-        {
-            downloadParams.Validate();
-
-            if (downloadParams.HasErrors)
-            {
-                return "Invalid download settings, check Settings > Download";
-            }
-
-            if (_downloadService.IsFileNameUsed(downloadParams.FullPath))
-            {
-                return "Already in the download queue";
-            }
-
-            if (File.Exists(downloadParams.FullPath))
-            {
-                return "File already exists";
-            }
-
-            _downloadService.Enqueue(downloadParams);
-            return null;
         }
 
         [RelayCommand]
@@ -324,11 +229,11 @@ namespace TwitchLeecher.Gui.ViewModels
                     // API calls off the UI thread so the window stays responsive for long selections
                     (DownloadParameters downloadParams, string problem) = await Task.Run(() =>
                     {
-                        DownloadParameters p = CreateDownloadParams(video, out string reason);
+                        DownloadParameters p = _quickDownloadService.CreateDownloadParams(video, out string reason);
                         return (p, reason);
                     });
 
-                    string notQueued = downloadParams == null ? problem : TryEnqueue(downloadParams);
+                    string notQueued = downloadParams == null ? problem : _quickDownloadService.TryEnqueue(downloadParams);
 
                     if (notQueued == null)
                     {
@@ -357,73 +262,6 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 _dialogService.ShowAndLogException(ex);
             }
-        }
-
-        private TwitchVideoQuality GetSelectedQuality(List<TwitchVideoQuality> qualities, DefaultQuality defaultQuality)
-        {
-            TwitchVideoQuality sourceQuality = qualities.Find(q => q.IsSource);
-
-            if (sourceQuality == null)
-            {
-                sourceQuality = qualities[0];
-            }
-
-            if (defaultQuality.IsSource)
-            {
-                return sourceQuality;
-            }
-
-            if (defaultQuality.IsAudioOnly)
-            {
-                TwitchVideoQuality audioOnlyQuality = qualities.FirstOrDefault(q => q.IsAudioOnly);
-
-                if (audioOnlyQuality != null)
-                {
-                    return audioOnlyQuality;
-                }
-                else
-                {
-                    return sourceQuality;
-                }
-            }
-
-            IEnumerable<TwitchVideoQuality> visualQualities = qualities.Where(q => !q.IsAudioOnly);
-
-            int defaultRes = defaultQuality.VerticalResolution;
-
-            TwitchVideoQuality selectedQuality = null;
-
-            foreach (TwitchVideoQuality quality in visualQualities)
-            {
-                if (quality.VerticalResolution <= defaultRes && (selectedQuality == null ||
-                                                                 selectedQuality.VerticalResolution <
-                                                                 quality.VerticalResolution))
-                {
-                    selectedQuality = quality;
-                }
-            }
-
-            if (selectedQuality != null)
-            {
-                return selectedQuality;
-            }
-
-            foreach (TwitchVideoQuality quality in visualQualities)
-            {
-                if (quality.VerticalResolution >= defaultRes && (selectedQuality == null ||
-                                                                 selectedQuality.VerticalResolution >
-                                                                 quality.VerticalResolution))
-                {
-                    selectedQuality = quality;
-                }
-            }
-
-            if (selectedQuality != null)
-            {
-                return selectedQuality;
-            }
-
-            return sourceQuality;
         }
 
         public void ShowSearch()

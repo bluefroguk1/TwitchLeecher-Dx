@@ -197,6 +197,17 @@ namespace TwitchLeecher.Gui.ViewModels
 
         #region Methods
 
+        [RelayCommand]
+        private void UseFavouritesForAutoDownload()
+        {
+            string[] channels = CurrentPreferences.GetAutoDownloadChannels()
+                .Concat(CurrentPreferences.SearchFavouriteChannels)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            CurrentPreferences.AutoDownloadChannels = string.Join(", ", channels);
+        }
+
         private void AddFavouriteChannel()
         {
             try
