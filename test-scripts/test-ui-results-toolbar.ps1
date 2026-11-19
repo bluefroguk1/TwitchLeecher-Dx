@@ -1,10 +1,13 @@
-# Search results redesign checks. Test needs: instant (UI), then a quick download.
+﻿# Search results redesign checks. Test needs: instant (UI), then a quick download.
 $ErrorActionPreference = 'Stop'
 $out = Join-Path $env:TEMP 'test-ui-results-toolbar.txt'
-dotnet build -c Release
+$root = Split-Path -Parent $PSScriptRoot
+$proj = Join-Path $root 'TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj'
+dotnet build $proj -c Release
 if ($LASTEXITCODE -ne 0) { "BUILD FAILED" | Out-File $out; exit 1 }
-$exe = Get-ChildItem -Recurse -Filter TwitchLeecher.exe | Where-Object FullName -match 'Release' | Select-Object -First 1
-Start-Process $exe.FullName
+$exe = Join-Path (Split-Path -Parent $proj) 'bin\Release
+et10.0\TwitchLeecher.exe'
+Start-Process $exe
 $questions = @(
   'Search a channel (Broadcasts, last 10). Summary bar shows "channel · Broadcasts · last 10 · N results" and Edit search goes back?',
   'Cards are 3 per row, 2-line title, date · views meta line, labelled Download button?',
