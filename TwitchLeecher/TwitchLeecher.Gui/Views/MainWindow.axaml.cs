@@ -1,11 +1,13 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Services.Interfaces;
 using TwitchLeecher.Shared.Communication;
+using TwitchLeecher.Shared.Events;
 
 namespace TwitchLeecher.Gui.Views
 {
@@ -26,7 +28,8 @@ namespace TwitchLeecher.Gui.Views
         public MainWindow(
             MainWindowVM viewModel,
             IDialogService dialogService,
-            IRuntimeDataService runtimeDataService)
+            IRuntimeDataService runtimeDataService,
+            IEventAggregator eventAggregator)
         {
             _dialogService = dialogService;
             _runtimeDataService = runtimeDataService;
@@ -34,6 +37,10 @@ namespace TwitchLeecher.Gui.Views
             _namedPipeManager = new NamedPipeManager("TwitchLeecher-DX");
             _namedPipeManager.OnMessage += OnPipeMessage;
             _namedPipeManager.StartServer();
+
+            // the login callback arrives in the browser, so pull the app back in front afterwards
+            eventAggregator.GetEvent<AuthResultEvent>().Subscribe(OnSignedIn);
+            eventAggregator.GetEvent<SubOnlyAuthChangedEvent>().Subscribe(OnSignedIn);
 
             InitializeComponent();
 
@@ -104,20 +111,34 @@ namespace TwitchLeecher.Gui.Views
         {
             if (message == "Activate")
             {
-                Dispatcher.UIThread.Invoke(() =>
-                {
-                    if (WindowState == WindowState.Minimized)
-                    {
-                        WindowState = WindowState.Normal;
-                    }
-
-                    this.Topmost = true;
-
-                    this.Activate();
-
-                    Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
-                });
+                BringToFront();
             }
+        }
+
+        private void OnSignedIn(bool signedIn)
+        {
+            if (signedIn)
+            {
+                BringToFront();
+            }
+        }
+
+        // safe to call from any thread
+        private void BringToFront()
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+
+                this.Topmost = true;
+
+                this.Activate();
+
+                Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
+            });
         }
 
         public void LoadWindowState()
