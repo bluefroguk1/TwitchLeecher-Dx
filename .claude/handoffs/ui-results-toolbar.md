@@ -13,4 +13,3 @@ Test needs: instant (UI only) for layout/sort/toggle/select; a quick download fo
 ## Not verified
 - Never compiled (no .NET SDK on the Mac). Build on Windows first; fix any XAML/compile errors.
 - Shortcuts: DOWNLOADED only detects default-named files and not when the filename uses `{res}`; size estimate makes 2 API calls per ticked video; QUEUED badge refreshes on queue add/remove and when the page is shown, not when a download finishes while you watch.
-- Not done yet: the PowerShell test script is a stub, see `test-scripts/test-ui-results-toolbar.ps1`.
