@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Xml.Linq;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Shared.Notification;
 
@@ -341,6 +342,68 @@ namespace TwitchLeecher.Core.Models
                 LoadTo = _loadTo,
                 LoadToDefault = _loadToDefault,
                 LoadLastVods = _loadLastVods
+            };
+        }
+
+        public const string SEARCH_EL = "Search";
+
+        public XElement GetXml()
+        {
+            XElement searchEl = new XElement(
+                SEARCH_EL,
+                new XAttribute("Type", _searchType),
+                new XAttribute("VideoType", _videoType),
+                new XAttribute("LoadLimitType", _loadLimitType),
+                new XAttribute("LoadLastVods", _loadLastVods)
+            );
+
+            // Only the fields the search type uses, so identical searches serialize identically
+            if (_searchType == Enums.SearchType.Channel)
+            {
+                searchEl.Add(new XAttribute("Channel", _channel ?? string.Empty));
+            }
+            else if (_searchType == Enums.SearchType.Urls)
+            {
+                searchEl.Add(new XElement("Urls", _urls ?? string.Empty));
+            }
+            else if (_searchType == Enums.SearchType.Ids)
+            {
+                searchEl.Add(new XElement("Ids", _ids ?? string.Empty));
+            }
+
+            // Favourites always search a date range; channel searches only for "Timespan"
+            bool usesDates =
+                _searchType == Enums.SearchType.Favorites
+                || (_searchType == Enums.SearchType.Channel && _loadLimitType == LoadLimitType.Timespan);
+
+            if (usesDates && _loadFrom.HasValue && _loadTo.HasValue)
+            {
+                searchEl.Add(new XAttribute("LoadFrom", _loadFrom.Value.Date));
+                searchEl.Add(new XAttribute("LoadTo", _loadTo.Value.Date));
+            }
+
+            return searchEl;
+        }
+
+        public static SearchParameters GetFromXml(XElement searchEl)
+        {
+            DateTime today = DateTime.Now.Date;
+
+            // XML loading turns "\r\n" into "\n"; the search code splits on Environment.NewLine
+            string Lines(XElement el) => ((string)el)?.ReplaceLineEndings(Environment.NewLine);
+
+            return new SearchParameters(Enum.Parse<SearchType>((string)searchEl.Attribute("Type")))
+            {
+                VideoType = Enum.Parse<VideoType>((string)searchEl.Attribute("VideoType")),
+                LoadLimitType = Enum.Parse<LoadLimitType>((string)searchEl.Attribute("LoadLimitType")),
+                LoadLastVods = (int)searchEl.Attribute("LoadLastVods"),
+                Channel = (string)searchEl.Attribute("Channel"),
+                Urls = Lines(searchEl.Element("Urls")),
+                Ids = Lines(searchEl.Element("Ids")),
+                LoadFrom = (DateTime?)searchEl.Attribute("LoadFrom") ?? today,
+                LoadFromDefault = (DateTime?)searchEl.Attribute("LoadFrom") ?? today,
+                LoadTo = (DateTime?)searchEl.Attribute("LoadTo") ?? today,
+                LoadToDefault = (DateTime?)searchEl.Attribute("LoadTo") ?? today
             };
         }
 

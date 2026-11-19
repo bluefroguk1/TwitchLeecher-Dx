@@ -59,10 +59,6 @@
             <DependentUpon>UpdateInfoView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Update="Views\WelcomeView.axaml.cs">
-            <DependentUpon>WelcomeView.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
         <Compile Update="Views\AuthView.axaml.cs">
             <DependentUpon>AuthView.axaml</DependentUpon>
             <SubType>Code</SubType>
@@ -115,10 +111,6 @@
             <DependentUpon>UpdateInfoView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Update="Views\WelcomeView.axaml.cs">
-            <DependentUpon>WelcomeView.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
     </ItemGroup>
 
     <ItemGroup>
@@ -134,7 +126,6 @@
         <AdditionalFiles Include="Views\SearchView.axaml" />
         <AdditionalFiles Include="Views\SubOnlyView.axaml" />
         <AdditionalFiles Include="Views\UpdateInfoView.axaml" />
-        <AdditionalFiles Include="Views\WelcomeView.axaml" />
     </ItemGroup>
 
     <ItemGroup>

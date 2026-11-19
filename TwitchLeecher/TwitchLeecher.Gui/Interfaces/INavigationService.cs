@@ -6,8 +6,6 @@ namespace TwitchLeecher.Gui.Interfaces
     {
         void ShowAuth();
 
-        void ShowWelcome();
-
         void ShowLoading();
 
         void ShowSearch();
