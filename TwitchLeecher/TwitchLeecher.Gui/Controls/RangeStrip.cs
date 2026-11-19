@@ -25,16 +25,25 @@ namespace TwitchLeecher.Gui.Controls
         public static readonly StyledProperty<double> EndProperty =
             AvaloniaProperty.Register<RangeStrip, double>(nameof(End), defaultBindingMode: BindingMode.TwoWay);
 
-        private static readonly IBrush TrackBrush = new SolidColorBrush(Color.Parse("#16161A"));
+        // theme brushes, set from XAML with DynamicResource so a theme switch re-renders
+        public static readonly StyledProperty<IBrush> TrackBrushProperty =
+            AvaloniaProperty.Register<RangeStrip, IBrush>(nameof(TrackBrush));
+
+        public static readonly StyledProperty<IBrush> AccentBrushProperty =
+            AvaloniaProperty.Register<RangeStrip, IBrush>(nameof(AccentBrush));
+
+        public static readonly StyledProperty<IBrush> GapBrushProperty =
+            AvaloniaProperty.Register<RangeStrip, IBrush>(nameof(GapBrush));
+
+        // translucent overlay, readable on every theme
         private static readonly IBrush DimBrush = new SolidColorBrush(Color.FromArgb(184, 15, 15, 18));
-        private static readonly IPen SelectionPen = new Pen(new SolidColorBrush(Color.Parse("#9146FF")), 2);
-        private static readonly IPen TileGapPen = new Pen(new SolidColorBrush(Color.Parse("#1F1F23")), 1);
 
         private bool? _draggingStart;
 
         static RangeStrip()
         {
-            AffectsRender<RangeStrip>(FramesProperty, DurationProperty, StartProperty, EndProperty);
+            AffectsRender<RangeStrip>(FramesProperty, DurationProperty, StartProperty, EndProperty,
+                TrackBrushProperty, AccentBrushProperty, GapBrushProperty);
         }
 
         public IReadOnlyList<IImage> Frames
@@ -61,6 +70,24 @@ namespace TwitchLeecher.Gui.Controls
             set => SetValue(EndProperty, value);
         }
 
+        public IBrush TrackBrush
+        {
+            get => GetValue(TrackBrushProperty);
+            set => SetValue(TrackBrushProperty, value);
+        }
+
+        public IBrush AccentBrush
+        {
+            get => GetValue(AccentBrushProperty);
+            set => SetValue(AccentBrushProperty, value);
+        }
+
+        public IBrush GapBrush
+        {
+            get => GetValue(GapBrushProperty);
+            set => SetValue(GapBrushProperty, value);
+        }
+
         private double ToX(double seconds) => Duration > 0 ? Math.Clamp(seconds / Duration, 0, 1) * Bounds.Width : 0;
 
         public override void Render(DrawingContext context)
@@ -70,10 +97,15 @@ namespace TwitchLeecher.Gui.Controls
             double height = bounds.Height;
             double x1 = ToX(Start);
             double x2 = ToX(End);
+            IPen selectionPen = new Pen(AccentBrush, 2);
+            IPen tileGapPen = new Pen(GapBrush, 1);
 
             using (context.PushClip(new RoundedRect(bounds, 6)))
             {
-                context.FillRectangle(TrackBrush, bounds);
+                if (TrackBrush != null)
+                {
+                    context.FillRectangle(TrackBrush, bounds);
+                }
 
                 IReadOnlyList<IImage> frames = Frames;
 
@@ -87,7 +119,7 @@ namespace TwitchLeecher.Gui.Controls
                     {
                         IImage frame = frames[Math.Min(frames.Count - 1, i * frames.Count / tiles)];
                         context.DrawImage(frame, new Rect(frame.Size), new Rect(i * tileWidth, 0, tileWidth, height));
-                        context.DrawLine(TileGapPen, new Point((i + 1) * tileWidth, 0), new Point((i + 1) * tileWidth, height));
+                        context.DrawLine(tileGapPen, new Point((i + 1) * tileWidth, 0), new Point((i + 1) * tileWidth, height));
                     }
                 }
 
@@ -95,16 +127,21 @@ namespace TwitchLeecher.Gui.Controls
                 context.FillRectangle(DimBrush, new Rect(x2, 0, Math.Max(0, width - x2), height));
             }
 
-            context.DrawRectangle(null, SelectionPen, new Rect(x1, 1, Math.Max(0, x2 - x1), Math.Max(0, height - 2)), 4, 4);
-            DrawHandle(context, x1, width, height);
-            DrawHandle(context, x2, width, height);
+            context.DrawRectangle(null, selectionPen, new Rect(x1, 1, Math.Max(0, x2 - x1), Math.Max(0, height - 2)), 4, 4);
+            DrawHandle(context, AccentBrush, x1, width, height);
+            DrawHandle(context, AccentBrush, x2, width, height);
         }
 
-        private static void DrawHandle(DrawingContext context, double x, double width, double height)
+        private static void DrawHandle(DrawingContext context, IBrush brush, double x, double width, double height)
         {
             double handleHeight = Math.Min(28, height);
             double left = Math.Clamp(x - 5, 0, Math.Max(0, width - 10));
-            context.FillRectangle(Brushes.White, new Rect(left, (height - handleHeight) / 2, 10, handleHeight), 3);
+            if (brush == null)
+            {
+                return;
+            }
+
+            context.FillRectangle(brush, new Rect(left, (height - handleHeight) / 2, 10, handleHeight), 3);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)

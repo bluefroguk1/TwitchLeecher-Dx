@@ -9,94 +9,104 @@
         <viewModels:DownloadViewModel />
     </Design.DataContext>
 
-    <!-- shortcut: palette colours are local to this view; move them to App.axaml resources once the redesign branches have merged -->
+    <!-- colours come only from the shared theme keys (App.axaml) so every theme keeps working -->
     <UserControl.Styles>
         <Style Selector="TextBlock.label">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="Margin" Value="0,0,0,6" />
         </Style>
         <Style Selector="TextBox, ComboBox">
             <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Background" Value="#16161A" />
-            <Setter Property="BorderBrush" Value="#44444D" />
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Padding" Value="10,0" />
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border">
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
         </Style>
         <Style Selector="Button">
             <Setter Property="MinHeight" Value="36" />
             <Setter Property="Padding" Value="16,0" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="#44444D" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#34343C" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="#9146FF" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <!-- hover/pressed shades of the accent, whatever the theme's accent is -->
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#A06BFF" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Opacity" Value="0.88" />
         </Style>
         <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#7B2FF0" />
+            <Setter Property="Opacity" Value="0.75" />
         </Style>
         <Style Selector="Button.link">
             <Setter Property="MinHeight" Value="0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="#B794FF" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#D4BFFF" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="Border.timecode">
+            <!-- translucent overlay on the preview picture, readable on every theme -->
             <Setter Property="Background" Value="#BF000000" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="6,1" />
             <Setter Property="Margin" Value="6" />
         </Style>
+        <Style Selector="Border.timecode TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
         <Style Selector="CheckBox">
-            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="FontSize" Value="13" />
         </Style>
     </UserControl.Styles>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Border Width="620" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center"
-                Background="#2A2A30" BorderBrush="#3A3A42" BorderThickness="1" CornerRadius="12"
-                TextElement.Foreground="#F2F2F5">
+                Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="1" CornerRadius="12"
+                TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
             <DockPanel>
                 <!-- Header: thumbnail, title, channel · date · length -->
-                <Border DockPanel.Dock="Top" Padding="20,18" BorderBrush="#3A3A42" BorderThickness="0,0,0,1">
+                <Border DockPanel.Dock="Top" Padding="20,18" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
                     <DockPanel>
                         <Border DockPanel.Dock="Left" Width="128" Height="72" CornerRadius="6" ClipToBounds="True"
-                                Background="#16161A" Margin="0,0,14,0">
+                                Background="{DynamicResource InputBackgroundBrush}" Margin="0,0,14,0">
                             <Image Source="{Binding DownloadParams.Video.Thumbnail^}" Stretch="UniformToFill" />
                         </Border>
                         <StackPanel VerticalAlignment="Top" Spacing="4">
                             <TextBlock Text="{Binding DownloadParams.Video.Title}" FontSize="18" FontWeight="SemiBold"
                                        TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding VideoDetails}" FontSize="13" Foreground="#A8A8B3" />
+                            <TextBlock Text="{Binding VideoDetails}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" />
                         </StackPanel>
                     </DockPanel>
                 </Border>
 
                 <!-- Footer: Cancel, Download -->
-                <Border DockPanel.Dock="Bottom" Padding="20,14" BorderBrush="#3A3A42" BorderThickness="0,1,0,0">
+                <Border DockPanel.Dock="Bottom" Padding="20,14" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                         <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
                         <Button Classes="primary" Content="⤓ Download" Command="{Binding DownloadCommand}" />
@@ -147,8 +157,8 @@
                         <TextBlock Classes="label" Text="PART TO DOWNLOAD" Margin="0" />
 
                         <Grid ColumnDefinitions="*,10,*" IsVisible="{Binding HasPreviews}">
-                            <Border Grid.Column="0" Height="140" CornerRadius="6" BorderBrush="#9146FF"
-                                    BorderThickness="2" Background="#16161A" ClipToBounds="True">
+                            <Border Grid.Column="0" Height="140" CornerRadius="6" BorderBrush="{DynamicResource AccentBrush}"
+                                    BorderThickness="2" Background="{DynamicResource InputBackgroundBrush}" ClipToBounds="True">
                                 <Panel>
                                     <Image Source="{Binding StartPreview}" Stretch="UniformToFill" />
                                     <Border Classes="timecode" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -159,8 +169,8 @@
                                     </Border>
                                 </Panel>
                             </Border>
-                            <Border Grid.Column="2" Height="140" CornerRadius="6" BorderBrush="#9146FF"
-                                    BorderThickness="2" Background="#16161A" ClipToBounds="True">
+                            <Border Grid.Column="2" Height="140" CornerRadius="6" BorderBrush="{DynamicResource AccentBrush}"
+                                    BorderThickness="2" Background="{DynamicResource InputBackgroundBrush}" ClipToBounds="True">
                                 <Panel>
                                     <Image Source="{Binding EndPreview}" Stretch="UniformToFill" />
                                     <Border Classes="timecode" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -175,6 +185,9 @@
 
                         <controls:RangeStrip Height="44" Cursor="SizeWestEast"
                                              AutomationProperties.Name="Part to download"
+                                             TrackBrush="{DynamicResource InputBackgroundBrush}"
+                                             AccentBrush="{DynamicResource AccentBrush}"
+                                             GapBrush="{DynamicResource CardBackgroundBrush}"
                                              Frames="{Binding PreviewFrames}"
                                              Duration="{Binding VideoSeconds}"
                                              Start="{Binding RangeStart}"
@@ -185,10 +198,10 @@
                                        FontWeight="SemiBold" Text="{Binding RangeSummary}"
                                        ToolTip.Tip="Estimated size, based on the quality's advertised bitrate. The real file can differ." />
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="From" VerticalAlignment="Center" FontSize="13" Foreground="#D0D0D8" />
+                                <TextBlock Text="From" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" />
                                 <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center"
                                          Text="{Binding RangeStartText, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="From" />
-                                <TextBlock Text="to" VerticalAlignment="Center" FontSize="13" Foreground="#D0D0D8" />
+                                <TextBlock Text="to" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" />
                                 <TextBox Width="90" MinHeight="32" Padding="0" HorizontalContentAlignment="Center"
                                          Text="{Binding RangeEndText, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="To" />
                                 <Button Classes="link" Content="Whole video" VerticalAlignment="Center"
@@ -199,9 +212,15 @@
 
                     <!-- Muted parts -->
                     <Border IsVisible="{Binding ShowMutedPartsWarning}" Padding="10,8" CornerRadius="6"
-                            Background="#1FFFAA00" BorderBrush="#66FFAA00" BorderThickness="1">
+                            BorderThickness="1">
+                        <Border.Background>
+                            <SolidColorBrush Color="{DynamicResource WarningColor}" Opacity="0.12" />
+                        </Border.Background>
+                        <Border.BorderBrush>
+                            <SolidColorBrush Color="{DynamicResource WarningColor}" Opacity="0.4" />
+                        </Border.BorderBrush>
                         <DockPanel>
-                            <TextBlock DockPanel.Dock="Left" Text="⚠" Foreground="#FFC14D" Margin="0,0,8,0"
+                            <TextBlock DockPanel.Dock="Left" Text="⚠" Foreground="{DynamicResource WarningBrush}" Margin="0,0,8,0"
                                        VerticalAlignment="Center" />
                             <Button DockPanel.Dock="Right" Classes="link" Content="What does this mean?"
                                     VerticalAlignment="Center">

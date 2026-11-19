@@ -5,7 +5,7 @@ Branch: `claude/ui-download-dialog-f97eb4` (from `combined`). Matches `DownloadA
 **Test needs:** a quick download (all checks but the last are instant UI; the last is a 1-minute cropped download).
 Script: `test-scripts/test-ui-download-dialog.ps1`.
 
-**Depends on:** open PRs #35 (size estimate), #50 (VOD info), #71 (chat), #37 (clips). Rebase onto `master` once they merge.
+**Depends on:** ui-theme-keys (commit f001555, cherry-picked as this branch's first commit), and open PRs #35 (size estimate), #50 (VOD info), #71 (chat), #37 (clips). Rebase onto `master` once they merge.
 
 ## What changed
 - `Views/DownloadView.axaml`: rewritten as a card. Header (thumbnail, title, "channel · date · length"), Quality | Save to (Change), always-editable file name with ↺ reset, Part to download, muted banner, Extras, footer Cancel + Download.
@@ -29,6 +29,6 @@ Script: `test-scripts/test-ui-download-dialog.ps1`.
 
 ## Known limits
 - `// shortcut:` previews are storyboard stills (one every 16 s to a few minutes), not exact frames.
-- `// shortcut:` palette colours are local to `DownloadView.axaml`; move them to App resources after the other redesign branches merge.
+- All colours use the shared theme keys (`{DynamicResource <Key>Brush}`); the only fixed colours are translucent overlays (dimmed strip area, timecode chips). `RangeStrip` takes its brushes as properties set from XAML, so a theme switch re-renders it.
 - The file name keeps its extension in the text box (the mockup shows `.mp4` outside it) so `.mkv` stays selectable.
-- Not compiled here (no .NET SDK on the Mac); written against Avalonia 11.3 APIs. Shared files (`App.axaml`, `MainWindow.axaml`) are untouched.
+- Not compiled here (no .NET SDK on the Mac); written against Avalonia 11.3 APIs. `App.axaml` changes come only from the cherry-picked theme-keys commit; `MainWindow.axaml` is untouched.

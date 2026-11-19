@@ -59,7 +59,13 @@ Ask 'Conversion off: no crop section' 'In Settings tick "Disable conversion", op
 Ask 'Muted banner' 'Open Download on a VOD with muted parts (often ones with music). Is there one yellow line "Some parts of this video are muted by Twitch." and does "What does this mean?" show an explanation? (s if none to hand)'
 Ask 'No storyboard (optional)' 'If you find a VOD whose filmstrip never appears: is the plain dark range bar still usable (handles drag, fields work) with no START/END pictures? (s if all had previews)'
 
-# --- 5. Quick download --------------------------------------------------------
+# --- 5. Themes (instant) ---------------------------------------------------
+Ask 'Theme New <-> Original' @'
+In Settings switch the theme from New to Original (and back), opening the Download dialog on a VOD each time.
+Expected: card, inputs, text, filmstrip selection border and handles, and the muted banner all follow the theme (Original: yellow accent with dark text on the Download button); nothing stays purple or unreadable.
+'@
+
+# --- 6. Quick download --------------------------------------------------------
 Ask 'Cropped download' @'
 Set From 00:01:00, To 00:02:00 with the handles or fields, click Download.
 Expected: status reaches Done and the file plays about 1 minute starting at the 1:00 mark.
