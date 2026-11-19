@@ -51,6 +51,7 @@ namespace TwitchLeecher.Services.Services
         private readonly Regex _rxVariantId = new Regex("STABLE-VARIANT-ID\\=\"(?<id>.*?)\"");
         private readonly Regex _rxIvsName = new Regex("IVS-NAME\\=\"(?<name>.*?)\"");
         private readonly Regex _rxCodecs = new Regex("CODECS\\=\"(?<codecs>.*?)\"");
+        private readonly Regex _rxBandwidth = new Regex("(?<![A-Z-])BANDWIDTH\\=(?<bandwidth>\\d+)");
         private IPreferencesService _preferencesService;
         private readonly ILogService _logService;
         private readonly object _nextRequestLock = new object();
@@ -779,7 +780,16 @@ namespace TwitchLeecher.Services.Services
                             resolution = resolutionMatch.Groups["resolution"].Value;
                         }
 
-                        TwitchVideoQuality quality = new TwitchVideoQuality(id, name, resolution, codecs);
+                        long bandwidth = 0;
+
+                        Match bandwidthMatch = _rxBandwidth.Match(streamInfo);
+
+                        if (bandwidthMatch.Success)
+                        {
+                            long.TryParse(bandwidthMatch.Groups["bandwidth"].Value, out bandwidth);
+                        }
+
+                        TwitchVideoQuality quality = new TwitchVideoQuality(id, name, resolution, codecs, bandwidth);
 
                         // first listed variant wins if Twitch ever repeats an id
                         playlistInfo.TryAdd(quality, line);
