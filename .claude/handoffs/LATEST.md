@@ -1,149 +1,133 @@
-# Handoff: TwitchLeecher-Dx (master overview)
+# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
 
-Updated 2026-11-19 (evening). This is the **overview** for Claude on the Windows PC. Every branch below also carries its own detailed handoff in `.claude/handoffs/`. The UI branches name theirs `.claude/handoffs/<name>.md`; the older feature branches use `LATEST.md`. Read it after you check out the branch.
+Updated 2026-11-19 (late night), on the Windows PC. **Every branch below has now been built and tested by the user on Windows.** The next job is to turn the tested branches into clean upstream PRs, one PR per change.
 
-Everything was written on a Mac with no .NET SDK, so **nothing below has been compiled except `combined`**, which passed the GitHub Actions build. Your job on the PC is to build, test with the user, fix, and push when asked.
+Read this file from `combined` (`git show combined:.claude/handoffs/LATEST.md`). Other branches carry their own older, branch-specific `LATEST.md` or `ui-*.md` notes; this overview is the one to trust.
 
 ## Rules (from the user, keep them)
 
-- **Never name, link or credit the third-party Twitch downloader project used for ideas.** This covers code, comments, commit messages, PR text and docs.
-- Commit freely on feature branches. **Push only when the user asks.** Never commit to `master`.
-- End commit messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Mark known limits in code as `// shortcut: <limit>, <when to upgrade>`.
+- **Never name, link or credit the third-party Twitch downloader project used for ideas.** Code, comments, commits, PR text, docs.
+- **Each change is its own branch and its own upstream PR**, so the developer can pick and choose. Don't bundle.
+- **PR branches and PR text must contain no reference to Claude or any AI**: no `Co-Authored-By` line, no "Generated with" line, no `.claude/` files, no test scripts. (Working branches still carry the `Co-Authored-By: Claude Opus 5.5` trailer; the recipe below strips it.)
+- **PR "Testing" sections claim only what the user actually confirmed** (see the results below). Do not invent coverage.
+- Commit freely on working branches. **Push, force-push and open PRs only when the user asks.** Never commit to `master`.
 - Ask before merging branches into each other or opening PRs to upstream.
-- **Each change is its own branch and its own upstream PR**, so the developer can pick and choose. Don't bundle changes.
-- **Views use theme brushes only:** `{DynamicResource <Key>Brush}` from `ui-theme-keys`, never hex colours. The only exception is translucent black overlays. Every theme (New, Original, Coyote) must define all 17 keys **twice: as a `...Color` and as a `...Brush` with the literal colour.** A brush whose colour is a `DynamicResource` renders transparent after a theme switch (found in testing, fixed on every redesign branch).
+- Mark known limits in code as `// shortcut: <limit>, <when to upgrade>`.
+- **Views use theme brushes only** (`{DynamicResource <Key>Brush}`), never hex colours (translucent black overlays and the red LIVE badge are the allowed exceptions).
+- **A theme must define every redesign key twice: as a `Color` AND as a literal `SolidColorBrush`** (see "Lessons"). New themes must do the same.
 
-## Project
+## Project and PC setup
 
-- **Stack:** C# .NET 10 (LTS; stay on it, .NET 11 adds nothing needed), Avalonia 11.3, Ninject, CommunityToolkit.Mvvm. The solution is in `TwitchLeecher/`; the app project is `TwitchLeecher/TwitchLeecher/TwitchLeecher.csproj`.
-- **Running it:** launch `TwitchLeecher.exe`, not `dotnet TwitchLeecher.dll`. The dll launch shows up as ".NET Host" with the .NET icon.
-- **Repos:**
-  - Fork: `bluefroguk1/TwitchLeecher-Dx`.
-  - Upstream: `schneidermanuel/TwitchLeecher-Dx`, where the user has **16 PRs open** (#104–#119).
-- **Design canvas** (approved before/after mockups of every screen): https://claude.ai/artifact/CYBdwo46oR2LqydWnUdo62
+- C# .NET 10, Avalonia 11.3, Ninject, CommunityToolkit.Mvvm. Solution in `TwitchLeecher/`; app project `TwitchLeecher/TwitchLeecher/TwitchLeecher.csproj`. Fork `bluefroguk1/TwitchLeecher-Dx`; upstream `schneidermanuel/TwitchLeecher-Dx`. Design canvas: https://claude.ai/artifact/CYBdwo46oR2LqydWnUdo62
+- **.NET SDK is at `C:\Program Files\dotnet\dotnet.exe`, not on PATH by default** (an x86 `dotnet` without an SDK comes first). Build: `& 'C:\Program Files\dotnet\dotnet.exe' build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release` (0 errors is the bar; ~20 warnings are normal).
+- Run `bin\Release\net10.0\TwitchLeecher.exe` (not `dotnet TwitchLeecher.dll`, which shows as ".NET Host").
+- **The app is single-instance.** A hidden/tray instance, or one left by a test script, blocks new launches and locks `bin\` so builds fail with "file is locked". Kill every `TwitchLeecher` process (`Get-Process TwitchLeecher | Stop-Process -Force`) before building or launching.
+- Terminal tool: `run_in_terminal` types literal lines only. Start scripts with `$env:Path = 'C:\Program Files\dotnet;C:\Windows\System32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Program Files\Git\cmd'; powershell -ExecutionPolicy Bypass -File test-scripts\<script>.ps1 -SkipBuild`.
+- **App settings are shared by every branch** (`%APPDATA%\Twitch Leecher DX\config.xml`). The user's saved Theme is "Original" (the code default is "New"); Quick download and similar toggles persist between branches and change behaviour (e.g. "Disable conversion" hides the crop section). Check them when something looks wrong.
+- ffmpeg on `master` is the old committed 5.0. PR #110 replaces it with 9.0.2 fetched at build time (the 9.x exe is over GitHub's 100 MB file limit).
 
-## Branch map
+## Where things stand
 
-| Branch | What it is | Starts from | Depends on |
+- **16 PRs are open** upstream (#104–#119), all from `*-pr` branches on the fork, no reviews or comments yet. They are a separate, earlier body of work (bugfixes, HEVC, clips, chat, quick-download, keep-.ts, ffmpeg 9, direct-to-ffmpeg, search-error, page scroll, three perf fixes, #50, #86, #35). `combined` = all of them merged. The `test-scripts` branch README maps each script to its PR. Check `gh pr list --repo schneidermanuel/TwitchLeecher-Dx --author bluefroguk1` for review feedback before anything else.
+- **The 13 branches below are new and NOT yet PRs.** All pass their test scripts, with the exceptions noted.
+- **Local is the source of truth; the fork's copies are older.** Most branches were rebased or extended locally and have 1–4 unpushed commits; several fork branches hold earlier versions of the same commits (some pushed from GitHub Desktop at ~21:47). Pushing a rebased branch needs `git push --force-with-lease origin <branch>`. Do not push until the user asks.
+
+## Branch status (13 tested)
+
+"Own commits" = what the branch adds beyond its base. Tested = user confirmed on Windows.
+
+### UI redesign, cut from `master` (can become PRs now, in this order)
+
+| # | Branch | Own commits | Tested / fixes made on the PC |
 |---|---|---|---|
-| `master` | Clean copy of upstream. Leave it alone. | — | — |
-| 16 × `*-pr` | One per open upstream PR. Fix PR feedback here. | `master` | — |
-| `test-scripts` | Test scripts for the 16 PR branches | — | — |
-| **`combined`** | All 16 PRs merged. The user's daily build. | `master` | — |
-| `claude/ci-build-41fa8a` | GitHub Actions build plus a Windows zip artifact. Passed. | `combined` | — |
-| `claude/login-page-and-icon-8b7b57` | Friendly sign-in page; the app comes to the front after sign-in | `combined` | — |
-| `claude/fix-slow-downloads-15ccca` | Faster chunk downloads (`Parallel.ForEachAsync`) | `combined` | — |
-| `claude/feature-tray-notifications-963477` | Tray icon, minimise to tray, desktop notifications | `combined` | — |
-| `claude/feature-new-theme-645696` | "Coyote" theme, including values for the redesign keys | `combined` | ui-theme-keys (picked in) |
-| `claude/feature-auto-download-f77d07` | Channel monitoring and auto-download (older UI) | `combined` | — |
-| **UI redesign** | | | |
-| `ui-theme-keys` | 17 shared colour keys and brushes for New and Original. **Its PR goes first.** | `master` | — |
-| `claude/ui-dark-inputs-0028fd` | Dark form controls and a 12/14/16/20/24 type scale | ui-theme-keys | ui-theme-keys |
-| `claude/ui-header-nav-d65209` | Labelled tabs, Settings button, account menu, corner toasts | ui-theme-keys | ui-theme-keys |
-| `claude/ui-search-sidebar-93487b` | Sidebar search, merged Links/IDs, recent searches; **opens on Search** (Welcome page removed) | ui-theme-keys | ui-theme-keys |
-| `claude/ui-downloads-queue-themed` | Speed and time left, summary bar, **per-download pause/resume**, Clear finished, failure reasons | ui-theme-keys | ui-theme-keys |
-| `claude/ui-results-toolbar-themed` | Sort, filter, grid/list, badges, Select all | `combined` | ui-theme-keys, #96, #37 |
-| `claude/ui-download-dialog-themed` | Thumbnail, **crop preview frames and filmstrip**, editable filename | `combined` | ui-theme-keys, #35, #50, #71, #37 |
-| `claude/ui-settings-sections-v2` | Settings side menu, wildcard chips, filename preview, save bar | `combined` | ui-theme-keys, #96, #86 |
-| `claude/ui-watched-searches` | Auto-download reworked as "watched searches", per-search "Download now / Add paused", Downloads pill, "Watch this search" | auto-download branch + downloads-queue merged in | auto-download, ui-downloads-queue, ui-theme-keys |
-| `claude/in-app-signin` | Sign in to Twitch inside the app (web view); optional "Also enable sub-only downloads" in the same login; tokens in protected storage | `master` (+ theme keys picked in) | ui-theme-keys; conflicts with login-page-and-icon in `AuthListener.cs` |
+| 1 | `ui-theme-keys` | f001555 keys, 07ed4ee literal brushes | tested through the branches on it. **Its PR goes first.** |
+| 2 | `claude/ui-dark-inputs-0028fd` | 030213a dark inputs, 7bc110c build fix, 923e88c invisible-text/dropdown/radio fix | passed. Fixed: build error (`VerticalContentAlignment` on a grouped selector), invisible input text (brush bug), blank dropdown, radio-label dark patches |
+| 3 | `claude/ui-header-nav-d65209` | 58dc6df header+toast, b7dd1fa theme keys, f242706 | passed. **User replaced the Account dropdown with Info / Donate / Log out icon buttons.** Test script and notes updated |
+| 4 | `claude/ui-search-sidebar-93487b` | 119d72a, c5a49e9 | passed (opens on Search, Welcome page removed) |
+| 5 | `claude/ui-downloads-queue-themed` | 2c41f9e queue, c049059 theme keys, 33a265c | passed (per-item pause/resume, speed/ETA, failure reasons) |
 
-The branches that start from `combined` must be **rebased onto `master` once their upstream PRs merge**, before their own PR is opened. Their handoffs say how.
+### UI redesign, cut from `combined` (need rebasing onto `master` before a clean PR)
 
-## Testing order: quickest first, so nothing simple waits behind something slow
+| # | Branch | Own commits (not in `combined`) | Depends on | Tested / fixes |
+|---|---|---|---|---|
+| 6 | `claude/ui-results-toolbar-themed` | 0fa5a11, f5dbeb3 (+ theme keys, literal brushes) | ui-theme-keys, #96, #37 | passed incl. badges. Test script's build/exe path was broken and is fixed |
+| 7 | `claude/ui-download-dialog-themed` | 39f08dc filmstrip dialog, f57deec, 3595229 build fix, 2594d0b | ui-theme-keys, #35, #50, #71, #37 | passed. User asked for and got: overlapping crop handles can be pulled apart by drag direction; From/To boxes accept only digits and `:` (paste still unfiltered, a `// shortcut:`) |
+| 8 | `claude/ui-settings-sections-v2` | 2d15ecf, 1039903, 9bdb9b8 | ui-theme-keys, #96, #86 | passed. Fixed: the "unsaved changes" bar showed on open; `HasChanges` now compares against the saved values |
+| 9 | `claude/feature-new-theme-645696` ("Coyote") | 12155ab/23caa2e theme, d11f8e7 | ui-theme-keys | passed. Fixed: tab labels were fixed black (now a per-theme brush), progress bar brushes were invisible (now literal brushes) |
 
-For each branch, check it out and run its script:
+### Other features, cut from `combined`
 
-```
-git fetch origin
-git checkout <branch>
-powershell -ExecutionPolicy Bypass -File test-scripts\<script>.ps1
-```
-
-**First check that it builds** (`dotnet build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release`). Each branch's handoff lists its most likely compile errors. Each script writes results to `%TEMP%`; ask the user to paste them, then fix the FAILs.
-
-### Tier 1: instant, UI only (sign-in at most, no downloads)
-
-| # | Branch | Script | Notes |
+| # | Branch | Own commits | Tested / notes |
 |---|---|---|---|
-| 1 | `claude/ui-dark-inputs-0028fd` | `test-ui-dark-inputs.ps1` | It contains ui-theme-keys, so this also tests the keys. Switch New ↔ Original. |
-| 2 | `claude/ui-header-nav-d65209` | `test-ui-header-nav.ps1` | Tabs, account menu, toast, theme switch |
-| 3 | `claude/ui-settings-sections-v2` | `test-ui-settings-sections.ps1` | Side menu, chips, preview, save bar |
-| 4 | `claude/feature-new-theme-645696` | `test-new-theme.ps1` | Coyote theme; it previously crashed on switch (fixed in ccb19e8) |
-| 5 | `claude/ui-search-sidebar-93487b` | `test-ui-search-sidebar.ps1` | Opens on Search; a search needs sign-in only, no download |
-| 6 | `claude/ui-results-toolbar-themed` | `test-ui-results-toolbar.ps1` | Run the layout, sort, toggle and select steps now. Its QUEUED/DOWNLOADED badge steps need a quick download, so skip them until Tier 2. |
-| 7 | `claude/login-page-and-icon-8b7b57` | `test-login-and-icon.ps1` | Sign out and back in; checks the process name and icon |
-| 7b | `claude/in-app-signin` | `test-in-app-signin.ps1` | Sign-in only; the optional last step needs a subscriber-only VOD from a channel you subscribe to. Its handoff explains the web view choice. |
+| 10 | `claude/login-page-and-icon-8b7b57` | 6a18e33 | passed (login page, window comes to front, exe icon). The "second launch activates window" check hits the known pipe bug below |
+| 11 | `claude/feature-tray-notifications-963477` | 06595a9 tray, 4d038e7 | **tray and "Minimise to tray" pass. Desktop notifications were REMOVED** (see below). The branch name is now misleading; consider `feature-tray` |
+| 12 | `claude/fix-slow-downloads-15ccca` | 0ea87ad `Parallel.ForEachAsync` | manual checks pass, but **the speed test did NOT show a gain**: master 8.74 MB/s vs branch 8.31 MB/s (0.95x, within noise; line-limited at ~70 Mbit/s; round 2 sections differed in size). Do **not** claim a speed-up. If opened at all, present it as connection-handling cleanup (uses the full Max connections setting; a cancel no longer retries) |
+| 13 | `claude/feature-auto-download-f77d07` | 2b6509f | passed (background channel monitoring) |
 
-### Tier 2: needs a quick download (a short cropped VOD, about 1–2 minutes)
+### Watched searches (supersedes #13 in the UI)
 
-| # | Branch | Script | Notes |
-|---|---|---|---|
-| 8 | `claude/ui-download-dialog-themed` | `test-ui-download-dialog.ps1` | All steps but the last are instant; the last is a 1-minute cropped download |
-| 9 | `claude/ui-downloads-queue-themed` | `test-ui-downloads-queue.ps1` | Cropped 2-minute VODs; pause/resume per item |
-| 10 | `claude/ui-results-toolbar-themed` | (same script) | The badge steps skipped in Tier 1 |
-| 11 | `claude/feature-tray-notifications-963477` | `test-tray-notifications.ps1` | The "download finished" notification needs a download to complete |
+| Branch | What | Status |
+|---|---|---|
+| `claude/ui-watched-searches` | auto-download reworked as "watched searches" (per-search quality/When found, Results "Watch this search", Downloads pill). Base = auto-download + downloads-queue merged | **passed**, but the user said its section "isn't in keeping with the theme": the dark cards sit on the old flat grey Settings page |
+| `claude/ui-watched-searches-in-settings` (NEW) | the above merged with `ui-settings-sections-v2`; Watched searches is its own Settings side-menu section; the Downloads pill sets `ScrollToWatchedSearches`, which selects that tab. Merge commit f547349 | **builds (0 errors); user has NOT yet confirmed it looks right.** Ask first. If the cards still clash, restyle (flatter rows) |
 
-### Tier 3: needs long downloads or repeated timing runs
+Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earlier; exists only on the fork). `master` is a clean copy of upstream: leave it alone.
 
-| # | Branch | Script | Notes |
-|---|---|---|---|
-| 12 | `claude/fix-slow-downloads-15ccca` | `test-slow-downloads.ps1 -Rounds 2` | Times master against the branch on 20+ minute sections |
-| 13 | `claude/ui-downloads-queue-themed` | (same script) | Its one optional long-VOD step |
+## Decisions and results to carry into the PRs
 
-### Tier 4: needs waiting for a channel to publish a new video
+- **Notifications removed from the tray branch.** On Windows the toast backend (`DesktopNotifications.Windows`) initialised and `ShowNotification` returned without error, yet no toast ever appeared (Do Not Disturb checked). Removed: the notification service/interface, the "Show notifications" setting, the download hooks, the `DesktopNotifications*` packages and the Windows-specific target framework (back to plain `net10.0`). To revisit: register the app's toast identity (AppUserModelID + Start Menu shortcut) for an unpackaged exe, or ship packaged. The auto-download and watched-searches branches may call `IDesktopNotificationService.Notify` in their handoffs; that interface no longer exists on the tray branch.
+- **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
+- **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
-| # | Branch | Script | Notes |
-|---|---|---|---|
-| 14 | `claude/feature-auto-download-f77d07` | `test-auto-download.ps1` | The first-run and seen-list checks are quick; only the "new video" check waits |
-| 15 | `claude/ui-watched-searches` | `test-ui-watched-searches.ps1` | Instant UI steps and "Check now" come first; the "new video" wait is last and optional. Test after #14. |
+## Known bugs, not fixed
 
-The 16 PR branches have their scripts on `test-scripts` (`test-scripts\test-<branch>.ps1`) if a PR needs re-testing after review feedback.
-
-## After testing: suggested merge and PR order (ask the user first)
-
-1. Open the PR for `ui-theme-keys`, then the PRs for dark-inputs, header-nav, search-sidebar and downloads-queue. They all start from `master`, so they can go upstream now; each says "depends on ui-theme-keys".
-2. Merge the passing `claude/*` branches into `combined` so the user gets everything day to day. Expected conflicts:
-   - **login × tray × header-nav:** `MainWindow.axaml(.cs)`. Login and tray both added a `BringToFront()`; keep one. The tray version also calls `Show()`.
-   - **settings-sections × tray × auto-download × theme:** `PreferencesView.axaml` and `Preferences*.cs`. Settings-sections replaces the page layout, so re-add the others as side-menu sections; its handoff says how.
-   - **dark-inputs × Coyote:** both add keys to `App.axaml`. Keep every theme defining all 17 keys.
-   - **`.claude/handoffs/LATEST.md`:** keep this overview.
-3. The `combined`-based UI branches (results, dialog, settings) are rebased onto `master` when #96, #37, #35, #50, #71 and #86 merge upstream.
-
-## User's notes from testing (revisit after testing, not started)
-
-Noted 2026-11-19. Discuss these with the user before building; each would be its own branch.
-
-1. **Search tab doesn't go back to the form.** On the results screen, clicking the top bar's **Search** tab should open the search form. Today it stays on, or goes back to, the results. Relevant code: `ShowSearchCommand` in `MainWindowVM` and the header branch's active-tab logic.
-2. **Pop-up dialogs can't be dragged.** Message boxes and other pop-up windows should be movable. Check `MessageBoxWindow` and any window with a custom title bar: it needs `BeginMoveDrag` on pointer-press of its title area.
-3. **Channel header on search results.** Show the channel's name at the top of the results, with a ★ button to add or remove it from favourites right there. This fits the results-toolbar branch's summary bar, next to "Watch this search".
-4. **Chat export with emotes.** Today chat is only `.chat.txt`. Options to discuss:
-   - **HTML chat log:** names in their chat colours, timestamps and Twitch emotes as images. The chat data already includes emote IDs, and the images come from Twitch's emote image server. Either link the images (needs internet to view) or embed them in the file (works offline, bigger). Third-party emote sets (7TV, BTTV, FFZ) are optional extras.
-   - **JSON:** the raw messages, for other tools.
-   - **Chat burned into the video, or rendered as a separate chat video:** much bigger, needs image rendering plus ffmpeg work.
-5. **Ask about the tray on first minimise.** The first time the user minimises the window, ask "Minimise to the system tray instead?" with Yes/No and a "Remember my choice" tick box. The answer sets the existing "Minimise to tray" setting, so it shows up in Settings, and the question isn't asked again. Builds on the tray branch (`claude/feature-tray-notifications-963477`); it needs a stored "asked already" flag in preferences.
-6. **Start with Windows, minimised to the tray.** Add a Settings option, "Start Twitch Leecher when I sign in to Windows", with a sub-option "Start minimised to the tray". It pairs with watched searches, so checks run without the user opening the app.
-   - **Windows:** a value under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` pointing to `TwitchLeecher.exe --minimized`. Per-user, no admin needed. Remove it when the option is turned off.
-   - **Linux:** an `~/.config/autostart/twitchleecher.desktop` file.
-   - **On launch:** `--minimized` starts hidden in the tray, which needs the tray branch.
-   - **Single instance:** a second launch should bring the running window forward. Fix the pipe-name mismatch first (see Known bugs).
-
-## Known bugs not yet fixed
-
-- **Pipe name mismatch:** `App.axaml.cs` sends "Activate" on pipe `TwitchLeecher`, but `MainWindow` listens on `TwitchLeecher-DX`. A second launch doesn't bring the running window forward.
+- **Pipe name mismatch:** `App.axaml.cs` sends "Activate" on pipe `TwitchLeecher`, but `MainWindow` listens on `TwitchLeecher-DX`, so a second launch does not bring the running window forward. One-line fix; do it as its own branch from `master`.
 - **Startup flash:** on the login branch, a saved sub-only token briefly makes the window Topmost at startup.
-- **macOS isn't supported:** no `ffmpeg.exe`, "open folder" doesn't work, and there's no notification backend.
+- **macOS isn't supported** (no `ffmpeg.exe`, "open folder", no notification backend).
+- Pasted text bypasses the From/To digit filter (checked on blur, as before).
 
-## Suggested next (not started)
+## Lessons (read before touching colours or XAML)
 
-- **`deps-patch-updates` from `master`:**
-  - Avalonia 11.3.11 → 11.3.23 (every Avalonia package);
-  - Avalonia.ReactiveUI 11.3.8 → 11.3.9;
-  - CommunityToolkit.Mvvm 8.4.0 → 8.4.2.
-- **`deps-remove-unused` from `master`:** remove System.Data.SQLite (unused, ships native DLLs), System.ComponentModel.Annotations (built into .NET) and the Upgrade Assistant analyzers (3 projects).
-- **Later:**
-  - Avalonia 12, after the UI PRs settle; check that the icon and progress-ring add-ons support it;
-  - replacing Ninject (an unmaintained beta);
-  - #31, the async rewrite, which also removes the obsolete `WebClient`;
-  - #42 (hover preview) and #36 (CLI).
+- **A `SolidColorBrush` whose `Color` is a `{DynamicResource ...Color}` does not resolve after `App.SetTheme()` clears and refills `Application.Resources`.** Anything using it renders transparent (this hid all input text, then the progress bar). Define brushes with literal colours inside each theme dictionary (`New`, `Original`, `Coyote`) and remove indirect ones from `Shared`. Old brushes still defined indirectly (`MainWindowBackground`, `TlScrollingTextBox*`, ...) work only because they are read with `StaticResource` at startup; don't use `DynamicResource` on them. Duplicate keys between `Shared` and a theme dictionary make the theme switch throw.
+- **Avalonia XAML:** a grouped selector (`TextBox, ComboBox, NumericUpDown, CalendarDatePicker`) fails to compile if a setter such as `VerticalContentAlignment` isn't on the common base. Split per control. Template part names (`Border#border`, `ContentPresenter#PART_ContentPresenter`, `Ellipse#border`) come from SimpleTheme.
+- **Windows tooling:** files are CRLF; Python edits must normalise `\r\n` first and assert the match. In Python heredocs, `\n` inside a path string becomes a newline (this corrupted `bin\Release\net10.0`); use real backslashes via byte constants or `\x5c`. Put multi-line PR bodies in a script file, not nested shell quoting.
+- **Never `git add -A` from a subfolder:** it commits `.claude/handoff-nudge-state.json`. Add files by path.
+- The test scripts differ: most take `-SkipBuild`; `test-ui-results-toolbar.ps1` always builds; the older scripts launch `dotnet TwitchLeecher.dll`.
+
+## How to make a clean PR branch (the recipe that worked for #104–#119)
+
+For each change, from the tested branch:
+
+```bash
+git checkout -B <name>-pr <tested-branch-or-commit-range-tip>
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --prune-empty \
+  --index-filter "git rm -r -q --cached --ignore-unmatch test-scripts .claude TwitchLeecher/.claude" \
+  --msg-filter "sed -e '/Co-Authored-By: Claude/d' | sed -e :a -e '/^\n*\$/{\$d;N;ba' -e '}'" master..HEAD
+git reset --soft master && git commit -m "<clear message>"      # one commit per PR
+git diff master..HEAD --stat; git diff master..HEAD | grep -ci claude   # must print 0
+git push -u origin <name>-pr
+```
+
+Then `gh pr create --repo schneidermanuel/TwitchLeecher-Dx --base master --head bluefroguk1:<name>-pr`. Body: Summary, Testing (only what was confirmed), a note naming any PR it overlaps. Write the body from a Python/script file. Verify the diff is only that change.
+
+## Suggested order for the PRs (ask the user first)
+
+1. **`ui-theme-keys`**, then the four master-based UI branches (`dark-inputs`, `header-nav`, `search-sidebar`, `downloads-queue-themed`). Each says "depends on ui-theme-keys"; either stack the PR bases or open them after it merges.
+2. **The `combined`-based branches** (results-toolbar, download-dialog, settings-sections-v2, Coyote, login, tray, auto-download/watched-searches, slow-downloads): extract each branch's own commits (`git log combined..<branch>`), drop the cherry-picked `ui-theme-keys` commits, and `git rebase --onto master <combined-or-base> <branch>`. Where the dependency PRs (#96 = #108, #37 = #106, #35 = #119, #50 = #117, #71 = #107, #86 = #118) are still unmerged, either wait for them to merge or state the dependency in the PR text. Login, tray and Coyote touch little and may cherry-pick straight onto `master`.
+3. **Watched searches:** open as one PR only after auto-download and the settings-sections PR exist; use `ui-watched-searches-in-settings` as the source if the user approves its look.
+4. `slow-downloads`: only with honest wording (row 12), or drop it.
+5. The pipe-name fix as its own tiny branch from `master`.
+
+## Expected merge conflicts when combining branches
+
+- `MainWindow.axaml(.cs)`: login × tray × header-nav (both login and tray add `BringToFront()`; keep one, the tray version also calls `Show()`).
+- `PreferencesView.axaml` and `Preferences*.cs`: settings-sections × tray × auto-download × theme. Settings-sections replaces the page layout, so re-add the others as side-menu sections (watched searches is already done on `ui-watched-searches-in-settings`).
+- `App.axaml`: dark-inputs × Coyote (both add keys). Keep every theme defining all 17 keys as Colors and Brushes, plus `TlTabItemTextForeground` and `TlProgressBar*` brushes per theme.
+- `.claude/handoffs/LATEST.md`: keep this overview.
+- The 16 open PRs overlap each other and these branches (e.g. #106/#107/#108, #104/#111); see each PR's description.
+
+## Later (not started)
+
+- `deps-patch-updates` from `master`: Avalonia 11.3.11 → 11.3.23 (all Avalonia packages), Avalonia.ReactiveUI 11.3.8 → 11.3.9, CommunityToolkit.Mvvm 8.4.0 → 8.4.2.
+- `deps-remove-unused` from `master`: System.Data.SQLite (unused, ships native DLLs), System.ComponentModel.Annotations, the Upgrade Assistant analyzers (3 projects).
+- Avalonia 12 after the UI PRs settle; replacing Ninject (unmaintained beta); #31 async rewrite (removes obsolete `WebClient`); #42 hover preview; #36 CLI; macOS support; toast notifications (see above).
