@@ -46,6 +46,11 @@ The card shows a red FAILED chip with a short reason ("Disk error: ..." / "Netwo
 '@
 Ask 'Clear finished' 'Clear finished removes done, failed and canceled cards and leaves queued/paused ones.'
 
+Ask 'Theme switch New <-> Original' @'
+With at least one downloading, one paused, one done and one failed card on screen, switch Settings theme New -> Original and back.
+Do the summary bar, cards, chips, progress bars and buttons follow each theme (Original uses the yellow accent), with all text readable?
+'@
+
 # --- Long VOD -----------------------------------------------------------------
 Ask 'Long VOD ETA (optional)' 'Download an uncropped multi-hour VOD for a few minutes. Is the speed steady (smoothed) and the time left plausible? Answer s to skip.'
 

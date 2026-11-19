@@ -1,6 +1,9 @@
 # ui-downloads-queue (redesign branch 3: Downloads queue)
 
-Branch: `claude/ui-downloads-queue-3f488b` (from master). Not compiled here (no .NET SDK on the Mac).
+Branch: `claude/ui-downloads-queue-3f488b`.
+
+**Depends on:** ui-theme-keys (branch is based on it; merge that first).
+ Not compiled here (no .NET SDK on the Mac).
 
 **Test needs:** a quick download (cropped 2-min VODs); one optional check needs a long VOD.
 
@@ -11,7 +14,7 @@ Branch: `claude/ui-downloads-queue-3f488b` (from master). Not compiled here (no 
   - Failure reason comes from the stage that was running ("Network error", "Conversion failed; kept .ts", "Disk error: ..."). On conversion failure the joined .ts is moved next to the output.
   - Chunk retries now give up after 3 tries instead of looping forever, so network failures actually surface.
   - Paused items count for `CanShutdown`/`IsFileNameUsed`; removing a paused item deletes its temp folder.
-- `DownloadsViewModel` + `DownloadsView.axaml`: summary bar (counts, GB of GB, time left, overall bar, Pause/Resume all, Clear finished), redesigned cards with per-state buttons, empty state. Palette kept local to the view; no shared files touched.
+- `DownloadsViewModel` + `DownloadsView.axaml`: summary bar (counts, GB of GB, time left, overall bar, Pause/Resume all, Clear finished), redesigned cards with per-state buttons, empty state. Colours use only the shared theme keys (`{DynamicResource <Key>Brush}`); status chips are a tinted Accent/Success/Warning/Error layer under text in the same colour. No shared files touched.
 
 ## Limits
 - Sizes are only known after an item fetches its first chunk, so waiting items are left out of the summary totals (`shortcut:` comment in DownloadsViewModel.Refresh).
