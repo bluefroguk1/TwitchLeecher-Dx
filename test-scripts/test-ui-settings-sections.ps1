@@ -92,6 +92,12 @@ In Search, add a favourite channel with +, pick video type and load limit; in Ge
 player" and Browse to a player. Save, close and restart the app: are all of these kept?
 '@
 
+Ask 'Theme switch New <-> Original' @'
+In Appearance switch the theme from New to Original (or back) and click Save. Does this screen follow the theme:
+side menu, selected item, chips, save bar, inputs and the Save button (its text readable on the yellow accent in Original)?
+Switch back afterwards and save.
+'@
+
 # --- Summary ---------------------------------------------------------------
 if (-not $p.HasExited) { Wait-AppClosed $p }
 $report = ($results.GetEnumerator() | ForEach-Object { '{0,-40} {1}' -f $_.Key, $_.Value }) -join [Environment]::NewLine

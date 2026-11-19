@@ -9,15 +9,6 @@
     <UserControl.Resources>
         <converters:VideoTypeToBooleanConverter x:Key="videoTypeToBooleanConverter" />
         <converters:LoadLimitToBooleanConverter x:Key="loadLimitToBooleanConverter" />
-        <SolidColorBrush x:Key="SettingsPanelBrush" Color="#222227" />
-        <SolidColorBrush x:Key="SettingsCardBrush" Color="#2A2A30" />
-        <SolidColorBrush x:Key="SettingsBorderBrush" Color="#34343C" />
-        <SolidColorBrush x:Key="SettingsStrongBorderBrush" Color="#44444D" />
-        <SolidColorBrush x:Key="SettingsTextBrush" Color="#F2F2F5" />
-        <SolidColorBrush x:Key="SettingsMenuTextBrush" Color="#D0D0D8" />
-        <SolidColorBrush x:Key="SettingsMutedBrush" Color="#A8A8B3" />
-        <SolidColorBrush x:Key="SettingsAccentBrush" Color="#9146FF" />
-        <SolidColorBrush x:Key="SettingsErrorBrush" Color="#FF8A80" />
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -25,7 +16,7 @@
         <Style Selector="TabControl#Sections TabItem">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsMenuTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Padding" Value="12,9" />
             <Setter Property="Margin" Value="0" />
@@ -35,22 +26,32 @@
             <Setter Property="HorizontalContentAlignment" Value="Left" />
         </Style>
         <Style Selector="TabControl#Sections TabItem:pointerover">
-            <Setter Property="Background" Value="{StaticResource SettingsCardBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
         </Style>
         <Style Selector="TabControl#Sections TabItem:selected">
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Background" Value="{StaticResource SettingsBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
         </Style>
         <Style Selector="TabControl#Sections TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SettingsBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
         </Style>
 
         <!-- section pages would otherwise inherit the menu item's selected look -->
         <Style Selector="TabControl#Sections > TabItem > ScrollViewer">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="TabControl#Sections TextBox, TabControl#Sections ComboBox, TabControl#Sections AutoCompleteBox, TabControl#Sections NumericUpDown">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="TabControl#Sections TextBox:focus, TabControl#Sections ComboBox:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
         </Style>
 
         <Style Selector="StackPanel.section">
@@ -65,16 +66,16 @@
         <Style Selector="TextBlock.h1">
             <Setter Property="FontSize" Value="20" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
         <Style Selector="TextBlock.label">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
         <Style Selector="TextBlock.sub">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="Button.chip">
@@ -83,9 +84,9 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="CornerRadius" Value="13" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource SettingsStrongBorderBrush}" />
-            <Setter Property="Background" Value="{StaticResource SettingsCardBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsMenuTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <!-- keeps keyboard focus (and the caret) in the file name box -->
             <Setter Property="Focusable" Value="False" />
@@ -95,7 +96,7 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#B794FF" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -111,9 +112,9 @@
             <Setter Property="Padding" Value="14,0" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource SettingsStrongBorderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.quiet">
@@ -121,7 +122,7 @@
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource SettingsMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.primary">
@@ -129,8 +130,8 @@
             <Setter Property="Padding" Value="14,0" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="{StaticResource SettingsAccentBrush}" />
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
@@ -138,8 +139,8 @@
 
     <Grid RowDefinitions="*,Auto">
         <!-- side menu background; the TabControl strip sits on top of it -->
-        <Border Grid.Row="0" Width="190" HorizontalAlignment="Left" Background="{StaticResource SettingsPanelBrush}"
-                BorderBrush="{StaticResource SettingsBorderBrush}" BorderThickness="0,0,1,0" />
+        <Border Grid.Row="0" Width="190" HorizontalAlignment="Left" Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0" />
 
         <!-- Adding a section = one more <TabItem Header="..."> holding a StackPanel.section. -->
         <TabControl Grid.Row="0" x:Name="Sections" TabStripPlacement="Left" Padding="0" Background="Transparent"
@@ -420,8 +421,8 @@
                                 </Button>
                             </WrapPanel>
                             <TextBlock FontSize="13" TextWrapping="Wrap">
-                                <Run Text="Preview: " Foreground="{StaticResource SettingsMutedBrush}" />
-                                <Run Text="{Binding FilenamePreview}" Foreground="{StaticResource SettingsTextBrush}" />
+                                <Run Text="Preview: " Foreground="{DynamicResource TextMutedBrush}" />
+                                <Run Text="{Binding FilenamePreview}" Foreground="{DynamicResource TextPrimaryBrush}" />
                             </TextBlock>
                         </StackPanel>
 
@@ -501,14 +502,14 @@
 
         <!-- save bar: only while there are unsaved changes -->
         <Border Grid.Row="1" IsVisible="{Binding HasChanges}" Padding="16,12"
-                Background="{StaticResource SettingsCardBrush}"
-                BorderBrush="{StaticResource SettingsStrongBorderBrush}" BorderThickness="0,1,0,0">
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="*,Auto,10,Auto,10,Auto">
                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
                     <TextBlock Text="You have unsaved changes" FontSize="13"
-                               Foreground="{StaticResource SettingsTextBrush}" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
                     <TextBlock Text="{Binding ValidationMessage}" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource SettingsErrorBrush}"
+                               Foreground="{DynamicResource ErrorBrush}"
                                IsVisible="{Binding ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </StackPanel>
                 <Button Grid.Column="1" Classes="quiet" Content="Reset to defaults" Command="{Binding DefaultsCommand}" />

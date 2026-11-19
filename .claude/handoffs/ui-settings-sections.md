@@ -1,14 +1,14 @@
 # Handoff: ui-settings-sections (UI redesign, branch 7: Settings page)
 
-Branch `claude/ui-settings-sections-c7c12e`, cut from `combined`. Written on a Mac without the .NET SDK, so **it has not been compiled yet**: build first on the PC.
+Branch `claude/ui-settings-sections-v2`, cut from `combined` (supersedes `claude/ui-settings-sections-c7c12e`, which lacks the theme keys). Written on a Mac without the .NET SDK, so **it has not been compiled yet**: build first on the PC.
 
 **Test needs:** instant (UI only). Script: `test-scripts\test-ui-settings-sections.ps1`.
 
-**Depends on:** #96 (quick download setting `DownloadQuickDownload`) and #86 (favourites default `SearchDefaultFavourites`). Both are in `combined`. Rebase onto `master` once those merge upstream, then open the upstream PR.
+**Depends on:** `ui-theme-keys` (commit f001555, cherry-picked here as the first commit; identical change, merges cleanly), #96 (quick download setting `DownloadQuickDownload`) and #86 (favourites default `SearchDefaultFavourites`). Both are in `combined`. Rebase onto `master` once those merge upstream, then open the upstream PR.
 
 ## What changed
 
-Only three files: `TwitchLeecher.Gui/Views/PreferencesView.axaml` (+ `.axaml.cs`) and `TwitchLeecher.Gui/ViewModels/PreferencesViewModel.cs`. No shared files (`App.axaml`, `MainWindow.axaml`) touched.
+Only three files: `TwitchLeecher.Gui/Views/PreferencesView.axaml` (+ `.axaml.cs`) and `TwitchLeecher.Gui/ViewModels/PreferencesViewModel.cs`. This branch's own commits touch no shared files; the `App.axaml` change is only the cherry-picked `ui-theme-keys` commit. Every colour is a `{DynamicResource <Key>Brush}` from those keys (no hex), text on the accent uses `AccentForegroundBrush`, and the inputs on this page use the `Input*` brushes.
 
 - **Side menu** = a `TabControl` with `TabStripPlacement="Left"` (`x:Name="Sections"`), one `TabItem` per section: General, Search, Download, Appearance. One section shows at a time; the VM keeps `SelectedSectionIndex` so the page reopens where it was left.
   - **Adding a section** (e.g. "Watched searches", "Notifications & tray"): add one `<TabItem Header="Watched searches">` with a `ScrollViewer` > `StackPanel Classes="section"` inside, at the position it should appear in the menu. Styling comes from the existing `TabControl#Sections TabItem` and `.section/.field/.label/.sub` styles in the view. Nothing else to register.
@@ -23,7 +23,6 @@ Only three files: `TwitchLeecher.Gui/Views/PreferencesView.axaml` (+ `.axaml.cs`
 
 - `HasChanges` is set by any edit, even if you change a value back by hand. Upgrade: compare against the saved preferences.
 - Toggles are `CheckBox`es with the label on the right of the box, not right-aligned switches as in the mockup; that keeps the whole label clickable.
-- Colours are hard-coded to the redesign palette in the view's resources (not theme keys); inputs are left to the `ui-dark-inputs` branch.
 - Leaving the Settings page still discards unsaved changes (old behaviour: `OnBeforeHidden`).
 - The scroll position is no longer restored for this page (each section scrolls on its own and is short). `PreferencesViewModel` no longer implements `INavigationState`.
 
