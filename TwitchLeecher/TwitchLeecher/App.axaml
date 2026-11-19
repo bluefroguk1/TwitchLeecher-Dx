@@ -89,6 +89,24 @@
 
             <Color x:Key="ProgressBarProgressColor">#FF06B025</Color>
             <Color x:Key="ProgressBarBackgroundColor">#FFE6E6E6</Color>
+            <!-- Redesign colour keys: every theme must define all of these -->
+            <Color x:Key="AppBackgroundColor">#FF1F1F23</Color>
+            <Color x:Key="HeaderBackgroundColor">#FF18181B</Color>
+            <Color x:Key="PanelBackgroundColor">#FF222227</Color>
+            <Color x:Key="CardBackgroundColor">#FF2A2A30</Color>
+            <Color x:Key="DividerColor">#FF34343C</Color>
+            <Color x:Key="ControlBorderColor">#FF44444D</Color>
+            <Color x:Key="InputBackgroundColor">#FF16161A</Color>
+            <Color x:Key="InputBorderColor">#FF44444D</Color>
+            <Color x:Key="InputBorderActiveColor">#FF9146FF</Color>
+            <Color x:Key="InputForegroundColor">#FFF2F2F5</Color>
+            <Color x:Key="TextPrimaryColor">#FFF2F2F5</Color>
+            <Color x:Key="TextMutedColor">#FFA8A8B3</Color>
+            <Color x:Key="AccentColor">#FF9146FF</Color>
+            <Color x:Key="AccentForegroundColor">#FFFFFFFF</Color>
+            <Color x:Key="SuccessColor">#FF3FB950</Color>
+            <Color x:Key="WarningColor">#FFFFC14D</Color>
+            <Color x:Key="ErrorColor">#FFFF8A80</Color>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Original">
             <Color x:Key="GlobalThemeColor">#FFFFC864</Color>
@@ -133,6 +151,24 @@
 
             <Color x:Key="ProgressBarProgressColor">#FF06B025</Color>
             <Color x:Key="ProgressBarBackgroundColor">#FFE6E6E6</Color>
+            <!-- Redesign colour keys: every theme must define all of these -->
+            <Color x:Key="AppBackgroundColor">#FF3A3A3A</Color>
+            <Color x:Key="HeaderBackgroundColor">#FF2E2E2E</Color>
+            <Color x:Key="PanelBackgroundColor">#FF444444</Color>
+            <Color x:Key="CardBackgroundColor">#FF505050</Color>
+            <Color x:Key="DividerColor">#FF5E5E5E</Color>
+            <Color x:Key="ControlBorderColor">#FF787878</Color>
+            <Color x:Key="InputBackgroundColor">#FF2A2A2A</Color>
+            <Color x:Key="InputBorderColor">#FF787878</Color>
+            <Color x:Key="InputBorderActiveColor">#FFFFC864</Color>
+            <Color x:Key="InputForegroundColor">#FFFFFFFF</Color>
+            <Color x:Key="TextPrimaryColor">#FFFFFFFF</Color>
+            <Color x:Key="TextMutedColor">#FFCCCCCC</Color>
+            <Color x:Key="AccentColor">#FFFFC864</Color>
+            <Color x:Key="AccentForegroundColor">#FF1A1A1A</Color>
+            <Color x:Key="SuccessColor">#FF3FB950</Color>
+            <Color x:Key="WarningColor">#FFFFC14D</Color>
+            <Color x:Key="ErrorColor">#FFFF8A80</Color>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Shared">
             <system:Double x:Key="GlobalFontSize">14</system:Double>
@@ -176,6 +212,24 @@
             <SolidColorBrush x:Key="MainWindowForeground" Color="{DynamicResource TextForegroundLightColor}" />
             <SolidColorBrush x:Key="MainWindowBackground" Color="{DynamicResource WindowBackgroundColor}" />
             <SolidColorBrush x:Key="MainWindowBorder" Color="{DynamicResource GlobalThemeBorderColor}" />
+            <!-- Redesign brushes: views use these, never hex colours, so every theme applies -->
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="{DynamicResource AppBackgroundColor}" />
+            <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="{DynamicResource HeaderBackgroundColor}" />
+            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="{DynamicResource PanelBackgroundColor}" />
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="{DynamicResource CardBackgroundColor}" />
+            <SolidColorBrush x:Key="DividerBrush" Color="{DynamicResource DividerColor}" />
+            <SolidColorBrush x:Key="ControlBorderBrush" Color="{DynamicResource ControlBorderColor}" />
+            <SolidColorBrush x:Key="InputBackgroundBrush" Color="{DynamicResource InputBackgroundColor}" />
+            <SolidColorBrush x:Key="InputBorderBrush" Color="{DynamicResource InputBorderColor}" />
+            <SolidColorBrush x:Key="InputBorderActiveBrush" Color="{DynamicResource InputBorderActiveColor}" />
+            <SolidColorBrush x:Key="InputForegroundBrush" Color="{DynamicResource InputForegroundColor}" />
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{DynamicResource TextPrimaryColor}" />
+            <SolidColorBrush x:Key="TextMutedBrush" Color="{DynamicResource TextMutedColor}" />
+            <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource AccentColor}" />
+            <SolidColorBrush x:Key="AccentForegroundBrush" Color="{DynamicResource AccentForegroundColor}" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="{DynamicResource SuccessColor}" />
+            <SolidColorBrush x:Key="WarningBrush" Color="{DynamicResource WarningColor}" />
+            <SolidColorBrush x:Key="ErrorBrush" Color="{DynamicResource ErrorColor}" />
         </ResourceDictionary>
     </Application.Resources>
 
