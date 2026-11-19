@@ -334,15 +334,34 @@
             <Style Selector="TextBox:pointerover /template/ Border#border, TextBox:focus /template/ Border#border, ComboBox:pointerover /template/ Border#border, ComboBox:focus /template/ Border#border">
                 <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
             </Style>
+            <!-- The dropdown list lives in a popup: give it and its items explicit theme colours -->
+            <Style Selector="ComboBox /template/ Border#PopupBorder">
+                <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            </Style>
+            <Style Selector="ComboBoxItem">
+                <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
+            </Style>
+            <Style Selector="ComboBox /template/ ContentPresenter#ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
+            </Style>
             <!-- The outer control draws the box; its inner TextBox must not draw a second one -->
             <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox, CalendarDatePicker /template/ TextBox#PART_TextBox">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="MinHeight" Value="0" />
             </Style>
-            <Style Selector="CheckBox, RadioButton">
+            <Style Selector="CheckBox">
                 <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            </Style>
+            <!-- RadioButton paints its Background behind the label too, so colour only the circle -->
+            <Style Selector="RadioButton">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            </Style>
+            <Style Selector="RadioButton /template/ Ellipse#border">
+                <Setter Property="Fill" Value="{DynamicResource InputBackgroundBrush}" />
             </Style>
             <Style Selector="CheckBox:pointerover /template/ Border#border, CheckBox:checked /template/ Border#border">
                 <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
