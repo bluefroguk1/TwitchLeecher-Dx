@@ -46,7 +46,7 @@ Everything was written on a Mac with no .NET SDK, so **nothing below has been co
 | `claude/ui-results-toolbar-themed` | Sort, filter, grid/list, badges, Select all | `combined` | ui-theme-keys, #96, #37 |
 | `claude/ui-download-dialog-themed` | Thumbnail, **crop preview frames and filmstrip**, editable filename | `combined` | ui-theme-keys, #35, #50, #71, #37 |
 | `claude/ui-settings-sections-v2` | Settings side menu, wildcard chips, filename preview, save bar | `combined` | ui-theme-keys, #96, #86 |
-| *(not built yet)* watched searches | Auto-download reworked as "watched searches", per-search "Download now / Add paused" | auto-download branch | ui-downloads-queue |
+| `claude/ui-watched-searches` | Auto-download reworked as "watched searches", per-search "Download now / Add paused", Downloads pill, "Watch this search" | auto-download branch + downloads-queue merged in | auto-download, ui-downloads-queue, ui-theme-keys |
 
 The branches that start from `combined` must be **rebased onto `master` once their upstream PRs merge**, before their own PR is opened. Their handoffs say how.
 
@@ -95,7 +95,7 @@ powershell -ExecutionPolicy Bypass -File test-scripts\<script>.ps1
 | # | Branch | Script | Notes |
 |---|---|---|---|
 | 14 | `claude/feature-auto-download-f77d07` | `test-auto-download.ps1` | The first-run and seen-list checks are quick; only the "new video" check waits |
-| 15 | watched searches (once built) | `test-ui-watched-searches.ps1` | Its script also puts the waiting step last, as optional |
+| 15 | `claude/ui-watched-searches` | `test-ui-watched-searches.ps1` | Instant UI steps and "Check now" come first; the "new video" wait is last and optional. Test after #14. |
 
 The 16 PR branches have their scripts on `test-scripts` (`test-scripts\test-<branch>.ps1`) if a PR needs re-testing after review feedback.
 
