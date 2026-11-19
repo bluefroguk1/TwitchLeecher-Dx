@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using TwitchLeecher.Core.Models;
 
@@ -15,6 +16,8 @@ namespace TwitchLeecher.Services.Interfaces
         Dictionary<TwitchVideoQuality, string> GetPlaylistInfo(string vodId, TwitchVideoAuthInfo vodAuthInfo);
 
         Dictionary<TwitchVideoQuality, string> GetClipQualities(string slug);
+
+        List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to, Action<TimeSpan> onPage);
 
         bool ChannelExists(string channel);
 
