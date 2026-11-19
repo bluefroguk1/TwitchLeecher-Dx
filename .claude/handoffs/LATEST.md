@@ -79,6 +79,63 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
+## Step 1 for the PC: push every tested branch (the Mac cannot see the fixes)
+
+Most fixes made during testing exist only on the PC. For example, 07ed4ee, 923e88c, f242706, 33a265c, 2594d0b, d11f8e7, 4d038e7 and f547349 are **not on GitHub**. The Mac pushed its own brush-fix commits (29bb1b3 and siblings, about 21:47) to the same branches; the PC versions replace them. Push them all from the PC:
+
+```powershell
+git fetch origin
+$branches = 'ui-theme-keys','claude/ui-dark-inputs-0028fd','claude/ui-header-nav-d65209','claude/ui-search-sidebar-93487b','claude/ui-downloads-queue-themed','claude/ui-results-toolbar-themed','claude/ui-download-dialog-themed','claude/ui-settings-sections-v2','claude/feature-new-theme-645696','claude/login-page-and-icon-8b7b57','claude/feature-tray-notifications-963477','claude/fix-slow-downloads-15ccca','claude/feature-auto-download-f77d07','claude/ui-watched-searches','claude/ui-watched-searches-in-settings'
+foreach ($b in $branches) { git push --force-with-lease origin "${b}:${b}" }
+```
+
+Before pushing, make sure the PC copy of each branch contains everything from the Mac's version. The only Mac-only commits are the literal-brush fixes, which the PC already has as its own commits. If unsure, run `git log origin/<b> --not <b> --oneline` per branch first and check every listed commit is a brush fix.
+
+## Next: an all-in-one test branch, `combined-all` (built on the Mac after the push)
+
+`combined` (the 16 open PRs) plus every tested branch, merged in this order:
+1. ui-theme-keys
+2. dark-inputs
+3. header-nav
+4. search-sidebar
+5. downloads-queue
+6. results-toolbar
+7. download-dialog
+8. settings-sections-v2
+9. Coyote
+10. login-page-and-icon
+11. tray
+12. slow-downloads
+13. watched-searches-in-settings, which brings in auto-download
+
+`claude/in-app-signin` was **not tested** and conflicts with login-page-and-icon, so it is left out of the first build; it can be added as a last commit. The PC builds and tests `combined-all` to look for cross-branch bugs before the PRs are cut. `combined-all` is a test branch only; PRs are still cut per branch.
+
+## User's notes from testing: suggested implementation (not started)
+
+Each is its own branch. Build it on `combined-all` so it can be tested with everything else, then extract it with the PR recipe.
+
+1. **Search tab goes to the search form.** `MainWindowVM.ShowSearch()` sends the user to the results page whenever results exist. Change it so the Search tab always opens the form (`_navigationService.ShowSearch()`). The form then shows a "Back to results (N)" link when results exist, and the tab badge keeps showing N. Small: about 10 lines in `MainWindowVM` and `SearchView`.
+2. **Dialogs can be dragged.** `MessageBoxWindow` (and any other custom-framed window) has no title bar to grab. Add one small reusable behaviour: on `PointerPressed` with the left button over the dialog's header, call `window.BeginMoveDrag(e)`. Attach it to every dialog header. Small, one helper.
+3. **Channel header with ★ favourite on results.**
+   - For channel searches, the results summary bar shows the channel's display name (and its avatar from Helix `users.profile_image_url`), plus a ★ toggle.
+   - The toggle adds or removes the channel in `Preferences.SearchFavouriteChannels` through `IPreferencesService` and saves.
+   - It sits next to "Watch this search". Hide it for Links/IDs searches. Small to medium; it touches the results-toolbar view.
+4. **Chat export with emotes.** Settings › Download gets "Chat format: Text / HTML". In `GetChatMessages`, keep each fragment's `emote.emoteID` and the commenter's `userColor`, which come in the same GQL response.
+   - The HTML writer outputs coloured names, timestamps and `<img>` emotes from `https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0`.
+   - Offer "Embed images (works offline)", which downloads each distinct emote once and inlines it as base64.
+   - 7TV, BTTV and FFZ emotes would be a later add-on. Medium.
+5. **First-minimise tray prompt** (on the tray branch).
+   - On the first change to `WindowState.Minimized` while `!Preferences.TrayPromptShown`, show "Minimise to the system tray instead?" with Yes/No and "Don't ask again".
+   - Yes sets `AppMinimiseToTray`. Either answer with the box ticked sets `TrayPromptShown`, then saves and applies. Settings shows the same toggle. Small.
+6. **Start with Windows, minimised to the tray.**
+   - Settings › General: "Start Twitch Leecher when I sign in to Windows" and "Start minimised to the tray".
+   - Windows: `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\TwitchLeecher` = `"<exe path>" --minimized`, written or removed when the toggle changes.
+   - Linux: `~/.config/autostart/twitchleecher.desktop`.
+   - `App.OnFrameworkInitializationCompleted` reads `--minimized`, keeps `MainWindow` hidden and shows only the tray.
+   - **Fix the pipe-name bug first** (Known bugs). Without it, a second launch can't wake the hidden instance. Small to medium; needs the tray branch.
+7. **Watched searches look** (the user said it "isn't in keeping with the theme"). On `ui-watched-searches-in-settings`, restyle the list as flat rows like the other Settings sections: no nested dark cards. Use `CardBackgroundBrush` only for the row hover and selection, and match the spacing and headings of `SettingsAfter`. Get the user's OK on the look before cutting the PR.
+8. **Desktop notifications, revisited.** Toasts from an unpackaged exe only show once the app has a registered identity. Create a Start Menu shortcut carrying an AppUserModelID (the notification library can do this on first run) and set the same ID on the process. Retry on its own branch.
+
 ## Known bugs, not fixed
 
 - **Pipe name mismatch:** `App.axaml.cs` sends "Activate" on pipe `TwitchLeecher`, but `MainWindow` listens on `TwitchLeecher-DX`, so a second launch does not bring the running window forward. One-line fix; do it as its own branch from `master`.
