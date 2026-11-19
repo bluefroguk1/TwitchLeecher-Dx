@@ -1,133 +1,272 @@
 ﻿<UserControl x:Class="TwitchLeecher.Gui.Views.SearchResultView"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:TwitchLeecher.Gui.Converters"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              x:DataType="viewModels:SearchResultViewModel"
-             Classes="searchView">
-    <Design.DataContext>
-        <viewModels:SearchResultViewModel />
-    </Design.DataContext>
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary>
-                    <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
-    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto">
-        <ItemsControl ItemsSource="{Binding Videos}" Grid.IsSharedSizeScope="True" Margin="5">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Padding="10" Margin="10" BorderThickness="1" CornerRadius="5" MinHeight="250" Width="350">
-                        <Border.Background>
-                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                                <GradientStop Color="{DynamicResource WindowBackgroundGradientTopColor}" Offset="0" />
-                                <GradientStop Color="{DynamicResource WindowBackgroundGradientBottomColor}"
-                                              Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <DockPanel>
-                            <Grid DockPanel.Dock="Bottom" Margin="0,5,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+             Classes="searchView"
+             FontFamily="fonts:Inter#Inter"
+             FontSize="14">
+    <UserControl.Styles>
+        <!-- redesign palette, kept local so other screens are unaffected -->
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#A8A8B3" />
+        </Style>
+        <Style Selector="Button.outline">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#44444D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="#F2F2F5" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="#B794FF" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#D4BFFF" />
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#9146FF" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#A066FF" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="Button.toggle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#A8A8B3" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.toggle.active">
+            <Setter Property="Background" Value="#34343C" />
+            <Setter Property="Foreground" Value="#F2F2F5" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#2A2A30" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="Border.card.selected">
+            <Setter Property="BorderBrush" Value="#9146FF" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+        </Style>
+        <Style Selector="Border.badge > TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+    </UserControl.Styles>
 
-                                <Grid Grid.Column="1" Margin="0,0,5,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
+    <DockPanel Background="#1F1F23">
+        <!-- search summary bar -->
+        <Border DockPanel.Dock="Top" Background="#222227" BorderBrush="#34343C" BorderThickness="0,0,0,1"
+                Padding="16,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding SearchTitle}" FontSize="16" FontWeight="SemiBold"
+                           Foreground="#F2F2F5" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="10,0"
+                            VerticalAlignment="Center" ClipToBounds="True">
+                    <TextBlock Classes="muted" FontSize="13" Text="{Binding SearchSummary}"
+                               VerticalAlignment="Center" />
+                    <Button Classes="link" Content="Edit search" Command="{Binding SeachCommnad}"
+                            VerticalAlignment="Center" />
+                </StackPanel>
+                <CheckBox Grid.Column="2" Content="Hide downloaded" FontSize="13" Foreground="#D0D0D8"
+                          Margin="0,0,10,0" IsChecked="{Binding HideDownloaded}"
+                          ToolTip.Tip="Hide videos already saved in your download folder" />
+                <ComboBox Grid.Column="3" Height="30" MinWidth="130" FontSize="13" Margin="0,0,10,0"
+                          VerticalAlignment="Center" Background="#16161A" BorderBrush="#44444D" CornerRadius="6"
+                          SelectedIndex="{Binding SortIndex}" AutomationProperties.Name="Sort">
+                    <ComboBoxItem Content="Newest first" />
+                    <ComboBoxItem Content="Oldest first" />
+                    <ComboBoxItem Content="Longest" />
+                    <ComboBoxItem Content="Most viewed" />
+                </ComboBox>
+                <Border Grid.Column="4" BorderBrush="#44444D" BorderThickness="1" CornerRadius="6"
+                        ClipToBounds="True" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Classes="toggle" Classes.active="{Binding !IsListView}"
+                                Command="{Binding ShowGridCommand}" ToolTip.Tip="Grid view"
+                                AutomationProperties.Name="Grid view">
+                            <avalonia:Icon Value="fa-solid fa-table-cells-large" />
+                        </Button>
+                        <Button Classes="toggle" Classes.active="{Binding IsListView}"
+                                Command="{Binding ShowListCommand}" ToolTip.Tip="List view"
+                                AutomationProperties.Name="List view">
+                            <avalonia:Icon Value="fa-solid fa-bars" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
 
-                                    <TextBlock Grid.Row="0" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Row="1" Margin="0,3,0,0" Opacity=".75" FontSize="12"
-                                               Text="{Binding RecordedDate, StringFormat='F'}" />
-                                </Grid>
+        <!-- selection footer -->
+        <Border DockPanel.Dock="Bottom" Background="#18181B" BorderBrush="#34343C" BorderThickness="0,1,0,0"
+                Padding="16,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Classes="primary" Command="{Binding DownloadSelectedCommand}"
+                        IsEnabled="{Binding HasSelection}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <avalonia:Icon Value="fa-solid fa-download" />
+                        <TextBlock Text="{Binding DownloadSelectedLabel}" />
+                    </StackPanel>
+                </Button>
+                <CheckBox Content="Select all" FontSize="13" Foreground="#F2F2F5" Margin="0,0,12,0"
+                          IsChecked="{Binding AllSelected}" />
+                <TextBlock Classes="muted" FontSize="13" VerticalAlignment="Center"
+                           Text="{Binding SelectionSummary}" />
+            </DockPanel>
+        </Border>
 
-                                <CheckBox Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0"
-                                          ToolTip.Tip="Select for Download Selected"
-                                          IsChecked="{Binding IsSelected}"
-                                          IsEnabled="{Binding Live, Converter={StaticResource InverseBoolConverter}}" />
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="10">
+                <!-- grid: 236px cards, 3 per row at the 780px default window width -->
+                <ItemsControl ItemsSource="{Binding GridVideos}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Classes="card" Classes.selected="{Binding IsSelected}" Width="236" Margin="6">
+                                <StackPanel>
+                                    <Grid Height="131">
+                                        <Button Padding="0" Background="Transparent" BorderThickness="0"
+                                                CornerRadius="0" Cursor="Hand"
+                                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                                Command="{Binding $parent[UserControl].((viewModels:SearchResultViewModel)DataContext).ViewCommand}"
+                                                CommandParameter="{Binding Id}" ToolTip.Tip="Watch on Twitch">
+                                            <Image Source="{Binding Thumbnail^}" Stretch="UniformToFill" />
+                                        </Button>
+                                        <Border Background="#99000000" CornerRadius="4" Padding="2"
+                                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6">
+                                            <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding !Live}"
+                                                      MinWidth="0" MinHeight="0" Padding="0" Margin="0"
+                                                      ToolTip.Tip="Select for download"
+                                                      AutomationProperties.Name="Select video" />
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top" Margin="0,6,6,0">
+                                            <Border Classes="badge" Background="#EB0400" IsVisible="{Binding Live}">
+                                                <TextBlock Text="LIVE" />
+                                            </Border>
+                                            <Border Classes="badge" Background="#1A7F5A" IsVisible="{Binding IsClip}">
+                                                <TextBlock Text="CLIP" />
+                                            </Border>
+                                            <Border Classes="badge" Background="#6B5B00" IsVisible="{Binding IsQueued}">
+                                                <TextBlock Text="QUEUED" />
+                                            </Border>
+                                            <Border Classes="badge" Background="#2D8A3E" IsVisible="{Binding IsDownloaded}">
+                                                <TextBlock Text="DOWNLOADED" />
+                                            </Border>
+                                        </StackPanel>
+                                        <Border Background="#BF000000" CornerRadius="4" Padding="6,1"
+                                                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6"
+                                                IsHitTestVisible="False">
+                                            <TextBlock Text="{Binding LengthStr}" FontSize="12" Foreground="#F2F2F5" />
+                                        </Border>
+                                    </Grid>
+                                    <StackPanel Margin="10" Spacing="4">
+                                        <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="#F2F2F5" LineHeight="17.5" Height="35"
+                                                   TextWrapping="Wrap" MaxLines="2"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip.Tip="{Binding Title}" />
+                                        <TextBlock Classes="muted" FontSize="12" Text="{Binding MetaStr}"
+                                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding MetaStr}" />
+                                        <Button Classes="outline" Margin="0,6,0,0" Height="30"
+                                                HorizontalAlignment="Stretch" IsEnabled="{Binding !Live}"
+                                                Command="{Binding $parent[UserControl].((viewModels:SearchResultViewModel)DataContext).DownloadCommand}"
+                                                CommandParameter="{Binding Id}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <avalonia:Icon Value="fa-solid fa-download" />
+                                                <TextBlock Text="Download" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-                                <Button Grid.Column="2"
-                                        IsEnabled="{Binding Live, Converter={StaticResource InverseBoolConverter}}"
-                                        Padding="8" Width="40"
-                                        Command="{Binding $parent[UserControl].((viewModels:SearchResultViewModel)DataContext).DownloadCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
-                                        CommandParameter="{Binding Id}">
-                                    <avalonia:Icon Value="fa-solid fa-download" RenderTransformOrigin="0.5,0.5" />
-                                </Button>
-                            </Grid>
-                            <Grid Cursor="Hand">
-                                <Canvas>
-                                    <Button
-                                        Command="{Binding $parent[UserControl].((viewModels:SearchResultViewModel)DataContext).ViewCommand}"
-                                        CommandParameter="{Binding Id}">
-                                        <Image Source="{Binding Thumbnail^}" Width="320" Height="180"
-                                               Stretch="Fill" />
+                <!-- list: one compact row per video -->
+                <ItemsControl ItemsSource="{Binding ListVideos}" Margin="6,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Classes="card" Classes.selected="{Binding IsSelected}" CornerRadius="6"
+                                    Margin="0,0,0,6" Padding="8,4">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}"
+                                              IsEnabled="{Binding !Live}" MinWidth="0" Margin="0,0,8,0"
+                                              ToolTip.Tip="Select for download"
+                                              AutomationProperties.Name="Select video" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                                                VerticalAlignment="Center" ClipToBounds="True">
+                                        <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="#F2F2F5" MaxWidth="340" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                                        <TextBlock Classes="muted" FontSize="12" Text="{Binding MetaStr}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                                                Margin="8,0">
+                                        <Border Classes="badge" Background="#EB0400" IsVisible="{Binding Live}">
+                                            <TextBlock Text="LIVE" />
+                                        </Border>
+                                        <Border Classes="badge" Background="#1A7F5A" IsVisible="{Binding IsClip}">
+                                            <TextBlock Text="CLIP" />
+                                        </Border>
+                                        <Border Classes="badge" Background="#6B5B00" IsVisible="{Binding IsQueued}">
+                                            <TextBlock Text="QUEUED" />
+                                        </Border>
+                                        <Border Classes="badge" Background="#2D8A3E" IsVisible="{Binding IsDownloaded}">
+                                            <TextBlock Text="DOWNLOADED" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="3" Classes="muted" FontSize="12" Text="{Binding LengthStr}"
+                                               VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <Button Grid.Column="4" Classes="outline" Height="28" Padding="8,0"
+                                            IsEnabled="{Binding !Live}"
+                                            Command="{Binding $parent[UserControl].((viewModels:SearchResultViewModel)DataContext).DownloadCommand}"
+                                            CommandParameter="{Binding Id}" ToolTip.Tip="Download"
+                                            AutomationProperties.Name="Download">
+                                        <avalonia:Icon Value="fa-solid fa-download" />
                                     </Button>
-                                </Canvas>
-                                <Border IsVisible="{Binding Live}"
-                                        Background="#FFEB0400" HorizontalAlignment="Left" VerticalAlignment="Top"
-                                        CornerRadius="3" Margin="3,3,0,0" Padding="5,0,5,1">
-                                    <StackPanel Orientation="Horizontal">
-                                        <avalonia:Icon Value="fa-solid fa-play" Width="10" Height="10"
-                                                       VerticalAlignment="Center">
-                                            <avalonia:Icon.Foreground>
-                                                <SolidColorBrush Color="{DynamicResource TextForegroundLightColor}" />
-                                            </avalonia:Icon.Foreground>
-                                        </avalonia:Icon>
-                                        <TextBlock Text="LIVE" FontSize="12" Margin="4,0,0,0"
-                                                   VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Border>
-                                <Border IsVisible="{Binding Muted}"
-                                        Background="#78000000" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                        CornerRadius="3" Margin="0,3,3,0" Padding="5,0,5,1">
-                                    <StackPanel Orientation="Horizontal">
-                                        <avalonia:Icon Value="fa-solid fa-microphone-slash" Width="10" Height="10"
-                                                       VerticalAlignment="Center">
-                                            <avalonia:Icon.Foreground>
-                                                <SolidColorBrush Color="{DynamicResource TextForegroundLightColor}" />
-                                            </avalonia:Icon.Foreground>
-                                        </avalonia:Icon>
-                                        <TextBlock Text="Muted Parts" FontSize="12" Margin="4,0,0,0"
-                                                   VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Border>
-                                <Border Background="#78000000" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                                        CornerRadius="3" Margin="3,0,0,3" Padding="5,0,5,1">
-                                    <StackPanel Orientation="Horizontal">
-                                        <avalonia:Icon Value="fa-solid fa-eye" Width="10" Height="10"
-                                                       VerticalAlignment="Center">
-                                            <avalonia:Icon.Foreground>
-                                                <SolidColorBrush Color="{DynamicResource TextForegroundLightColor}" />
-                                            </avalonia:Icon.Foreground>
-                                        </avalonia:Icon>
-                                        <TextBlock Text="{Binding Views}" FontSize="12" Margin="4,0,0,0"
-                                                   VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Border>
-                                <Border Background="#78000000" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                        CornerRadius="3" Margin="0,0,3,3" Padding="5,0,5,1">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding LengthStr}" FontSize="12" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-                        </DockPanel>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Horizontal"></WrapPanel>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>
