@@ -47,7 +47,7 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Update Available" FontSize="21" FontWeight="Bold" />
+                <TextBlock Text="Update Available" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <TextBlock Grid.Row="2">

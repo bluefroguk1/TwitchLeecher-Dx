@@ -6,7 +6,7 @@
              RequestedThemeVariant="Dark">
     <Application.Resources>
         <system:Double x:Key="GlobalFontSize">14</system:Double>
-        <system:Double x:Key="GlobalFontEmphasizeSize">18</system:Double>
+        <system:Double x:Key="GlobalFontEmphasizeSize">16</system:Double>
         <!-- Colors -->
         <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
         <SolidColorBrush x:Key="MultilineTextBoxMouseOverBorder"
@@ -172,7 +172,7 @@
         </ResourceDictionary>
         <ResourceDictionary x:Key="Shared">
             <system:Double x:Key="GlobalFontSize">14</system:Double>
-            <system:Double x:Key="GlobalFontEmphasizeSize">18</system:Double>
+            <system:Double x:Key="GlobalFontEmphasizeSize">16</system:Double>
             <!-- Colors -->
             <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <SolidColorBrush x:Key="MultilineTextBoxMouseOverBorder"
@@ -286,6 +286,43 @@
             </Style>
             <!-- /Button -->
 
+
+            <!-- Inputs: declared before the class styles below so those still win -->
+            <Style Selector="TextBox, ComboBox, NumericUpDown, CalendarDatePicker">
+                <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="MinHeight" Value="36" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style Selector="TextBox, ComboBox">
+                <Setter Property="Padding" Value="8,0" />
+            </Style>
+            <Style Selector="TextBox:pointerover, TextBox:focus, ComboBox:pointerover, ComboBox:focus, NumericUpDown:pointerover, NumericUpDown:focus-within, CalendarDatePicker:pointerover, CalendarDatePicker:focus-within">
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
+            </Style>
+            <!-- SimpleTheme sets its own grey hover/focus border on these template parts -->
+            <Style Selector="TextBox:pointerover /template/ Border#border, TextBox:focus /template/ Border#border, ComboBox:pointerover /template/ Border#border, ComboBox:focus /template/ Border#border">
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
+            </Style>
+            <!-- The outer control draws the box; its inner TextBox must not draw a second one -->
+            <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox, CalendarDatePicker /template/ TextBox#PART_TextBox">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+            </Style>
+            <Style Selector="CheckBox, RadioButton">
+                <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            </Style>
+            <Style Selector="CheckBox:pointerover /template/ Border#border, CheckBox:checked /template/ Border#border">
+                <Setter Property="BorderBrush" Value="{DynamicResource InputBorderActiveBrush}" />
+            </Style>
+            <Style Selector="RadioButton:pointerover /template/ Ellipse#border, RadioButton:checked /template/ Ellipse#border">
+                <Setter Property="Stroke" Value="{DynamicResource InputBorderActiveBrush}" />
+            </Style>
 
             <Style Selector="TextBox.TlMultilineTextBox">
                 <Setter Property="Padding" Value="3" />
