@@ -1,4 +1,4 @@
-# Test script for the "ui-header-nav" branch: new header + corner toasts.
+﻿# Test script for the "ui-header-nav" branch: new header + corner toasts.
 # Builds the app, then walks you through each manual check. UI only, no downloads needed.
 # Windows:  powershell -ExecutionPolicy Bypass -File test-scripts\test-ui-header-nav.ps1
 # Linux:    pwsh test-scripts/test-ui-header-nav.ps1
@@ -39,7 +39,7 @@ Write-Host 'App started. Log in if asked.' -ForegroundColor Cyan
 # --- 1. Header layout ------------------------------------------------------
 Ask 'Header layout' @'
 Look at the top bar. Expected: one dark bar (about 56px tall) with the small TL logo and "Twitch Leecher" on the left,
-then "Search" and "Downloads [n]" tabs, and on the right "Sub-only: on/off", "Settings" and "Account" buttons.
+then "Search" and "Downloads [n]" tabs, and on the right "Sub-only: on/off", "Settings" button, then icon buttons for Info, Donate (if enabled) and Log out.
 No purple gradient, no "The Broadcast Downloader" subtitle.
 '@
 
@@ -59,14 +59,14 @@ The Sub-only button reads "Sub-only: off" with a grey border when sub-only is no
 and "Sub-only: on" with a green star and green border when it is. Clicking it opens the sub-only page.
 '@
 
-# --- 5. Account menu --------------------------------------------------------
-Ask 'Account menu' @'
-Click "Account". A menu opens under it with Info, Donate (only if "show donation button" is on in Settings) and Log out.
-Click Info: the Info page opens. Open the menu again and click Log out, then answer No: you stay logged in.
+# --- 5. Info / Donate / Log out buttons ---------------------------------------
+Ask 'Info, Donate, Log out buttons' @'
+At the right of the header are three icon buttons: Info (?), Donate ($, only if "show donation button" is on in Settings) and Log out.
+Click Info: the Info page opens. Click Log out, then answer No: you stay logged in.
 '@
 
 # --- 6. Tooltips -------------------------------------------------------------
-Ask 'Tooltips' 'Hover Search, Downloads, Sub-only, Settings and Account. Does each show a tooltip?'
+Ask 'Tooltips' 'Hover Search, Downloads, Sub-only, Settings, Info, Donate and Log out. Does each show a tooltip?'
 
 # --- 7. Toast ---------------------------------------------------------------
 Ask 'Toast' @'
@@ -85,7 +85,7 @@ Ask 'Toast does not block clicks' 'After the toast has faded, click a button tha
 # --- 8. Theme switch --------------------------------------------------------
 Ask 'Theme switch' @'
 In Settings, switch the theme New -> Original (and back to New), saving each time.
-Expected: the header, tab underline, Sub-only/Settings/Account buttons, badge and the toast all change colours with the theme,
+Expected: the header, tab underline, Sub-only/Settings/Info/Donate/Log out buttons, badge and the toast all change colours with the theme,
 and every label stays readable in both themes.
 '@
 

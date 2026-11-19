@@ -1,4 +1,4 @@
-# ui-header-nav: new header + corner toasts
+﻿# ui-header-nav: new header + corner toasts
 
 **Branch:** `claude/ui-header-nav-d65209` (on top of `ui-theme-keys`)
 **Depends on:** ui-theme-keys (merge that first)
@@ -7,7 +7,7 @@
 
 ## What changed
 - `TwitchLeecher.Gui/Views/MainWindow.axaml`
-  - Header: 56px `#18181B` bar, logo + "Twitch Leecher", Search / Downloads tabs (count badge, 2px `#9146FF` underline on the active page), right side "Sub-only: on/off", "Settings", and an "Account" button whose flyout holds Info, Donate (only if `ShowDonationButton`) and Log out (`RevokeCommand`).
+  - Header: 56px `#18181B` bar, logo + "Twitch Leecher", Search / Downloads tabs (count badge, 2px `#9146FF` underline on the active page), right side "Sub-only: on/off", "Settings", and three icon buttons: Info, Donate (only if `ShowDonationButton`) and Log out (`RevokeCommand`). They were an Account dropdown at first; the user asked for plain buttons.
   - Every header button has `ToolTip.Tip` and `AutomationProperties.Name`.
   - The purple top notification bar is replaced by a bottom-right toast (card `#2A2A30`, rounded, 0.3 s opacity fade). It ignores clicks while hidden.
   - All colours are `{DynamicResource <Key>Brush}` theme keys from `ui-theme-keys`, so the header and toast follow the New/Original theme. Only the toast shadow (`#66000000`) is fixed.
@@ -19,9 +19,8 @@
 - `INotificationService` / `NotificationService` are unchanged.
 
 ## Known limits
-- The account button reads "Account": the Twitch login name isn't stored anywhere yet (marked `shortcut:` in the XAML).
 - The Search tab no longer shows the video count; the mockup has none.
-- Not compiled on the Mac (no SDK). Watch for these on the first Windows build: the `MenuFlyout` bindings (DataContext comes from the button) and the FontAwesome names `fa-gear`, `fa-circle-user`, `fa-caret-down` and `fa-circle-info`.
+- Not compiled on the Mac (no SDK). Watch for these on the first Windows build: the FontAwesome name `fa-gear`.
 
 ## Merge notes
 `MainWindow.axaml` is shared with the other redesign branches. This branch rewrites the header `Border` and the bottom notification `Grid`, and adds `Window.Styles`. The `DataTemplates` and the `MenuCommands` bar are kept as-is, apart from one less indent level. Expect a conflict only if another branch edits the header.

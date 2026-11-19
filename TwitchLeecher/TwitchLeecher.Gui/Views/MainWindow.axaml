@@ -103,13 +103,6 @@
         <Style Selector="Button.TlHeaderButton.on avalonia|Icon">
             <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
         </Style>
-        <Style Selector="Button.TlHeaderButton.account">
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-        </Style>
-        <Style Selector="Button.TlHeaderButton.account:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
-        </Style>
         <Style Selector="Border.TlToast">
             <Setter Property="Opacity" Value="0" />
             <Setter Property="Transitions">
@@ -178,27 +171,21 @@
                             <TextBlock Text="Settings" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <!-- shortcut: labelled "Account" because the Twitch user name is not stored, show the login name once auth keeps it -->
-                    <Button Classes="TlHeaderButton account"
-                            ToolTip.Tip="Account: info, donate and log out"
-                            AutomationProperties.Name="Account menu">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <avalonia:Icon Value="fa-solid fa-circle-user" Width="14" Height="14" />
-                            <TextBlock Text="Account" VerticalAlignment="Center" />
-                            <avalonia:Icon Value="fa-solid fa-caret-down" Width="10" Height="10" />
-                        </StackPanel>
-                        <Button.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                <MenuItem Header="Info" Command="{Binding ShowInfoCommand}"
-                                          AutomationProperties.Name="Info" />
-                                <MenuItem Header="Donate" Command="{Binding DonateCommand}"
-                                          IsVisible="{Binding ShowDonationButton}"
-                                          AutomationProperties.Name="Donate" />
-                                <Separator />
-                                <MenuItem Header="Log out" Command="{Binding RevokeCommand}"
-                                          AutomationProperties.Name="Log out" />
-                            </MenuFlyout>
-                        </Button.Flyout>
+                    <Button Classes="TlHeaderButton" Command="{Binding ShowInfoCommand}"
+                            ToolTip.Tip="Info"
+                            AutomationProperties.Name="Info">
+                        <avalonia:Icon Value="fa-solid fa-circle-question" Width="14" Height="14" />
+                    </Button>
+                    <Button Classes="TlHeaderButton" Command="{Binding DonateCommand}"
+                            IsVisible="{Binding ShowDonationButton}"
+                            ToolTip.Tip="Donate"
+                            AutomationProperties.Name="Donate">
+                        <avalonia:Icon Value="fa-solid fa-dollar-sign" Width="14" Height="14" />
+                    </Button>
+                    <Button Classes="TlHeaderButton" Command="{Binding RevokeCommand}"
+                            ToolTip.Tip="Log out"
+                            AutomationProperties.Name="Log out">
+                        <avalonia:Icon Value="fa-solid fa-right-from-bracket" Width="14" Height="14" />
                     </Button>
                 </StackPanel>
             </Grid>
