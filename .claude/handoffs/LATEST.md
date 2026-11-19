@@ -111,6 +111,18 @@ The 16 PR branches have their scripts on `test-scripts` (`test-scripts\test-<bra
    - **`.claude/handoffs/LATEST.md`:** keep this overview.
 3. The `combined`-based UI branches (results, dialog, settings) are rebased onto `master` when #96, #37, #35, #50, #71 and #86 merge upstream.
 
+## User's notes from testing (revisit after testing, not started)
+
+Noted 2026-11-19. Discuss these with the user before building; each would be its own branch.
+
+1. **Search tab doesn't go back to the form.** On the results screen, clicking the top bar's **Search** tab should open the search form. Today it stays on, or goes back to, the results. Relevant code: `ShowSearchCommand` in `MainWindowVM` and the header branch's active-tab logic.
+2. **Pop-up dialogs can't be dragged.** Message boxes and other pop-up windows should be movable. Check `MessageBoxWindow` and any window with a custom title bar: it needs `BeginMoveDrag` on pointer-press of its title area.
+3. **Channel header on search results.** Show the channel's name at the top of the results, with a ★ button to add or remove it from favourites right there. This fits the results-toolbar branch's summary bar, next to "Watch this search".
+4. **Chat export with emotes.** Today chat is only `.chat.txt`. Options to discuss:
+   - **HTML chat log:** names in their chat colours, timestamps and Twitch emotes as images. The chat data already includes emote IDs, and the images come from Twitch's emote image server. Either link the images (needs internet to view) or embed them in the file (works offline, bigger). Third-party emote sets (7TV, BTTV, FFZ) are optional extras.
+   - **JSON:** the raw messages, for other tools.
+   - **Chat burned into the video, or rendered as a separate chat video:** much bigger, needs image rendering plus ffmpeg work.
+
 ## Known bugs not yet fixed
 
 - **Pipe name mismatch:** `App.axaml.cs` sends "Activate" on pipe `TwitchLeecher`, but `MainWindow` listens on `TwitchLeecher-DX`. A second launch doesn't bring the running window forward.
