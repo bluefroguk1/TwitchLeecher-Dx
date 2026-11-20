@@ -215,7 +215,7 @@
                                                     AutomationProperties.Name="Remove watched search"
                                                     Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).RemoveCommand}"
                                                     CommandParameter="{Binding}">
-                                                <avalonia:Icon Value="fa-solid fa-trash" Width="12" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <avalonia:Icon Value="fa-solid fa-trash" Width="12" Height="14" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
                                         </StackPanel>
                                     </Grid>
