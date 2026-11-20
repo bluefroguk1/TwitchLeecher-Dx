@@ -414,8 +414,7 @@ namespace TwitchLeecher.Gui.ViewModels
             }
             else if (subOnly == false)
             {
-                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again " +
-                                  "(tick \"Also enable sub-only downloads\") to turn them back on?");
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again to turn them back on?");
             }
         }
 
@@ -439,8 +438,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
             if (_showAuthSubOnlyError)
             {
-                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again " +
-                                  "(tick \"Also enable sub-only downloads\") to turn them back on?");
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again to turn them back on?");
             }
 
             StartTokenChecks();
