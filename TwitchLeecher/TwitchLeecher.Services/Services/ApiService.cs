@@ -631,7 +631,8 @@ namespace TwitchLeecher.Services.Services
                 false
             )
             {
-                IsClip = true
+                IsClip = true,
+                ClipCreator = clipJson.Value<string>("creator_name")
             };
         }
 
