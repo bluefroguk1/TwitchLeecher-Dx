@@ -23,6 +23,9 @@ namespace TwitchLeecher.Services.Interfaces
 
         string GetChannelIdByName(string channel);
 
+        // Helix users: display name and avatar URL, null when the channel is not found
+        (string DisplayName, string ProfileImageUrl)? GetChannelInfo(string channel);
+
         ObservableCollection<TwitchVideo> Search(SearchParameters searchParams);
     }
 }
