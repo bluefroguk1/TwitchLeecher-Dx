@@ -544,11 +544,35 @@
                     </ToolTip.Tip>
                 </avalonia:Icon>
 
-                <CheckBox Grid.Row="14" Grid.Column="2"
-                          IsChecked="{Binding CurrentPreferences.DownloadQuickDownload}"
-                          Content="Quick download (skip the download dialog)"
-                          VerticalAlignment="Center"
-                          HorizontalAlignment="Left" />
+                <StackPanel Grid.Row="14" Grid.Column="2" Spacing="8">
+                    <CheckBox IsChecked="{Binding CurrentPreferences.DownloadQuickDownload}"
+                              Content="Quick download (skip the download dialog)"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Left" />
+                    <CheckBox IsChecked="{Binding CurrentPreferences.DownloadCompress}"
+                              Content="Compress videos after download (smaller files, takes a while)"
+                              VerticalAlignment="Center" HorizontalAlignment="Left" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0"
+                                IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
+                        <TextBlock Text="Compression" VerticalAlignment="Center" />
+                        <ComboBox SelectedIndex="{Binding CurrentPreferences.DownloadCompressLevelIndex}" MinWidth="260"
+                                  AutomationProperties.Name="Compression level">
+                            <ComboBoxItem Content="Light: H.264, plays everywhere" />
+                            <ComboBoxItem Content="Balanced: H.265, about half the size" />
+                            <ComboBoxItem Content="Strong: H.265, smallest, some quality loss" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0"
+                                IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
+                        <TextBlock Text="Encoder" VerticalAlignment="Center" />
+                        <ComboBox SelectedIndex="{Binding CurrentPreferences.DownloadCompressEncoderIndex}" MinWidth="260"
+                                  AutomationProperties.Name="Compression encoder">
+                            <ComboBoxItem Content="Auto: graphics card if available" />
+                            <ComboBoxItem Content="CPU: smallest files, slower" />
+                            <ComboBoxItem Content="Graphics card: fastest, files a bit bigger" />
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
                 <avalonia:Icon Grid.Row="14" Grid.Column="4" Classes="Img_Help"
                                Value="fa-solid fa-circle-question">
                     <ToolTip.Tip>
