@@ -321,6 +321,45 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
+        public (string DisplayName, string ProfileImageUrl)? GetChannelInfo(string channel)
+        {
+            if (string.IsNullOrWhiteSpace(channel))
+            {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            using (WebClient webClient = CreateApiWebClient())
+            {
+                webClient.QueryString.Add("login", channel);
+
+                string result;
+
+                try
+                {
+                    WaitForNextRequest();
+
+                    result = webClient.DownloadString(USERS_URL);
+
+                    SetNextRequestTime(webClient);
+                }
+                catch (WebException)
+                {
+                    return null;
+                }
+
+                JToken userJson = string.IsNullOrWhiteSpace(result)
+                    ? null
+                    : JObject.Parse(result).Value<JArray>("data")?.FirstOrDefault();
+
+                if (userJson == null)
+                {
+                    return null;
+                }
+
+                return (userJson.Value<string>("display_name"), userJson.Value<string>("profile_image_url"));
+            }
+        }
+
         public ObservableCollection<TwitchVideo> Search(SearchParameters searchParams)
         {
             if (searchParams == null)
@@ -631,7 +670,8 @@ namespace TwitchLeecher.Services.Services
                 false
             )
             {
-                IsClip = true
+                IsClip = true,
+                ClipCreator = clipJson.Value<string>("creator_name")
             };
         }
 
