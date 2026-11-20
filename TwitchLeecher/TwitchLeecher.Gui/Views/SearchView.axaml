@@ -44,6 +44,9 @@
             </Setter>
         </Style>
         <Style Selector="RadioButton.seg">
+            <!-- no outline of its own: the dark track around the pair draws the only border -->
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Height" Value="32" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="CornerRadius" Value="6" />
@@ -104,7 +107,8 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="20" Spacing="16">
 
-                    <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="8" Padding="3">
+                    <Border Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource InputBorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="3">
                         <Grid ColumnDefinitions="*,*">
                             <RadioButton Grid.Column="0" Classes="seg" GroupName="SearchSource" Content="Channel"
                                          AutomationProperties.Name="Search a channel"
