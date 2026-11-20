@@ -5,8 +5,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Ninject;
 using TwitchLeecher.Core.Constants;
+using TwitchLeecher.Core.Events;
 using TwitchLeecher.Gui.Modules;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Gui.Views;
@@ -91,10 +93,25 @@ public partial class App : Application
             ? "New"
             : preferencesService.CurrentPreferences.Theme);
 
+        // re-sync at start-up in case the exe moved
+        SyncAutoStart(preferencesService);
+        _kernel.Get<IEventAggregator>().GetEvent<PreferencesSavedEvent>()
+            .Subscribe(() => SyncAutoStart(preferencesService), true);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.Exit += OnExit;
-            desktop.MainWindow = _kernel.Get<MainWindow>();
+            MainWindow mainWindow = _kernel.Get<MainWindow>();
+
+            if (Array.Exists(desktop.Args ?? [], arg => arg == AutoStart.MinimizedArg))
+            {
+                // the lifetime shows MainWindow when it starts; assigning it afterwards keeps it hidden in the tray
+                Dispatcher.UIThread.Post(() => desktop.MainWindow = mainWindow);
+            }
+            else
+            {
+                desktop.MainWindow = mainWindow;
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -104,8 +121,27 @@ public partial class App : Application
 
     private void TrayOpen_OnClick(object sender, EventArgs e) => _kernel.Get<MainWindow>().BringToFront();
 
+    private void SyncAutoStart(IPreferencesService preferencesService)
+    {
+        try
+        {
+            AutoStart.Apply(preferencesService.CurrentPreferences);
+        }
+        catch (Exception ex)
+        {
+            _kernel.Get<ILogService>().LogException(ex);
+        }
+    }
+
     private void TrayExit_OnClick(object sender, EventArgs e)
     {
+        // started with --minimized and never opened: no window to close
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { Windows.Count: 0 } hidden)
+        {
+            hidden.Shutdown();
+            return;
+        }
+
         // same path as the close button: saves window state, then the app exits with its last window
         (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Close();
     }

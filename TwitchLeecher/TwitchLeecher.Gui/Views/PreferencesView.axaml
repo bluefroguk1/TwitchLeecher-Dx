@@ -175,6 +175,19 @@
                                 <TextBlock Classes="sub" Text="Minimising hides the window; click the tray icon to bring it back" />
                             </StackPanel>
                         </CheckBox>
+                        <CheckBox IsChecked="{Binding CurrentPreferences.AppStartWithOs}">
+                            <StackPanel>
+                                <TextBlock Text="Start Twitch Leecher when I sign in" />
+                                <TextBlock Classes="sub" Text="So watched searches keep running without opening the app" />
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding CurrentPreferences.AppStartMinimised}"
+                                  IsEnabled="{Binding CurrentPreferences.AppStartWithOs}" Margin="24,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Start minimised to the tray" />
+                                <TextBlock Classes="sub" Text="Opens hidden; click the tray icon to show the window" />
+                            </StackPanel>
+                        </CheckBox>
 
                         <StackPanel Classes="field">
                             <CheckBox IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}">
