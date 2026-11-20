@@ -197,7 +197,7 @@ Before testing, kill any running copy: `Get-Process TwitchLeecher | Stop-Process
 
 | Fix | Branch | What to check |
 |---|---|---|
-| **Watched search downloaded a stream still in progress** (kibblethegoat) | `claude/ui-watched-searches-in-settings` (3397903) | Twitch now gives a recording VOD a normal thumbnail, so the old live check missed it. Broadcast searches now ask Helix `/streams` whether the channel is live, and hold back VODs from the current stream (WAITING … still live). If that check fails, the newest VOD is held back. Test: a watched Broadcasts search for a live channel. Check now must show WAITING and start nothing; after the stream ends, the next check starts it |
+| **Watched search downloaded a stream still in progress** (a live channel) | `claude/ui-watched-searches-in-settings` (3397903) | Twitch now gives a recording VOD a normal thumbnail, so the old live check missed it. Broadcast searches now ask Helix `/streams` whether the channel is live, and hold back VODs from the current stream (WAITING … still live). If that check fails, the newest VOD is held back. Test: a watched Broadcasts search for a live channel. Check now must show WAITING and start nothing; after the stream ends, the next check starts it |
 
 ### Off-peak download schedule (added 2026-11-20, in combined-all, build run 44709201140 passed)
 
