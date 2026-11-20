@@ -47,6 +47,10 @@ namespace TwitchLeecher.Gui.ViewModels
         private Bitmap _channelAvatar;
 
         private bool _hideDownloaded;
+        private bool _statusRefreshPending;
+
+        // default save path per video id, so badges don't rebuild filenames on every queue change
+        private readonly Dictionary<string, string> _defaultPaths = new Dictionary<string, string>();
         private int _sortIndex;
         private bool _isListView;
         private List<TwitchVideo> _displayed = new List<TwitchVideo>();
@@ -97,7 +101,21 @@ namespace TwitchLeecher.Gui.ViewModels
             LoadChannelHeader();
 
             // queue changes may come from a background thread (e.g. automatic downloads)
-            _downloadService.Downloads.CollectionChanged += (s, e) => Dispatcher.UIThread.Post(RefreshStatusesAndList);
+            // queue changes may come from a background thread (e.g. automatic downloads); a finished download
+            // changes state without leaving the list, so watch each item's state too
+            _downloadService.Downloads.CollectionChanged += Downloads_CollectionChanged;
+
+            foreach (TwitchVideoDownload download in _downloadService.Downloads)
+            {
+                download.PropertyChanged += Download_PropertyChanged;
+            }
+
+            // folder or filename settings may have changed
+            _eventAggregator.GetEvent<PreferencesSavedEvent>().Subscribe(() =>
+            {
+                _defaultPaths.Clear();
+                RequestStatusRefresh();
+            });
 
             HookVideos();
         }
@@ -476,6 +494,66 @@ namespace TwitchLeecher.Gui.ViewModels
             return (folder, filename, disableConversion);
         }
 
+        private void Downloads_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            foreach (TwitchVideoDownload download in e.NewItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
+            {
+                download.PropertyChanged += Download_PropertyChanged;
+            }
+
+            foreach (TwitchVideoDownload download in e.OldItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
+            {
+                download.PropertyChanged -= Download_PropertyChanged;
+            }
+
+            RequestStatusRefresh();
+        }
+
+        private void Download_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(TwitchVideoDownload.DownloadState))
+            {
+                RequestStatusRefresh();
+            }
+        }
+
+        // many queue events in a row (Download Selected, a watched-search check) cause one refresh, not one each
+        private void RequestStatusRefresh()
+        {
+            if (_statusRefreshPending)
+            {
+                return;
+            }
+
+            _statusRefreshPending = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                _statusRefreshPending = false;
+                RefreshStatusesAndList();
+            }, DispatcherPriority.Background);
+        }
+
+        private static bool FileExists(Dictionary<string, HashSet<string>> folderFiles, string path)
+        {
+            string folder = Path.GetDirectoryName(path) ?? string.Empty;
+
+            if (!folderFiles.TryGetValue(folder, out HashSet<string> files))
+            {
+                files = Directory.Exists(folder)
+                    ? new HashSet<string>(Directory.EnumerateFiles(folder), StringComparer.OrdinalIgnoreCase)
+                    : new HashSet<string>();
+                folderFiles[folder] = files;
+            }
+
+            return files.Contains(path);
+        }
+
+        private string DefaultPathOf(TwitchVideo video, Preferences prefs, TwitchVideoQuality quality)
+        {
+            (string folder, string filename, _) = GetDefaultTarget(video, prefs, quality);
+            return Path.Combine(folder, filename);
+        }
+
         private void RefreshStatusesAndList()
         {
             // only rebuild the cards when the hidden set changed, a rebuild loses the scroll position
@@ -494,11 +572,13 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 Preferences prefs = _preferencesService.CurrentPreferences;
 
-                HashSet<string> queuedIds = _downloadService.Downloads
+                List<TwitchVideoDownload> active = _downloadService.Downloads
                     .Where(d => d.DownloadState == DownloadState.Queued || d.DownloadState == DownloadState.Paused ||
                                 d.DownloadState == DownloadState.Downloading)
-                    .Select(d => d.DownloadParams.Video.Id)
-                    .ToHashSet();
+                    .ToList();
+                HashSet<string> queuedIds = active.Select(d => d.DownloadParams.Video.Id).ToHashSet();
+                HashSet<string> queuedPaths = active.Select(d => d.DownloadParams.FullPath)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
                 // shortcut: only finds files saved under the default folder/filename, and not at all when the
                 // filename uses {res} (the quality is unknown until the playlist is fetched); upgrade by keeping
@@ -507,21 +587,24 @@ namespace TwitchLeecher.Gui.ViewModels
                                     !prefs.DownloadFileName.Contains(FilenameWildcards.RES);
                 TwitchVideoQuality anyQuality = new TwitchVideoQuality("chunked", "Source");
 
+                // one directory listing per folder instead of a File.Exists per result
+                Dictionary<string, HashSet<string>> folderFiles = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (TwitchVideo video in Videos ?? new ObservableCollection<TwitchVideo>())
                 {
                     string path = null;
 
-                    if (canGuessPath)
+                    if (canGuessPath && !_defaultPaths.TryGetValue(video.Id, out path))
                     {
-                        (string folder, string filename, _) = GetDefaultTarget(video, prefs, anyQuality);
-                        path = Path.Combine(folder, filename);
+                        path = DefaultPathOf(video, prefs, anyQuality);
+                        _defaultPaths[video.Id] = path;
                     }
 
-                    bool downloaded = path != null && File.Exists(path);
+                    bool downloaded = path != null && FileExists(folderFiles, path);
                     downloadedChanged |= downloaded != video.IsDownloaded;
                     video.IsDownloaded = downloaded;
                     video.IsQueued = !video.IsDownloaded &&
-                                     (queuedIds.Contains(video.Id) || (path != null && _downloadService.IsFileNameUsed(path)));
+                                     (queuedIds.Contains(video.Id) || (path != null && queuedPaths.Contains(path)));
                 }
             }
             catch (Exception ex)
@@ -644,6 +727,8 @@ namespace TwitchLeecher.Gui.ViewModels
         // Follows ticks on every result, for the footer and the size estimate
         private void HookVideos()
         {
+            _defaultPaths.Clear();
+
             foreach (TwitchVideo video in _hookedVideos)
             {
                 video.PropertyChanged -= Video_PropertyChanged;
