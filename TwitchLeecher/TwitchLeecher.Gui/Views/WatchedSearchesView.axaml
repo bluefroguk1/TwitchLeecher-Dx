@@ -1,4 +1,4 @@
-<UserControl x:Class="TwitchLeecher.Gui.Views.WatchedSearchesView"
+﻿<UserControl x:Class="TwitchLeecher.Gui.Views.WatchedSearchesView"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
@@ -171,7 +171,7 @@
                             <Border Classes="row" Classes.off="{Binding !Active}" Classes.editing="{Binding IsEditing}">
                                 <StackPanel Spacing="10">
                                     <!-- one line: title shrinks (trimmed); the controls keep fixed widths so they line up across rows -->
-                                    <Grid ColumnDefinitions="*,Auto,160,Auto,Auto,Auto">
+                                    <Grid ColumnDefinitions="*,150,56,88,38">
                                         <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" MinWidth="0">
                                             <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
@@ -193,20 +193,20 @@
                                             <TextBlock Text="{Binding LatestResult}" Classes="muted"
                                                        TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="When found" Classes="muted" Margin="12,0,8,0"
-                                                   VerticalAlignment="Center" />
-                                        <ComboBox Grid.Column="2" Classes="ws" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                        <ComboBox Grid.Column="1" Classes="ws" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                                  Margin="12,0,0,0"
                                                   SelectedIndex="{Binding WhenFoundIndex}"
+                                                  ToolTip.Tip="When a new video is found"
                                                   AutomationProperties.Name="When found">
                                             <ComboBoxItem Content="Download now" />
                                             <ComboBoxItem Content="Add to queue, paused" />
                                         </ComboBox>
-                                        <Button Grid.Column="3" Classes="ws" Content="Edit" Margin="8,0,0,0" VerticalAlignment="Center"
+                                        <Button Grid.Column="2" Classes="ws" Content="Edit" Margin="8,0,0,0" VerticalAlignment="Center"
                                                 Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
                                                 CommandParameter="{Binding}" />
-                                        <CheckBox Grid.Column="4" Content="Active" Margin="10,0,0,0"
+                                        <CheckBox Grid.Column="3" Content="Active" Margin="10,0,0,0"
                                                   IsChecked="{Binding Active}" VerticalAlignment="Center" />
-                                        <Button Grid.Column="5" Classes="ws" Margin="6,0,0,0" Width="32" Padding="0"
+                                        <Button Grid.Column="4" Classes="ws" Margin="6,0,0,0" Width="32" Padding="0"
                                                 VerticalAlignment="Center" HorizontalContentAlignment="Center"
                                                 Foreground="{DynamicResource ErrorBrush}"
                                                 ToolTip.Tip="Remove watched search"
