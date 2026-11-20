@@ -37,7 +37,7 @@ function Simulate-NewVideo {
     }
     $seen | ConvertTo-Json -Depth 5 | Set-Content $seenFile
     $script:p = Start-Process $exe -PassThru
-    Write-Host 'Started again. Open Settings > Watched searches. (If On is ticked, a check runs at start-up, so it may already have happened.)' -ForegroundColor Yellow
+    Write-Host 'Started again. Open Settings > Watched searches. (If "Check watched searches" is ticked, a check runs at start-up, so it may already have happened.)' -ForegroundColor Yellow
 }
 
 function Show-Log($lines) {
@@ -78,34 +78,37 @@ plus a "<channel> . Clips" search (tag ">= N views") for each if clips were swit
 
 # --- Instant (UI only) ---------------------------------------------------------
 Ask 'Settings page layout' @'
-Settings > scroll to "Watched searches". Do you see: the heading with an "On" tick on the right; a bar with a dot,
-"Last check ... / Not checked yet", "Every [interval]" and "Check now"; SEARCHES with a purple "+ Add watched search";
-RECENT ACTIVITY; and the "Checks only run while Twitch Leecher is open" hint? No "Auto Download" text anywhere?
+Settings > Watched searches. It should look like the other sections (same heading, margins, grey SEARCHES / RECENT ACTIVITY
+labels), with no dark boxes. Do you see: the heading; a tick "Check watched searches for new videos" with
+"Checks only run while Twitch Leecher is open" under it; a line with a dot, "Last check ... / Not checked yet",
+"Every [interval]" and "Check now"; SEARCHES with an accent "+ Add watched search"; searches as flat rows split by thin lines
+(a row lights up on hover and stays lit while its editor is open); RECENT ACTIVITY as the same flat rows?
+No "Auto Download" text anywhere?
 '@
 Ask 'Add + edit a search' @'
-Press "+ Add watched search". A "New search . Broadcasts" card opens with an editor: Channel, Type, Quality, Remove, Done.
+Press "+ Add watched search". A "New search . Broadcasts" row opens with an editor: Channel, Type, Quality, Remove, Done.
 Type a channel, pick Type = Clips: "Minimum views" appears and the title/tags update (">= 100 views", "Default quality").
 Pick Quality = 720p: the tag says 720p. Press Done: the editor closes.
 '@
 Ask 'When found + Active' @'
-On a card, switch "When found" to "Add to queue, paused" and untick Active. The card fades and says "Search switched off".
+On a row, switch "When found" to "Add to queue, paused" and untick Active. The row's content fades and says "Search switched off".
 Go to Downloads and back to Settings: both choices are kept. Tick Active again.
 '@
 Ask 'Saved straight away' @'
 Without pressing Settings Save, close and restart Twitch Leecher (or leave Settings and press Undo first).
-Are the searches, On and the interval still as you left them? (They live in %APPDATA%\Twitch Leecher DX\watched_searches.json.)
+Are the searches, the "Check watched searches" tick and the interval still as you left them? (They live in %APPDATA%\Twitch Leecher DX\watched_searches.json.)
 '@
 Ask 'Remove' 'Edit a search and press Remove. Is it gone (and still gone after a restart)?'
 Ask 'Watch this search (Results)' @'
 Search a channel's Broadcasts. In the results menu press "Watch this search". A notification says "Watching <channel> . Broadcasts"
-(and "watched searches switched on" if it was off). The search appears in Settings with default settings and On is ticked.
+(and "watched searches switched on" if it was off). The search appears in Settings with default settings and "Check watched searches for new videos" is ticked.
 Press it again: no duplicate. Then search by URL/ID and press it: "Only a channel search can be watched".
 '@
 Ask 'Downloads pill' @'
-Open Downloads. The summary bar shows a pill "N watched searches" with a green dot (grey and "Watched searches off" when On is unticked).
+Open Downloads. The summary bar shows a pill "N watched searches" with a green dot (grey and "Watched searches off" when "Check watched searches" is unticked).
 Click it: Settings opens scrolled to the Watched searches section.
 '@
-Ask 'Theme switch' 'Switch the Settings theme New <-> Original with the section and Downloads visible. Do the cards, tags, pill and activity colours follow the theme and stay readable?'
+Ask 'Theme switch' 'Switch the Settings theme through New, Original and Coyote (if present) with the section and Downloads visible. Do the rows, row hover, divider lines, tags, pill and activity colours follow the theme and stay readable?'
 
 # --- Check now: first run on a channel with existing videos --------------------
 if (Test-Path $seenFile) {
