@@ -86,10 +86,11 @@
                 <ComboBox SelectedIndex="{Binding ChatFormatIndex}"
                           IsEnabled="{Binding DownloadParams.DownloadChat}"
                           Margin="5,0,0,0" FontSize="12" VerticalAlignment="Center"
-                          ToolTip.Tip="Text: timestamped lines. HTML: names in chat colours with emotes. Offline HTML also embeds the emote images.">
+                          ToolTip.Tip="Text: timestamped lines. HTML: names in chat colours with emotes. Offline HTML also embeds the emote images. JSON: raw messages for other tools.">
                     <ComboBoxItem Content="Text" />
                     <ComboBoxItem Content="HTML" />
                     <ComboBoxItem Content="HTML (offline)" />
+                    <ComboBoxItem Content="JSON" />
                 </ComboBox>
             </StackPanel>
 

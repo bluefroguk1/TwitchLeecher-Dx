@@ -65,6 +65,18 @@ Turn the network off (Wi-Fi off or unplug), then open the offline .chat.html in 
 Do emotes still show as images? Then open the plain "HTML" file: its emotes should be broken/missing offline (expected).
 '@
 
+Ask 'json download' @'
+Download the same short cropped VOD again with Save chat set to JSON. A .chat.json file appears next to the video.
+'@
+$json = Get-ChildItem -Path $env:USERPROFILE -Filter *.chat.json -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($json) {
+    $data = Get-Content $json.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+    $count = @($data.messages).Count
+    $prev = -1; $ordered = $true
+    foreach ($m in $data.messages) { if ($m.offsetSeconds -lt $prev) { $ordered = $false }; $prev = $m.offsetSeconds }
+    $results['json parses, has messages, in order'] = $(if ($count -gt 0 -and $ordered) { "PASS ($count messages, $($json.Name))" } else { "FAIL (count $count, ordered $ordered)" })
+} else { $results['json parses, has messages, in order'] = 'FAIL (no .chat.json found under your user folder)' }
+
 Ask 'chat failure keeps video' @'
 Network back on. Start an HTML chat download, and while it says "Saving Chat" turn the network off.
 Does the video stay, with a "Chat could not be saved" warning instead of a failed download?

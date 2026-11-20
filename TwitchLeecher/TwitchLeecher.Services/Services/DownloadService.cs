@@ -635,8 +635,10 @@ namespace TwitchLeecher.Services.Services
             // same window as the video, so chat timestamps line up with the downloaded file
             TimeSpan from = downloadParams.CropStart ? downloadParams.CropStartTime : TimeSpan.Zero;
             TimeSpan to = downloadParams.CropEnd ? downloadParams.CropEndTime : downloadParams.Video.Length;
-            bool html = downloadParams.ChatFormat != ChatFormat.Text;
-            string chatFile = Path.ChangeExtension(outputFile, html ? ".chat.html" : ".chat.txt");
+            ChatFormat format = downloadParams.ChatFormat;
+            bool html = format == ChatFormat.Html || format == ChatFormat.HtmlEmbedded;
+            string chatFile = Path.ChangeExtension(outputFile,
+                format == ChatFormat.Json ? ".chat.json" : html ? ".chat.html" : ".chat.txt");
 
             setStatus("Saving Chat");
             setIsIndeterminate(false);
@@ -656,7 +658,11 @@ namespace TwitchLeecher.Services.Services
                         }
                     });
 
-                if (html)
+                if (format == ChatFormat.Json)
+                {
+                    File.WriteAllText(chatFile, ChatJson(downloadParams, messages, from, to));
+                }
+                else if (html)
                 {
                     Dictionary<string, string> emoteSources = downloadParams.ChatFormat == ChatFormat.HtmlEmbedded
                         ? DownloadEmotes(messages, log, cancellationToken)
@@ -685,6 +691,39 @@ namespace TwitchLeecher.Services.Services
             }
 
             setProgress(100);
+        }
+
+        // Raw chat for other tools: offsets are seconds from the start of the downloaded part, like the other formats
+        private static string ChatJson(DownloadParameters downloadParams, List<TwitchChatMessage> messages,
+            TimeSpan from, TimeSpan to)
+        {
+            TwitchVideo video = downloadParams.Video;
+
+            var chat = new
+            {
+                video = new
+                {
+                    id = video.Id,
+                    title = video.Title,
+                    channel = video.Channel,
+                    cropStart = from.ToDaylessString(),
+                    cropEnd = to.ToDaylessString()
+                },
+                messages = messages.Select(m => new
+                {
+                    offsetSeconds = Math.Round((m.Offset - from).TotalSeconds, 3),
+                    timestamp = (m.Offset - from).ToDaylessString(),
+                    name = m.Name,
+                    color = m.Color,
+                    text = m.Text,
+                    fragments = m.Fragments?.Select(f => f.EmoteId == null
+                        ? (object)new { text = f.Text }
+                        : new { text = f.Text, emoteId = f.EmoteId })
+                })
+            };
+
+            return System.Text.Json.JsonSerializer.Serialize(chat,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
 
         // Downloads each distinct emote once as a data: URI so the HTML works offline; failed emotes are left out

@@ -30,3 +30,7 @@ Branch: `feature-chat-html`, from `origin/feature-71-chat-pr` (upstream PR #107,
 ## Test
 - `test-scripts/test-feature-chat-html.ps1`
 - Test needs: one short cropped download with chat. Open the HTML in a browser and check names, colours, emotes, and offline mode with the network off.
+
+## Added after second test round
+
+- New format **JSON** (`ChatFormat.Json`, index 3, appended so saved indexes keep their meaning): writes `<video>.chat.json` with the video (id, title, channel, crop start/end) and `messages` (offsetSeconds and HH:MM:SS from the crop start, name, colour, text, fragments with emoteId).
