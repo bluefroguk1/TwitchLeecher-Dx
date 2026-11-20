@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace TwitchLeecher.Core.Models
 {
@@ -11,6 +12,8 @@ namespace TwitchLeecher.Core.Models
         public AuthInfo AuthInfo { get; set; }
 
         public MainWindowInfo MainWindowInfo { get; set; }
+
+        public List<SearchParameters> RecentSearches { get; set; } = new List<SearchParameters>();
 
         #endregion Properties
     }

@@ -362,7 +362,7 @@ namespace TwitchLeecher.Gui.ViewModels
                 }
                 else
                 {
-                    ShowWelcomeOrSearch();
+                    ShowSearchOnStart();
                 }
             }
             catch (Exception ex)
@@ -425,7 +425,7 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             if (success)
             {
-                ShowWelcomeOrSearch();
+                ShowSearchOnStart();
             }
             else
             {
@@ -438,12 +438,10 @@ namespace TwitchLeecher.Gui.ViewModels
             this.IsAuthenticatedSubOnly = isAuthenticatedSubOnly;
         }
 
-        private void ShowWelcomeOrSearch()
+        private void ShowSearchOnStart()
         {
-            if (!SearchOnStartup())
-            {
-                _navigationService.ShowWelcome();
-            }
+            _navigationService.ShowSearch();
+            SearchOnStartup();
         }
 
         private bool SearchOnStartup()

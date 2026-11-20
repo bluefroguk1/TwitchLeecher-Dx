@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Xml.Linq;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
@@ -19,6 +20,9 @@ namespace TwitchLeecher.Gui.Services
         private readonly IDialogService _dialogService;
         private readonly INavigationService _navigationService;
         private readonly IPreferencesService _preferencesService;
+        private readonly IRuntimeDataService _runtimeDataService;
+
+        private const int MAX_RECENT_SEARCHES = 5;
 
         private ObservableCollection<TwitchVideo> _videos;
 
@@ -33,7 +37,8 @@ namespace TwitchLeecher.Gui.Services
             IApiService apiService,
             IDialogService dialogService,
             INavigationService navigationService,
-            IPreferencesService preferencesService
+            IPreferencesService preferencesService,
+            IRuntimeDataService runtimeDataService
         )
         {
             _eventAggregator = eventAggregator;
@@ -41,6 +46,7 @@ namespace TwitchLeecher.Gui.Services
             _apiService = apiService;
             _navigationService = navigationService;
             _preferencesService = preferencesService;
+            _runtimeDataService = runtimeDataService;
 
             _eventAggregator.GetEvent<PreferencesSavedEvent>().Subscribe(PreferencesSaved);
 
@@ -110,6 +116,8 @@ namespace TwitchLeecher.Gui.Services
         {
             lastSearchParams = searchParams;
 
+            AddRecentSearch(searchParams);
+
             _navigationService.ShowLoading();
 
             Task.Run(() => _apiService.Search(searchParams))
@@ -128,6 +136,29 @@ namespace TwitchLeecher.Gui.Services
                     },
                     TaskScheduler.FromCurrentSynchronizationContext()
                 );
+        }
+
+        private void AddRecentSearch(SearchParameters searchParams)
+        {
+            try
+            {
+                List<SearchParameters> recent = _runtimeDataService.RuntimeData.RecentSearches;
+                XElement searchXml = searchParams.GetXml();
+
+                recent.RemoveAll(s => XNode.DeepEquals(s.GetXml(), searchXml));
+                recent.Insert(0, searchParams.Clone());
+
+                if (recent.Count > MAX_RECENT_SEARCHES)
+                {
+                    recent.RemoveRange(MAX_RECENT_SEARCHES, recent.Count - MAX_RECENT_SEARCHES);
+                }
+
+                _runtimeDataService.Save();
+            }
+            catch
+            {
+                // Recent searches are a convenience; never block the search itself
+            }
         }
 
         private void PreferencesSaved()
