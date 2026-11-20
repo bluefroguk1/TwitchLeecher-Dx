@@ -26,3 +26,9 @@
 - The Search tab (`MainWindowVM.ShowSearch`) always opens the form; before, it jumped to the results whenever there were any, so the form was unreachable.
 - The sidebar shows "← Back to results (N)" under the Search button when the last search has results (`SearchViewModel.HasResults` / `BackToResultsCommand`, count from `ISearchService.Videos`). The VM is created per visit, so the count is read once.
 - `IsSearchActive` (header underline on both pages) lives on `ui-header-nav`, not here.
+
+## Added after second test round
+
+- Removed the star button next to the Channel field; favourites are the chips under it.
+- Removed the bottom-bar Search/Cancel buttons from the Search page.
+- Links / IDs box: Enter now adds a new line (the page-wide Enter-to-search binding swallowed it, which is why everything ended up on one line). Enter-to-search now only applies in the Channel field. The box wraps long links and scrolls.

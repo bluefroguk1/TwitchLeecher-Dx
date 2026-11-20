@@ -392,12 +392,6 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void OpenSearchDropDown()
-        {
-            SearchParams.Channel = string.Empty;
-            IsDropdownOpen = !IsDropdownOpen;
-        }
 
         protected override List<MenuCommand> BuildMenu()
         {
@@ -408,10 +402,7 @@ namespace TwitchLeecher.Gui.ViewModels
                 menuCommands = new List<MenuCommand>();
             }
 
-            menuCommands.Add(
-                new MenuCommand(SearchCommand, "Search", "fa-solid fa-magnifying-glass")
-            );
-            menuCommands.Add(new MenuCommand(CancelCommand, "Cancel", "fa-solid fa-xmark"));
+            // the sidebar has its own Search button; the page needs no bottom-bar buttons
 
             return menuCommands;
         }
