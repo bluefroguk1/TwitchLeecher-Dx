@@ -350,16 +350,21 @@ namespace TwitchLeecher.Gui.Services
                 DownloadParameters downloadParams =
                     _quickDownloadService.CreateDownloadParams(video, out string problem, quality);
 
+                // off-peak schedule: outside the window the find waits, paused, until the window opens
+                bool holdForSchedule = !startPaused &&
+                                       !DownloadSchedule.IsOpen(_preferencesService.CurrentPreferences, DateTime.Now);
+
                 if (downloadParams != null)
                 {
                     downloadParams.FromWatchedSearch = true;
+                    downloadParams.WaitForSchedule = holdForSchedule;
                 }
 
                 // the download queue is bound to the UI
                 string notQueued = downloadParams == null
                     ? problem
                     : await Dispatcher.UIThread.InvokeAsync(() =>
-                        _quickDownloadService.TryEnqueue(downloadParams, startPaused));
+                        _quickDownloadService.TryEnqueue(downloadParams, startPaused || holdForSchedule));
 
                 // shortcut: a skipped video (sub-only, file exists, bad download settings) is not retried, the log says why; add a retry list if users ask
                 seen.Add(video.Id);
@@ -371,7 +376,12 @@ namespace TwitchLeecher.Gui.Services
                     continue;
                 }
 
-                if (startPaused)
+                if (holdForSchedule)
+                {
+                    Log("SCHEDULED", label,
+                        $"{video.Title} (starts at {DownloadSchedule.Describe(_preferencesService.CurrentPreferences).Substring(0, 5)})");
+                }
+                else if (startPaused)
                 {
                     Log("PAUSED", label, $"{video.Title} (waiting for you in Downloads)");
                 }
