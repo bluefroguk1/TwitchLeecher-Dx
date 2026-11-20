@@ -618,7 +618,6 @@
                     <views:WatchedSearchesView DataContext="{Binding WatchedSearches}" />
                 </ScrollViewer>
             </TabItem>
-
         </TabControl>
 
         <!-- save bar: only while there are unsaved changes -->
