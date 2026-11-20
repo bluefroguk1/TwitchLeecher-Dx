@@ -1,5 +1,4 @@
 ﻿using System.Windows.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
@@ -55,7 +54,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly object _commandLockObject;
         private bool _showNotification;
         private string _notification;
-        private IBrush _subOnlyButtonColor;
+        private int _notificationVersion;
 
         #endregion Fields
 
@@ -130,8 +129,15 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             get { return _isAuthenticated; }
 
-            private set { SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated)); }
+            private set
+            {
+                SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated));
+                FirePropertyChanged(nameof(UserName));
+            }
         }
+
+        // shown in Settings next to Log out
+        public string UserName => _authService.UserName;
 
         public bool IsAuthenticatedSubOnly
         {
@@ -139,22 +145,27 @@ namespace TwitchLeecher.Gui.ViewModels
 
             private set
             {
-                SubOnlyButtonColor = value ? Brushes.GreenYellow : Brushes.DarkGray;
                 SetProperty(ref _isAuthenticatedSubOnly, value, nameof(IsAuthenticatedSubOnly));
+                FirePropertyChanged(nameof(SubOnlyLabel));
             }
         }
 
-        public IBrush SubOnlyButtonColor
-        {
-            get => _subOnlyButtonColor;
-            set => SetProperty(ref _subOnlyButtonColor, value);
-        }
+        public string SubOnlyLabel => IsAuthenticatedSubOnly ? "Sub-only: on" : "Sub-only: off";
 
         public ViewModelBase MainView
         {
             get { return _mainView; }
-            set { SetProperty(ref _mainView, value, nameof(MainView)); }
+            set
+            {
+                SetProperty(ref _mainView, value, nameof(MainView));
+                FirePropertyChanged(nameof(IsSearchActive));
+                FirePropertyChanged(nameof(IsDownloadsActive));
+            }
         }
+
+        public bool IsSearchActive => _mainView is SearchViewModel or SearchResultViewModel;
+
+        public bool IsDownloadsActive => _mainView is DownloadsViewModel;
 
         public ICommand ShowSearchCommand => _showSearchCommand ??= new DelegateCommand(ShowSearch);
 
@@ -495,10 +506,15 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             Notification = text;
             ShowNotification = true;
+            int version = ++_notificationVersion;
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 await Task.Delay(5000);
-                ShowNotification = false;
+                // a newer toast restarts the 5 s timer instead of being hidden early by this one
+                if (version == _notificationVersion)
+                {
+                    ShowNotification = false;
+                }
             });
         }
     }
