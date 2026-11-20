@@ -1,4 +1,5 @@
-﻿using System;
+﻿using TwitchLeecher.Shared.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -147,8 +148,9 @@ namespace TwitchLeecher.Services.Services
                 {
                     jsonStr = webClient.DownloadString(AUTH_URL);
                 }
-                catch (WebException)
+                catch (WebException ex)
                 {
+                    Log.Swallowed("ApiService: access token verification", ex);
                     // Any WebException indicates that the access token could not be verified
                     return false;
                 }
@@ -200,8 +202,9 @@ namespace TwitchLeecher.Services.Services
                 {
                     _ = webClient.UploadString(REVOKE_URL, string.Empty);
                 }
-                catch (WebException)
+                catch (WebException ex)
                 {
+                    Log.Swallowed("ApiService: access token revoke", ex);
                     // Ignore potentionally failed revoke requests
                 }
             }
@@ -238,8 +241,9 @@ namespace TwitchLeecher.Services.Services
 
                     SetNextRequestTime(webClient);
                 }
-                catch (WebException)
+                catch (WebException ex)
                 {
+                    Log.Swallowed("ApiService: GQL request", ex);
                     return null;
                 }
 
@@ -273,8 +277,9 @@ namespace TwitchLeecher.Services.Services
 
                                         return id;
                                     }
-                                    catch (WebException)
+                                    catch (WebException ex)
                                     {
+                                        Log.Swallowed("ApiService: channel lookup", ex);
                                         return null;
                                     }
                                     catch (Exception)

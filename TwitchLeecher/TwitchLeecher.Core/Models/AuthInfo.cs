@@ -1,4 +1,6 @@
-﻿using System.Xml.Linq;
+﻿using TwitchLeecher.Shared.Helpers;
+using System;
+using System.Xml.Linq;
 using TwitchLeecher.Shared.Extensions;
 
 namespace TwitchLeecher.Core.Models
@@ -64,8 +66,9 @@ namespace TwitchLeecher.Core.Models
                         runtimeAuthInfo.AccessToken = accessTokenEl.GetValueAsString();
                         entryFound = true;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Swallowed("AuthInfo: access token in config", ex);
                         // Malformed XML
                         return null;
                     }

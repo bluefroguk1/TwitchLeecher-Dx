@@ -309,8 +309,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.AppCheckForUpdates = appCheckForUpdatesEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.AppCheckForUpdates", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -323,8 +324,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.AppShowDonationButton = appShowDonationButtonEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.AppShowDonationButton", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -340,8 +342,9 @@ namespace TwitchLeecher.Services.Services
                                         preferences.Theme = "New";
                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.Theme", ex);
                                     preferences.Theme = "New";
                                 }
                             }
@@ -380,8 +383,9 @@ namespace TwitchLeecher.Services.Services
                                         }
                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchFavouriteChannels", ex);
                                     // Value from config file could not be parsed
                                 }
                             }
@@ -394,8 +398,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.SearchChannelName = searchChannelNameEl.GetValueAsString();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchChannelName", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -408,8 +413,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.SearchVideoType = searchVideoTypeEl.GetValueAsEnum<VideoType>();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchVideoType", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -423,8 +429,9 @@ namespace TwitchLeecher.Services.Services
                                     preferences.SearchLoadLimitType =
                                         searchLoadLimitTypeEl.GetValueAsEnum<LoadLimitType>();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchLoadLimitType", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -437,8 +444,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.SearchLoadLastDays = searchLoadLastDaysEl.GetValueAsInt();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchLoadLastDays", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -451,8 +459,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.SearchLoadLastVods = searchLoadLastVodsEl.GetValueAsInt();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchLoadLastVods", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -465,8 +474,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.SearchOnStartup = searchOnStartupEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.SearchOnStartup", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -484,8 +494,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.DownloadTempFolder = downloadTempFolderEl.GetValueAsString();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.DownloadTempFolder", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -498,8 +509,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.DownloadFolder = downloadFolderEl.GetValueAsString();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.DownloadFolder", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -515,8 +527,9 @@ namespace TwitchLeecher.Services.Services
                                         preferences.DownloadFileName = downloadFileNameEl.GetValueAsString();
                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.Version upgrade", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -530,8 +543,9 @@ namespace TwitchLeecher.Services.Services
                                     preferences.DownloadDefaultQuality = Preferences.DefaultQualities.Find(q =>
                                         q.VerticalResolution == downloadDefaultQualityEl.GetValueAsInt());
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.DownloadDefaultQuality", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -544,8 +558,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.DownloadSubfoldersForFav = donwloadSubfolderForFavEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.DownloadSubfoldersForFav", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -558,8 +573,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.DownloadRemoveCompleted = donwloadRemoveCompletedEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.DownloadRemoveCompleted", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -573,8 +589,9 @@ namespace TwitchLeecher.Services.Services
                                     preferences.DownloadDisableConversion =
                                         donwloadDisableConversionEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.DownloadDisableConversion", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -592,8 +609,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.MiscUseExternalPlayer = miscUseExternalPlayerEl.GetValueAsBool();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.MiscUseExternalPlayer", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -606,8 +624,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     preferences.MiscExternalPlayer = miscExternalPlayerEl.GetValueAsString();
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("PreferencesService: preferences.MiscExternalPlayer", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }

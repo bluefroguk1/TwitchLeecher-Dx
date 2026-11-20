@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using TwitchLeecher.Shared.Helpers;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Globalization;
 using System.Net;
@@ -61,8 +62,9 @@ namespace TwitchLeecher.Services.Services
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Swallowed("UpdateService: update check failed", ex);
                 // Update check should not distract the application
             }
 

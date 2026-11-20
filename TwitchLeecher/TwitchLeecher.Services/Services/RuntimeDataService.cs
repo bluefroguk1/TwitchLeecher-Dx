@@ -1,4 +1,5 @@
-﻿using System;
+﻿using TwitchLeecher.Shared.Helpers;
+using System;
 using System.IO;
 using System.Xml.Linq;
 using TwitchLeecher.Core.Models;
@@ -149,8 +150,9 @@ namespace TwitchLeecher.Services.Services
                                 {
                                     runtimeData.AuthInfo = AuthInfo.GetFromXml(authenticationEl);
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Log.Swallowed("RuntimeDataService: runtimeData.AuthInfo", ex);
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
@@ -167,8 +169,9 @@ namespace TwitchLeecher.Services.Services
                                     {
                                         runtimeData.MainWindowInfo = MainWindowInfo.GetFromXml(mainWindowInfoEl);
                                     }
-                                    catch
+                                    catch (Exception ex)
                                     {
+                                        Log.Swallowed("RuntimeDataService: runtimeData.MainWindowInfo", ex);
                                         // Value from config file could not be loaded, use default value
                                     }
                                 }
@@ -176,8 +179,9 @@ namespace TwitchLeecher.Services.Services
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Swallowed("RuntimeDataService: runtime config file could not be loaded", ex);
                     // For whatever reason, the runtime.xml could not be loaded
                 }
 

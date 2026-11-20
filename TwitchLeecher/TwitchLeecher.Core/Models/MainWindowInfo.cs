@@ -1,4 +1,5 @@
-﻿using System;
+﻿using TwitchLeecher.Shared.Helpers;
+using System;
 using System.Xml.Linq;
 using TwitchLeecher.Shared.Extensions;
 
@@ -79,8 +80,9 @@ namespace TwitchLeecher.Core.Models
                     {
                         mainWindowInfo.Width = (int)Math.Round(widthEl.GetValueAsDouble());
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Swallowed("MainWindowInfo: mainWindowInfo.Width", ex);
                         // Malformed XML
                         return null;
                     }
@@ -99,8 +101,9 @@ namespace TwitchLeecher.Core.Models
                     {
                         mainWindowInfo.Height = (int)Math.Round(heightEl.GetValueAsDouble());
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Swallowed("MainWindowInfo: mainWindowInfo.Height", ex);
                         // Malformed XML
                         return null;
                     }
@@ -119,8 +122,9 @@ namespace TwitchLeecher.Core.Models
                     {
                         mainWindowInfo.Top = (int)Math.Round(topEl.GetValueAsDouble());
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Swallowed("MainWindowInfo: mainWindowInfo.Top", ex);
                         // Malformed XML
                         return null;
                     }
@@ -139,8 +143,9 @@ namespace TwitchLeecher.Core.Models
                     {
                         mainWindowInfo.Left = (int)Math.Round(leftEl.GetValueAsDouble());
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Swallowed("MainWindowInfo: mainWindowInfo.Left", ex);
                         // Malformed XML
                         return null;
                     }
@@ -159,8 +164,9 @@ namespace TwitchLeecher.Core.Models
                     {
                         mainWindowInfo.IsMaximized = isMaximizedEl.GetValueAsBool();
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Log.Swallowed("MainWindowInfo: mainWindowInfo.IsMaximized", ex);
                         // Malformed XML
                         return null;
                     }

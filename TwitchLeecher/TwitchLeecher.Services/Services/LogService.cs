@@ -1,4 +1,5 @@
-﻿using System;
+﻿using TwitchLeecher.Shared.Helpers;
+using System;
 using System.IO;
 using TwitchLeecher.Services.Interfaces;
 using TwitchLeecher.Shared.IO;
@@ -47,8 +48,9 @@ namespace TwitchLeecher.Services.Services
 
                 return logFile;
             }
-            catch
+            catch (Exception logEx)
             {
+                Log.Swallowed("LogService.LogException: writing error log", logEx);
                 // Do not crash application if logging fails
             }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using TwitchLeecher.Shared.Helpers;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -629,8 +630,9 @@ namespace TwitchLeecher.Services.Services
                 FileSystem.DeleteDirectory(directory);
                 log(" done!");
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Swallowed("DownloadService.CleanUp: deleting temp directory", ex);
             }
         }
 
