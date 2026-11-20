@@ -121,9 +121,11 @@
                                         BorderBrush="{DynamicResource InputBorderBrush}" BorderThickness="1,0,0,0">
                                     <Button.Template>
                                         <ControlTemplate>
+                                            <!-- right corners follow the field's rounded border (6px outer, 1px line) -->
                                             <Border Background="{TemplateBinding Background}"
                                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="0,5,5,0">
                                                 <avalonia:Icon Value="fa-regular fa-calendar" Width="15" Height="15"
                                                                Foreground="{DynamicResource AccentBrush}"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
