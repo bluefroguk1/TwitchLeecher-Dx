@@ -34,12 +34,7 @@ namespace TwitchLeecher.Services.Services
                 if (context.Request.QueryString.ContainsKey("access_token"))
                 {
                     var accessToken = context.Request.QueryString["access_token"];
-                    context.Response.StatusCode = 200;
-                    var buffer =
-                        Encoding.UTF8.GetBytes(
-                            "Token recieved, you can close this window!");
-                    await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    context.Response.Close();
+                    await WriteSignedInPage(context.Response);
                     if (_authService.ValidateAuthentication(accessToken, false))
                     {
                         FireSubOnlyAuthenticationSuccess();
@@ -52,12 +47,7 @@ namespace TwitchLeecher.Services.Services
                 if (context.Request.QueryString.ContainsKey("sub_token"))
                 {
                     var accessToken = context.Request.QueryString["sub_token"];
-                    context.Response.StatusCode = 200;
-                    var buffer =
-                        Encoding.UTF8.GetBytes(
-                            "Token recieved, you can close this window!");
-                    await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    context.Response.Close();
+                    await WriteSignedInPage(context.Response);
                     _runtimeDataService.RuntimeData.AuthInfo.AccessTokenSubOnly = accessToken;
                     _eventAggregator.GetEvent<SubOnlyAuthChangedEvent>().Publish(true);
 
@@ -74,6 +64,25 @@ namespace TwitchLeecher.Services.Services
                     context.Response.Close();
                 }
             }
+        }
+
+        // window.close() is usually blocked for tabs the app opened, so the page must read fine when it stays open
+        private const string SignedInPage =
+            "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Twitch Leecher</title>" +
+            "<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;" +
+            "font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#18181b;color:#efeff1}" +
+            ".card{text-align:center;padding:40px 48px;border-radius:12px;background:#1f1f23;border-top:4px solid #9146FF}" +
+            "h1{margin:0 0 8px;font-size:24px;color:#bf94ff}p{margin:0;color:#adadb8}</style></head>" +
+            "<body><div class=\"card\"><h1>Signed in to Twitch Leecher</h1><p>You can close this tab</p></div>" +
+            "<script>window.close()</script></body></html>";
+
+        private static async Task WriteSignedInPage(HttpListenerResponse response)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "text/html; charset=utf-8";
+            var buffer = Encoding.UTF8.GetBytes(SignedInPage);
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            response.Close();
         }
 
         private void FireSubOnlyAuthenticationSuccess()
