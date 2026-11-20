@@ -407,11 +407,7 @@ namespace TwitchLeecher.Gui.ViewModels
                             if (_preferencesService.CurrentPreferences.DownloadQuickDownload)
                             {
                                 // #96: skip the dialog and queue with the default settings
-                                string notQueued = _quickDownloadService.TryEnqueue(downloadParams);
-                                if (notQueued != null)
-                                {
-                                    _notificationService.ShowNotification(notQueued);
-                                }
+                                _quickDownloadService.TryEnqueue(downloadParams);
                             }
                             else
                             {
@@ -633,7 +629,6 @@ namespace TwitchLeecher.Gui.ViewModels
                     }
 
                     _preferencesService.Save(prefs);
-                    _notificationService.ShowNotification(existing != null ? "Removed from favourites" : "Added to favourites");
                     FirePropertyChanged(nameof(IsFavourite));
                 }
             }
@@ -730,18 +725,13 @@ namespace TwitchLeecher.Gui.ViewModels
                 if (searchParams == null || searchParams.SearchType != SearchType.Channel ||
                     string.IsNullOrWhiteSpace(searchParams.Channel))
                 {
-                    _notificationService.ShowNotification("Only a channel search can be watched");
                     return;
                 }
 
-                bool wasOn = _autoDownloadService.Enabled;
                 WatchedSearch search = _autoDownloadService.Add(searchParams.Channel, searchParams.VideoType);
 
                 // asking to watch a search means wanting it to run
                 _autoDownloadService.Enabled = true;
-
-                _notificationService.ShowNotification("Watching " + search.Label +
-                    (wasOn ? "" : ", watched searches switched on") + ". Change it in Settings");
             }
             catch (Exception ex)
             {
@@ -758,7 +748,6 @@ namespace TwitchLeecher.Gui.ViewModels
 
                 if (selected.Count == 0)
                 {
-                    _notificationService.ShowNotification("Tick the videos you want first");
                     return;
                 }
 
@@ -789,11 +778,7 @@ namespace TwitchLeecher.Gui.ViewModels
                     }
                 }
 
-                if (skipped.Count == 0)
-                {
-                    _notificationService.ShowNotification(added + " download(s) added");
-                }
-                else
+                if (skipped.Count > 0)
                 {
                     await _dialogService.ShowMessageBox(
                         added + " download(s) added. Skipped (still ticked):" + Environment.NewLine +

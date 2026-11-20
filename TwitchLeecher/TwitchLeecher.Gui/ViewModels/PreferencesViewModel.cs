@@ -304,7 +304,6 @@ namespace TwitchLeecher.Gui.ViewModels
                             CurrentPreferences.SearchFavouriteChannels.Add(currentChannel);
                         }
 
-                        _notificationService.ShowNotification($"'{currentChannel}' added!");
                     }
                 }
             }
@@ -332,7 +331,6 @@ namespace TwitchLeecher.Gui.ViewModels
                             CurrentPreferences.SearchFavouriteChannels.Remove(existingEntry);
                             CurrentPreferences.SearchChannelName =
                                 CurrentPreferences.SearchFavouriteChannels.FirstOrDefault();
-                            _notificationService.ShowNotification($"'{currentChannel}' removed!");
                         }
                     }
                 }
@@ -466,7 +464,6 @@ namespace TwitchLeecher.Gui.ViewModels
                         _preferencesService.Save(_currentPreferences);
                         _themeService.SetTheme(_currentPreferences.Theme);
                         CurrentPreferences = null;
-                        _notificationService.ShowNotification("Preferences saved");
                     }
                 }
             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -389,9 +389,6 @@ namespace TwitchLeecher.Gui.Services
                 {
                     Log("STARTED", label, video.Title);
                 }
-
-                string message = $"Watched search {label}: {video.Title}";
-                Dispatcher.UIThread.Post(() => _notificationService.ShowNotification(message));
 
                 // DESKTOP NOTIFICATION: call the tray/desktop notification service here once it exists.
             }
