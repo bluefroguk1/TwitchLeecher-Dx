@@ -545,16 +545,19 @@
                         </StackPanel>
 
                         <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="DEFAULT QUALITY" />
-                            <ComboBox Width="220"
-                                      ItemsSource="{Binding CurrentPreferences.DownloadDefaultQualities}"
-                                      SelectedItem="{Binding CurrentPreferences.DownloadDefaultQuality}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+                            <!-- label and drop-down on one line, like Theme -->
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <TextBlock Classes="label" Text="DEFAULT QUALITY" VerticalAlignment="Center" />
+                                <ComboBox Width="220" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                          ItemsSource="{Binding CurrentPreferences.DownloadDefaultQualities}"
+                                          SelectedItem="{Binding CurrentPreferences.DownloadDefaultQuality}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
                             <TextBlock Classes="sub"
                                        Text="If a video doesn't have it, the next lower quality is picked (or the next higher if there is none lower)" />
                         </StackPanel>
