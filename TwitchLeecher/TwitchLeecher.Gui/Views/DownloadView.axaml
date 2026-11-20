@@ -103,7 +103,7 @@
                             <Image Source="{Binding DownloadParams.Video.Thumbnail^}" Stretch="UniformToFill" />
                         </Border>
                         <StackPanel VerticalAlignment="Top" Spacing="4">
-                            <TextBlock Text="{Binding DownloadParams.Video.Title}" FontSize="18" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding DownloadParams.Video.Title}" FontSize="16" FontWeight="SemiBold"
                                        TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding VideoDetails}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" />
                         </StackPanel>
@@ -167,7 +167,7 @@
                                 <Panel>
                                     <Image Source="{Binding StartPreview}" Stretch="UniformToFill" />
                                     <Border Classes="timecode" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                        <TextBlock Text="START" FontSize="11" FontWeight="Bold" />
+                                        <TextBlock Text="START" FontSize="12" FontWeight="Bold" />
                                     </Border>
                                     <Border Classes="timecode" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                         <TextBlock Text="{Binding RangeStartText}" FontSize="12" />
@@ -179,7 +179,7 @@
                                 <Panel>
                                     <Image Source="{Binding EndPreview}" Stretch="UniformToFill" />
                                     <Border Classes="timecode" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                        <TextBlock Text="END" FontSize="11" FontWeight="Bold" />
+                                        <TextBlock Text="END" FontSize="12" FontWeight="Bold" />
                                     </Border>
                                     <Border Classes="timecode" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                         <TextBlock Text="{Binding RangeEndText}" FontSize="12" />

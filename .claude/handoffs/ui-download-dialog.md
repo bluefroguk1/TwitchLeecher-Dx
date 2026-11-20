@@ -32,3 +32,4 @@ Script: `test-scripts/test-ui-download-dialog.ps1`.
 - All colours use the shared theme keys (`{DynamicResource <Key>Brush}`); the only fixed colours are translucent overlays (dimmed strip area, timecode chips). `RangeStrip` takes its brushes as properties set from XAML, so a theme switch re-renders it.
 - The file name keeps its extension in the text box (the mockup shows `.mp4` outside it) so `.mkv` stays selectable.
 - Not compiled here (no .NET SDK on the Mac); written against Avalonia 11.3 APIs. `App.axaml` changes come only from the cherry-picked theme-keys commit; `MainWindow.axaml` is untouched.
+- Font sizes are on the app scale (12/13/14/16/20/24): START/END labels 11 → 12, video title 18 → 16. No 21.333 / 14.667 left in `DownloadView.axaml`.
