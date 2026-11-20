@@ -562,6 +562,16 @@
                             <ComboBoxItem Content="Strong: H.265, smallest, some quality loss" />
                         </ComboBox>
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0"
+                                IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
+                        <TextBlock Text="Encoder" VerticalAlignment="Center" />
+                        <ComboBox SelectedIndex="{Binding CurrentPreferences.DownloadCompressEncoderIndex}" MinWidth="260"
+                                  AutomationProperties.Name="Compression encoder">
+                            <ComboBoxItem Content="Auto: graphics card if available" />
+                            <ComboBoxItem Content="CPU: smallest files, slower" />
+                            <ComboBoxItem Content="Graphics card: fastest, files a bit bigger" />
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
                 <avalonia:Icon Grid.Row="14" Grid.Column="4" Classes="Img_Help"
                                Value="fa-solid fa-circle-question">

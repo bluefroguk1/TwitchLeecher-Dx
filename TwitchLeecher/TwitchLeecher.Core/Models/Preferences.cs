@@ -69,6 +69,8 @@ namespace TwitchLeecher.Core.Models
 
         private CompressionLevel _downloadCompressLevel = CompressionLevel.Balanced;
 
+        private CompressionEncoder _downloadCompressEncoder = CompressionEncoder.Auto;
+
         private bool _miscUseExternalPlayer;
 
         private string _miscExternalPlayer;
@@ -238,6 +240,26 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _downloadCompressLevel, value); }
         }
 
+        public CompressionEncoder DownloadCompressEncoder
+        {
+            get { return _downloadCompressEncoder; }
+            set { SetProperty(ref _downloadCompressEncoder, value); }
+        }
+
+        // the Settings dropdown lists the encoders in enum order
+        public int DownloadCompressEncoderIndex
+        {
+            get { return (int)_downloadCompressEncoder; }
+            set
+            {
+                if (value >= 0)
+                {
+                    DownloadCompressEncoder = (CompressionEncoder)value;
+                    FirePropertyChanged(nameof(DownloadCompressEncoderIndex));
+                }
+            }
+        }
+
         // the Settings dropdown lists the levels in enum order
         public int DownloadCompressLevelIndex
         {
@@ -389,6 +411,7 @@ namespace TwitchLeecher.Core.Models
                 DownloadQuickDownload = DownloadQuickDownload,
                 DownloadCompress = DownloadCompress,
                 DownloadCompressLevel = DownloadCompressLevel,
+                DownloadCompressEncoder = DownloadCompressEncoder,
                 Theme = Theme,
                 MaxConnectionCount = MaxConnectionCount
             };

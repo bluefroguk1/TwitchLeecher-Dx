@@ -260,6 +260,8 @@ namespace TwitchLeecher.Services.Services
                 downloadCompressLevelEl.SetValue(preferences.DownloadCompressLevel);
                 downloadEl.Add(downloadCompressLevelEl);
 
+                downloadEl.Add(new XElement("CompressEncoder", preferences.DownloadCompressEncoder));
+
                 // Miscellanious
                 XElement miscUseExternalPlayerEl = new XElement(MISC_USEEXTERNALPLAYER_EL);
                 miscUseExternalPlayerEl.SetValue(preferences.MiscUseExternalPlayer);
@@ -641,6 +643,20 @@ namespace TwitchLeecher.Services.Services
                                 }
                             }
 
+                            XElement downloadCompressEncoderEl = downloadEl.Element("CompressEncoder");
+
+                            if (downloadCompressEncoderEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadCompressEncoder = downloadCompressEncoderEl.GetValueAsEnum<CompressionEncoder>();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
                             XElement downloadCompressLevelEl = downloadEl.Element(DOWNLOAD_COMPRESSLEVEL_EL);
 
                             if (downloadCompressLevelEl != null)
@@ -719,6 +735,7 @@ namespace TwitchLeecher.Services.Services
                 DownloadQuickDownload = false,
                 DownloadCompress = false,
                 DownloadCompressLevel = CompressionLevel.Balanced,
+                DownloadCompressEncoder = CompressionEncoder.Auto,
                 MiscUseExternalPlayer = false,
                 MiscExternalPlayer = null,
                 MaxConnectionCount = 10,

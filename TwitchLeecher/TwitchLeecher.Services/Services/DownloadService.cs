@@ -307,7 +307,8 @@ namespace TwitchLeecher.Services.Services
                                 cancellationToken.ThrowIfCancellationRequested();
                                 string compressWarning = _processingService.CompressVideo(log, setStatus, setProgress,
                                     setIsIndeterminate, outputFile, downloadParams.CroppedLength,
-                                    _preferencesService.CurrentPreferences.DownloadCompressLevel, cancellationToken);
+                                    _preferencesService.CurrentPreferences.DownloadCompressLevel,
+                                    _preferencesService.CurrentPreferences.DownloadCompressEncoder, cancellationToken);
 
                                 if (compressWarning != null)
                                 {

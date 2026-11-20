@@ -9,3 +9,12 @@ Option to compress a video after it is downloaded, to save space. Branch from `c
 - **combined-all:** the redesigned dialog needs the checkbox in its Extras section, and the redesigned Settings needs the toggle + level in Download.
 
 **Test needs:** one short download (3-minute crop). Script: `test-scripts\test-feature-compress-video.ps1`.
+
+## Added: GPU encoders
+
+- **`Preferences.DownloadCompressEncoder`** (`CompressionEncoder` Auto / Cpu / Gpu, default Auto, saved as `CompressEncoder`) appears in Settings as an "Encoder" dropdown.
+- **Detection:** Auto and Gpu look for a working encoder once per run. On Windows/Linux the candidates are `<codec>_nvenc`, then `_qsv`, then `_amf`; on macOS `_videotoolbox`. Each gets a 5-frame test encode, because ffmpeg lists hardware encoders even when the hardware is missing. The first that passes is used; otherwise the CPU (libx264/libx265) is.
+- **Fallback:** if a GPU encode fails part way, it is retried on the CPU automatically.
+- **Settings per encoder:** NVENC `-preset p5 -rc vbr -cq Q -b:v 0`, QSV `-global_quality Q`, AMF `-rc cqp -qp_i/p/b Q`, VideoToolbox `-q:v` mapped from Q. `// shortcut:` GPU quality reuses the CPU CRF numbers; tune per vendor if files come out too big or soft. Linux VAAPI is not included (it needs a device path).
+- **Trade-off for the user:** GPU is typically 5-20x faster and leaves the CPU free, but makes files about 20-40% bigger at similar quality. CPU gives the smallest files.
+- **combined-all:** the redesigned Settings › Download needs the Encoder dropdown next to the Compression level.
