@@ -85,6 +85,24 @@ Everything below is on the branch it belongs to (for its PR) **and** merged into
 
 Before testing, kill any running copy: `Get-Process TwitchLeecher | Stop-Process -Force`.
 
+### Sub-only now comes from the Twitch sign-in (added 2026-11-20, in combined-all, build run 44659396373 passed)
+
+`claude/in-app-signin` is now in `combined-all` (f838226). **It is the first test of this branch**, so test it first.
+- **Signing in:** happens inside the app (a web view). The login screen's "Also enable sub-only downloads" tick box sets up sub-only in the same login. No console steps.
+- **No Sub-only switch anywhere:** it was removed from the header and from Settings (`claude/ui-settings-sections-v2` b06d771). Sub-only is turned on only at sign-in.
+- **Subscriber-only VODs:** the message is just **"This video is for subscribers only."**, for the download button, quick download, Download Selected and watched searches (QuickDownloadService, `claude/ui-watched-searches-in-settings` 2fc596a).
+- **Token health check:**
+  - At start-up and **every hour**, the app asks Twitch (`oauth2/validate`) whether both saved tokens still work.
+  - If Twitch **rejects** one (401), it offers: "Your Twitch sign-in has stopped working. Log out now and sign in again?" For the sub-only token: "Sub-only downloads have stopped working. Log out now and sign in again (tick "Also enable sub-only downloads")…".
+  - Yes logs out. It asks once per run. Being offline never triggers it.
+- **Browser fallback:** the friendly "Signed in to Twitch Leecher" page from the login-page branch is kept for it, alongside the sign-in branch's one-time-code checks (`AuthListener`).
+
+| Test | Needs |
+|---|---|
+| Sign in with the tick box ticked; sub-only works (download a sub-only VOD from a channel you subscribe to) | Sign-in; the last step needs a subscription |
+| Sign in without the tick box, then try a sub-only VOD: "This video is for subscribers only." | Sign-in |
+| Disconnect Twitch Leecher at twitch.tv › Settings › Connections, then restart the app: it offers to log out and sign in again | Sign-in (optional) |
+
 ### 1. Instant checks (UI only)
 
 | Fix | Branch | What to check |
@@ -93,7 +111,6 @@ Before testing, kill any running copy: `Get-Process TwitchLeecher | Stop-Process
 | Search: no bottom Search/Cancel | same | The bottom bar is empty on Search; the sidebar button and Enter (in the Channel field) still search |
 | Search: Links / IDs box | same | **Root cause:** Enter-to-search was bound to the whole page, so Enter in this box searched instead of adding a line. Now each link goes on its own line, long links wrap, and the box scrolls |
 | Header: no Sub-only button | `claude/ui-header-nav-d65209` (596c24d) | Top bar shows tabs, Settings, Info/Donate/Log out only |
-| Settings › General: Sub-only row | `claude/ui-settings-sections-v2` (f03c4e2) | SUB-ONLY DOWNLOADS shows On/Off, and "Set up" opens the sub-only page |
 | Settings › Search: no favourites list | same | Only a DEFAULT CHANNEL box (Search on start uses it). Favourites are managed with the ★ on results |
 | Watched searches row layout | `claude/ui-watched-searches-in-settings` (3397903) | Each row on one line: title, "When found", dropdown, Edit, Active, a red bin. Rows line up, nothing is cut off, even at the minimum window width |
 | Watched searches bin | same | The bin asks "Stop watching …?"; Edit no longer has Remove |
