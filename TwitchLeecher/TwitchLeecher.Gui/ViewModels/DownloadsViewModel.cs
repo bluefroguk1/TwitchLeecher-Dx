@@ -79,6 +79,9 @@ namespace TwitchLeecher.Gui.ViewModels
 
             Downloads.CollectionChanged += Downloads_CollectionChanged;
 
+            // the watched-searches count in the summary bar changes without any download changing
+            _autoDownloadService.Changed += (_, _) => Dispatcher.UIThread.Post(Refresh, DispatcherPriority.Background);
+
             foreach (TwitchVideoDownload download in Downloads)
             {
                 download.PropertyChanged += Download_PropertyChanged;
