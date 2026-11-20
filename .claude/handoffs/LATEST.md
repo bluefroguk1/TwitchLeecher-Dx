@@ -79,6 +79,51 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
+## Post-testing notes: built and in combined-all (2026-11-20)
+
+All the user's notes and both tidy-ups are built on the branch each belongs to (for its PR) and merged into `combined-all`. **`combined-all` compiles on GitHub Actions** (Windows + Linux, run 44646475701). None of this has been **run** yet. Test on `combined-all`, quickest first; each branch's own test script has the detailed steps.
+
+### Instant (UI only)
+
+| Note | Branch (for the PR) | What to check |
+|---|---|---|
+| 1 | `claude/ui-search-sidebar-93487b` (9c5668b) | On results, the Search tab opens the search form; "← Back to results (N)" returns to them |
+| 3 | `claude/ui-results-toolbar-themed` (a49fd65) | Channel searches show the channel name, its avatar and a ★ that adds or removes the channel from favourites (and saves). Hidden for link/ID searches |
+| 2 | `ui-draggable-dialogs` (49f659d, from `master`) | Message boxes can be dragged by their header |
+| 7 | `claude/ui-watched-searches-in-settings` (33e58a4) | Settings › Watched searches uses flat rows that match the other sections. **The user decides whether the look is right** |
+| tidy | `claude/ui-download-dialog-themed` (39bced0) | No odd font sizes left in the dialog |
+| tidy | `combined-all` only (1fd18f0) | The results page uses `IQuickDownloadService` (plus a new `GetDefaultPath`) instead of its own copy. Quick download, Download Selected and the QUEUED/DOWNLOADED badges behave as before |
+| 5 | `claude/feature-tray-notifications-963477` (4b0930f) | The first minimise asks "Minimise to the system tray instead?" with "Don't ask again". The answer sets Settings › General › "Minimise to the system tray". To re-test, set `AppTrayPromptShown` false in `config.xml` |
+| pipe | `fix-single-instance-pipe` (9a1ea44, from `master`) | With the app running (or hidden in the tray), launching it again brings the existing window forward |
+
+### Needs one short download
+
+| Note | Branch | What to check |
+|---|---|---|
+| 4 | `feature-chat-html` (490a50e, built on `feature-71-chat-pr` / PR #107) | Download dialog › Extras › "Save chat" offers **as text / as HTML with emotes / as HTML (works offline)**. Open the `.chat.html` in a browser and check name colours, emotes and timestamps. For offline mode, check it with the network off. Third-party emotes (7TV/BTTV/FFZ) are not included |
+| 8 | `feature-desktop-notifications` (3d1ca5a) | Desktop notifications are back. On first run the app creates a Start Menu shortcut with AppUserModelID `TwitchLeecher.Dx` (Windows needs it to show toasts from an unpackaged exe). Check that a toast appears when a download finishes, and "All N downloads finished" after a batch. If toasts still don't show, its handoff lists what to check |
+
+### Needs a sign-out/sign-in of Windows, or a reboot
+
+| Note | Branch | What to check |
+|---|---|---|
+| 6 | `feature-start-with-windows` (265c397, includes the pipe fix) | Settings › General › "Start Twitch Leecher when I sign in", and "Start minimised to the tray". After signing in to Windows, the app starts, hidden in the tray if that's ticked. Turning it off removes `HKCU\...\Run\TwitchLeecher` |
+
+### Needs a channel that is live
+
+| Fix | Branch | What to check |
+|---|---|---|
+| live at setup | `claude/ui-watched-searches-in-settings` (32182c7) | Add a watched search for a channel that is **live right now**. The first check's log says "the current live stream will download when it ends"; after the stream ends, that VOD downloads (or waits paused) |
+
+**Merge notes for `combined-all`:**
+- The tray, start-with-Windows and notification toggles all sit in the redesigned Settings › General.
+- The chat-format choice sits under the new dialog's Extras.
+- The results page keeps the channel-header lookup through `IApiService`.
+
+**Still not in `combined-all`:**
+- `claude/fix-slow-downloads-15ccca`: it conflicts with the queue's pause/resume, and showed no measurable gain.
+- `claude/in-app-signin`: never tested.
+
 ## combined-all: everything together, for one last round of testing (built 2026-11-20 on the Mac)
 
 `combined-all` = `combined` (the 16 open PRs) plus every tested branch. **It is a test branch only**: PRs are still cut per branch with the recipe below. It has **not been compiled**, because the Mac has no SDK. Build it first and fix any compile errors on `combined-all` itself, noting which branch each fix belongs to.
@@ -138,7 +183,7 @@ Before pushing, make sure the PC copy of each branch contains everything from th
 
 `claude/in-app-signin` was **not tested** and conflicts with login-page-and-icon, so it is left out of the first build; it can be added as a last commit. The PC builds and tests `combined-all` to look for cross-branch bugs before the PRs are cut. `combined-all` is a test branch only; PRs are still cut per branch.
 
-## User's notes from testing: suggested implementation (not started)
+## User's notes from testing: original implementation plan (now built, see "Post-testing notes" above)
 
 Each is its own branch. Build it on `combined-all` so it can be tested with everything else, then extract it with the PR recipe.
 
