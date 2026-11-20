@@ -21,6 +21,8 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
+    <!-- Pin patched Tmds.DBus.Protocol (GHSA-xrw6-gwf8-vvr9); Avalonia 11.3 pulls 0.21.2 transitively. -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     <PackageReference Include="Ninject" Version="4.0.0-beta.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
