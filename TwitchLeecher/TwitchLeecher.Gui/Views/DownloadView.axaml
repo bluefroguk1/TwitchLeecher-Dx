@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-            <TextBlock Text="Download Video" FontSize="21.333" FontWeight="Bold" />
+            <TextBlock Text="Download Video" FontSize="20" FontWeight="Bold" />
         </Border>
 
         <Grid Grid.Row="1" Grid.IsSharedSizeScope="True">
@@ -180,7 +180,7 @@
                 <Border.Background>
                     <SolidColorBrush Color="{DynamicResource TextForegroundErrorColor}" Opacity="0.3" />
                 </Border.Background>
-                <TextBlock FontSize="11"
+                <TextBlock FontSize="12"
                            Text="The video contains muted parts! This may cause problems during conversion. In case of a conversion error or audio issues, please try disabling converion in the preferences." />
             </Border>
         </Grid>

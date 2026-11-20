@@ -37,7 +37,7 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Application" FontSize="21.333" FontWeight="Bold" />
+                <TextBlock Text="Application" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <Grid Grid.Row="1" Margin="15,0,0,0">
@@ -100,7 +100,7 @@
             </Grid>
 
             <Border Grid.Row="2" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Search" FontSize="21.333" FontWeight="Bold" />
+                <TextBlock Text="Search" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <Grid Grid.Row="3" Margin="15,0,0,0">
@@ -263,7 +263,7 @@
             </Grid>
 
             <Border Grid.Row="4" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Download" FontSize="21.333" FontWeight="Bold" />
+                <TextBlock Text="Download" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <Grid Grid.Row="5" Margin="15,0,0,0">
@@ -566,7 +566,7 @@
             </Grid>
 
             <Border Grid.Row="6" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Miscellaneous" FontSize="21.333" FontWeight="Bold" />
+                <TextBlock Text="Miscellaneous" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <Grid Grid.Row="7" Margin="15,0,0,0">
@@ -636,7 +636,7 @@
                 </avalonia:Icon>
             </Grid>
             <Border Grid.Row="8" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Experimental" FontSize="21.333" FontWeight="Bold" />
+                <TextBlock Text="Experimental" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <Grid Grid.Row="9" Margin="15,0,0,0">
