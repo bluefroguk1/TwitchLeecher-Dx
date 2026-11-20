@@ -186,15 +186,23 @@
 
                     <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
                         <TextBlock Classes="label" Text="SHOW" />
-                        <!-- Item order must match the SHOW_* indexes in SearchViewModel -->
-                        <ComboBox Height="36" HorizontalAlignment="Stretch"
-                                  AutomationProperties.Name="Which videos to show"
-                                  SelectedIndex="{Binding ShowIndex}">
-                            <ComboBoxItem Content="Last N videos" />
-                            <ComboBoxItem Content="Today" />
-                            <ComboBoxItem Content="Last 7 days" />
-                            <ComboBoxItem Content="Custom range&#x2026;" />
-                        </ComboBox>
+                        <!-- Quick picks as pills; the fields below appear for Last N videos and Custom -->
+                        <WrapPanel>
+                            <RadioButton Classes="chip" GroupName="SearchShow" Content="Last N videos"
+                                         AutomationProperties.Name="Last N videos"
+                                         IsChecked="{Binding ShowLastVodsPill}" />
+                            <RadioButton Classes="chip" GroupName="SearchShow" Content="Today"
+                                         IsChecked="{Binding ShowTodayPill}" />
+                            <RadioButton Classes="chip" GroupName="SearchShow" Content="7 days"
+                                         AutomationProperties.Name="Last 7 days"
+                                         IsChecked="{Binding Show7DaysPill}" />
+                            <RadioButton Classes="chip" GroupName="SearchShow" Content="30 days"
+                                         AutomationProperties.Name="Last 30 days"
+                                         IsChecked="{Binding Show30DaysPill}" />
+                            <RadioButton Classes="chip" GroupName="SearchShow" Content="Custom"
+                                         AutomationProperties.Name="Custom date range"
+                                         IsChecked="{Binding ShowCustomPill}" />
+                        </WrapPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsLastVods}">
                             <TextBlock Text="Last" VerticalAlignment="Center" />
                             <NumericUpDown Minimum="1" Maximum="999" Width="110" FormatString="0"

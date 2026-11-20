@@ -22,7 +22,8 @@ namespace TwitchLeecher.Gui.ViewModels
         private const int SHOW_LAST_VODS = 0;
         private const int SHOW_TODAY = 1;
         private const int SHOW_LAST_7_DAYS = 2;
-        private const int SHOW_CUSTOM = 3;
+        private const int SHOW_LAST_30_DAYS = 3;
+        private const int SHOW_CUSTOM = 4;
 
         private SearchParameters _searchParams;
         private bool _isLinksMode;
@@ -154,19 +155,43 @@ namespace TwitchLeecher.Gui.ViewModels
                         SearchParams.LoadTo = today;
                         break;
 
+                    case SHOW_LAST_30_DAYS:
+                        SearchParams.LoadLimitType = LoadLimitType.Timespan;
+                        SearchParams.LoadFrom = today.AddDays(-30);
+                        SearchParams.LoadTo = today;
+                        break;
+
                     default:
                         SearchParams.LoadLimitType = LoadLimitType.Timespan;
                         break;
                 }
 
-                FirePropertyChanged(nameof(IsLastVods));
-                FirePropertyChanged(nameof(IsCustomRange));
+                FireShowChanged();
             }
         }
 
         public bool IsLastVods => _showIndex == SHOW_LAST_VODS;
 
         public bool IsCustomRange => _showIndex == SHOW_CUSTOM;
+
+        // One bool per pill in the sidebar (radio buttons set theirs to true to choose it)
+        public bool ShowLastVodsPill { get => _showIndex == SHOW_LAST_VODS; set { if (value) ShowIndex = SHOW_LAST_VODS; } }
+        public bool ShowTodayPill { get => _showIndex == SHOW_TODAY; set { if (value) ShowIndex = SHOW_TODAY; } }
+        public bool Show7DaysPill { get => _showIndex == SHOW_LAST_7_DAYS; set { if (value) ShowIndex = SHOW_LAST_7_DAYS; } }
+        public bool Show30DaysPill { get => _showIndex == SHOW_LAST_30_DAYS; set { if (value) ShowIndex = SHOW_LAST_30_DAYS; } }
+        public bool ShowCustomPill { get => _showIndex == SHOW_CUSTOM; set { if (value) ShowIndex = SHOW_CUSTOM; } }
+
+        private void FireShowChanged()
+        {
+            FirePropertyChanged(nameof(ShowIndex));
+            FirePropertyChanged(nameof(IsLastVods));
+            FirePropertyChanged(nameof(IsCustomRange));
+            FirePropertyChanged(nameof(ShowLastVodsPill));
+            FirePropertyChanged(nameof(ShowTodayPill));
+            FirePropertyChanged(nameof(Show7DaysPill));
+            FirePropertyChanged(nameof(Show30DaysPill));
+            FirePropertyChanged(nameof(ShowCustomPill));
+        }
 
         public ICommand CancelCommand
         {
@@ -204,12 +229,11 @@ namespace TwitchLeecher.Gui.ViewModels
                 LoadLimitType.LastVods => SHOW_LAST_VODS,
                 LoadLimitType.OnlyToday => SHOW_TODAY,
                 _ when SearchParams.LoadFrom == today.AddDays(-7) && SearchParams.LoadTo == today => SHOW_LAST_7_DAYS,
+                _ when SearchParams.LoadFrom == today.AddDays(-30) && SearchParams.LoadTo == today => SHOW_LAST_30_DAYS,
                 _ => SHOW_CUSTOM
             };
 
-            FirePropertyChanged(nameof(ShowIndex));
-            FirePropertyChanged(nameof(IsLastVods));
-            FirePropertyChanged(nameof(IsCustomRange));
+            FireShowChanged();
         }
 
         // One box for links and IDs: all IDs -> ID search, otherwise IDs become video links -> URL search
