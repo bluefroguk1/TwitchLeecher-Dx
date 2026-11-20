@@ -257,6 +257,7 @@
                                 <ComboBoxItem Content="as text" />
                                 <ComboBoxItem Content="as HTML with emotes" />
                                 <ComboBoxItem Content="as HTML (works offline)" />
+                                <ComboBoxItem Content="as JSON (for other tools)" />
                             </ComboBox>
                         </StackPanel>
                         <CheckBox Content="Save video details" IsChecked="{Binding DownloadParams.SaveVodInfo}"

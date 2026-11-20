@@ -4,6 +4,8 @@ namespace TwitchLeecher.Core.Enums
     {
         Text,
         Html,
-        HtmlEmbedded
+        HtmlEmbedded,
+        // appended last so saved indexes keep their meaning
+        Json
     }
 }
