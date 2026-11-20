@@ -24,6 +24,10 @@ $checks = @(
  'Back on Search: Recent searches lists the last searches (max 5), clicking one re-runs it',
  'Restart the app: recent searches are still there',
  'With "Search on Start" on in Settings, restart: the default search runs immediately',
+ 'Before any search: no "Back to results" link under the Search button',
+ 'Run a search with results, then click the Search tab: the search form opens (not the results)',
+ 'The form shows "<- Back to results (N)" with N = number of videos found; clicking it opens the results page',
+ 'Run a search that finds nothing, click the Search tab: no "Back to results" link',
  'Switch theme New <-> Original in Settings and back to Search: sidebar, chips, switch and empty state follow the theme, all text readable (incl. on the accent)'
 )
 $results = foreach ($c in $checks) {

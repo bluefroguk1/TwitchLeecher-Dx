@@ -237,6 +237,11 @@
                                    Text="Press Enter to search" IsVisible="{Binding !IsLinksMode}" />
                         <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
                                    Text="One link or video ID per line" IsVisible="{Binding IsLinksMode}" />
+                        <Button HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"
+                                IsVisible="{Binding HasResults}"
+                                Command="{Binding BackToResultsCommand}"
+                                Content="{Binding BackToResultsText}" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
