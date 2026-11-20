@@ -299,6 +299,22 @@ namespace TwitchLeecher.Services.Services
                             warnings.AddRange(downloadWarnings);
                             warnings.AddRange(processingWarnings);
 
+                            bool compress = downloadParams.Compress ??
+                                            _preferencesService.CurrentPreferences.DownloadCompress;
+
+                            if (compress && downloadParams.CanCompress)
+                            {
+                                cancellationToken.ThrowIfCancellationRequested();
+                                string compressWarning = _processingService.CompressVideo(log, setStatus, setProgress,
+                                    setIsIndeterminate, outputFile, downloadParams.CroppedLength,
+                                    _preferencesService.CurrentPreferences.DownloadCompressLevel, cancellationToken);
+
+                                if (compressWarning != null)
+                                {
+                                    warnings.Add(compressWarning);
+                                }
+                            }
+
                             if (downloadParams.DownloadChat)
                             {
                                 cancellationToken.ThrowIfCancellationRequested();
