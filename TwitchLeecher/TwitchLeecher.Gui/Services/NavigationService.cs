@@ -82,13 +82,25 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowPreferences()
         {
+            Navigate(GetPreferences());
+        }
+
+        public void ShowWatchedSearches()
+        {
+            PreferencesViewModel vm = GetPreferences();
+            vm.ScrollToWatchedSearches = true;
+            Navigate(vm);
+        }
+
+        private PreferencesViewModel GetPreferences()
+        {
             if (!_persistentViews.TryGetValue(typeof(PreferencesViewModel), out ViewModelBase vm))
             {
                 vm = _kernel.Get<PreferencesViewModel>();
                 _persistentViews.Add(typeof(PreferencesViewModel), vm);
             }
-            
-            Navigate(vm);
+
+            return (PreferencesViewModel)vm;
         }
 
         public void ShowInfo()

@@ -34,6 +34,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
         private readonly IEventAggregator _eventAggregator;
         private readonly IAuthService _authService;
+        private readonly IAutoDownloadService _autoDownloadService;
         private readonly IDownloadService _downloadService;
         private readonly IDialogService _dialogService;
         private readonly IDonationService _donationService;
@@ -63,6 +64,7 @@ namespace TwitchLeecher.Gui.ViewModels
         public MainWindowVM(
             IEventAggregator eventAggregator,
             IAuthService authService,
+            IAutoDownloadService autoDownloadService,
             IDownloadService downloadService,
             IDialogService dialogService,
             IDonationService donationService,
@@ -78,6 +80,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
             _eventAggregator = eventAggregator;
             _authService = authService;
+            _autoDownloadService = autoDownloadService;
             _downloadService = downloadService;
             _dialogService = dialogService;
             _donationService = donationService;
@@ -440,6 +443,9 @@ namespace TwitchLeecher.Gui.ViewModels
 
         private void ShowSearchOnStart()
         {
+            // signed in now, so the Twitch API works; the loop itself waits for the setting to be on
+            _autoDownloadService.Start();
+
             _navigationService.ShowSearch();
             SearchOnStartup();
         }
