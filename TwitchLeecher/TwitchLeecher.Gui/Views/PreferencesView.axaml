@@ -169,6 +169,21 @@
                             </StackPanel>
                         </CheckBox>
 
+                        <!-- sub-only setup moved here from the header; status and command live on the main window -->
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="SUB-ONLY DOWNLOADS" />
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock VerticalAlignment="Center" Text="On: subscriber-only videos can be downloaded"
+                                           IsVisible="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).IsAuthenticatedSubOnly}" />
+                                <TextBlock VerticalAlignment="Center" Text="Off"
+                                           IsVisible="{Binding !$parent[Window].((viewModels:MainWindowVM)DataContext).IsAuthenticatedSubOnly}" />
+                                <Button Content="Set up"
+                                        Command="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).ShowSubOnlyCommand}"
+                                        ToolTip.Tip="Sign in with a subscriber account to download sub-only videos"
+                                        AutomationProperties.Name="Set up sub-only downloads" />
+                            </StackPanel>
+                        </StackPanel>
+
                         <StackPanel Classes="field">
                             <CheckBox IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}">
                                 <StackPanel>
@@ -202,29 +217,11 @@
                         <TextBlock Classes="h1" Text="Search" />
 
                         <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="FAVOURITE CHANNELS" />
-                            <Grid ColumnDefinitions="*,6,Auto,6,Auto,6,Auto">
-                                <AutoCompleteBox Grid.Column="0"
-                                                 ItemsSource="{Binding CurrentPreferences.SearchFavouriteChannels, Mode=OneWay}"
-                                                 MinimumPrefixLength="0"
-                                                 IsDropDownOpen="{Binding IsChannelDropDownOpen, Mode=TwoWay}"
-                                                 Text="{Binding CurrentPreferences.SearchChannelName}"
-                                                 IsTextCompletionEnabled="True" />
-                                <Button Grid.Column="2" Classes="TlMiniButton" ToolTip.Tip="Show favourites"
-                                        Command="{Binding OpenDropdownCommand}">
-                                    <avalonia:Icon Value="fa-solid fa-bars" Width="11" Height="11" />
-                                </Button>
-                                <Button Grid.Column="4" Classes="TlMiniButton" ToolTip.Tip="Add to favourites"
-                                        Command="{Binding AddFavouriteChannelCommand}">
-                                    <avalonia:Icon Value="fa-solid fa-plus" Width="11" Height="11" />
-                                </Button>
-                                <Button Grid.Column="6" Classes="TlMiniButton" ToolTip.Tip="Remove from favourites"
-                                        Command="{Binding RemoveFavouriteChannelCommand}">
-                                    <avalonia:Icon Value="fa-solid fa-minus" Width="11" Height="11" />
-                                </Button>
-                            </Grid>
+                            <TextBlock Classes="label" Text="DEFAULT CHANNEL" />
+                            <TextBox Text="{Binding CurrentPreferences.SearchChannelName}" Watermark="Channel name"
+                                     AutomationProperties.Name="Default channel" />
                             <TextBlock Classes="sub"
-                                       Text="The channel shown here is pre-selected on the Search page. Use + and − to add or remove it." />
+                                       Text="Pre-filled on the Search page and used by Search on start. Add or remove favourites with the star on the results page." />
                         </StackPanel>
 
                         <StackPanel Classes="field">

@@ -30,3 +30,8 @@ Only three files: `TwitchLeecher.Gui/Views/PreferencesView.axaml` (+ `.axaml.cs`
 
 - The SimpleTheme `TabItem` template: the selected-item background style targets `/template/ ContentPresenter#PART_ContentPresenter`. If the selected item doesn't highlight, check the template part name.
 - `Run Text="{Binding FilenamePreview}"` in a `TextBlock` (compiled binding).
+
+## Added after second test round
+
+- Search section: removed the Favourite channels list (the user does not need it there; favourites are added/removed with the star on results and picked with the chips on the Search page). A plain DEFAULT CHANNEL box remains because Search on start uses it. The favourites commands in the view model are now unused; remove them when this becomes a PR.
+- General: a SUB-ONLY DOWNLOADS row (On/Off + Set up), replacing the header button the header branch removed. It binds to `MainWindowVM` via `$parent[Window]`.
