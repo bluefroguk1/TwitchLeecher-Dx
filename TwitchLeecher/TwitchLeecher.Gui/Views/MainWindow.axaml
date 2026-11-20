@@ -8,7 +8,7 @@
         Classes="TlWindow"
         Width="780"
         Height="920"
-        MinWidth="780"
+        MinWidth="880"
         MinHeight="600"
         x:DataType="vm:MainWindowVM"
         Title="{Binding Title}">
