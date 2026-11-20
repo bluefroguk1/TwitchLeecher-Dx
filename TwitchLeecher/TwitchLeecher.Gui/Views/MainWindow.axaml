@@ -124,10 +124,16 @@
         <Border Grid.Row="0" Classes="TlHeader" Height="56" Background="{DynamicResource HeaderBackgroundBrush}"
                 BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,0">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Image Source="/Assets/TL_Icon.png" Width="28" Height="28" />
-                    <TextBlock Text="Twitch Leecher" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                </StackPanel>
+                <!-- the logo and name go home (Search), like most apps -->
+                <Button Grid.Column="0" Command="{Binding ShowSearchCommand}" Background="Transparent"
+                        BorderThickness="0" Padding="0" VerticalAlignment="Center" Cursor="Hand"
+                        ToolTip.Tip="Go to Search" AutomationProperties.Name="Twitch Leecher, go to Search">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Image Source="/Assets/TL_Icon.png" Width="28" Height="28" />
+                        <TextBlock Text="Twitch Leecher" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </StackPanel>
+                </Button>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="16,0,0,0"
                             IsVisible="{Binding IsAuthenticated}">
@@ -171,11 +177,6 @@
                             ToolTip.Tip="Donate"
                             AutomationProperties.Name="Donate">
                         <avalonia:Icon Value="fa-solid fa-dollar-sign" Width="14" Height="14" />
-                    </Button>
-                    <Button Classes="TlHeaderButton" Command="{Binding RevokeCommand}"
-                            ToolTip.Tip="Log out"
-                            AutomationProperties.Name="Log out">
-                        <avalonia:Icon Value="fa-solid fa-right-from-bracket" Width="14" Height="14" />
                     </Button>
                 </StackPanel>
             </Grid>

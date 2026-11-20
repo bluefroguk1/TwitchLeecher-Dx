@@ -35,6 +35,8 @@ namespace TwitchLeecher.Services.Services
 
         #region Properties
 
+        public string UserName => _apiService.SignedInLogin;
+
         public bool IsAuthenticatedSubOnly
         {
             get

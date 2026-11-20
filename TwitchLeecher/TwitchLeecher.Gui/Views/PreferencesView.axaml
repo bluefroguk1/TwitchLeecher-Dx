@@ -40,6 +40,11 @@
                 <DockPanel>
                     <!-- sub-only setup moved here from the header; status and command live on the main window -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).UserName, StringFormat='Signed in as {0}', FallbackValue='Signed in'}" />
+                        <Button Content="Log out" Margin="0,0,12,0"
+                                Command="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).RevokeCommand}"
+                                AutomationProperties.Name="Log out of Twitch" />
                         <TextBlock Text="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).SubOnlyLabel}"
                                    VerticalAlignment="Center" />
                         <Button Content="Set up"
