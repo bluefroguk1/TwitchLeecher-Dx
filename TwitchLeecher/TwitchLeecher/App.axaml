@@ -549,21 +549,6 @@
                 <Setter Property="Padding" Value="10,0" />
                 <Setter Property="ClipToBounds" Value="True" />
             </Style>
-            <!-- the calendar button: a card-coloured square on the right, separated by a hairline -->
-            <Style Selector="CalendarDatePicker /template/ Button#PART_Button">
-                <Setter Property="Width" Value="36" />
-                <Setter Property="Template">
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                BorderBrush="{DynamicResource InputBorderBrush}"
-                                BorderThickness="1,0,0,0" CornerRadius="0,5,5,0">
-                            <avalonia:Icon Value="fa-regular fa-calendar" Width="15" Height="15"
-                                           Foreground="{DynamicResource AccentBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter>
-            </Style>
             <!-- Pop-up calendar in theme colours: accent for the chosen day, outlined accent for today -->
             <Style Selector="Calendar">
                 <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />

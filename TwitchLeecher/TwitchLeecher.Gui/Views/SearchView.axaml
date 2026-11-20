@@ -17,6 +17,143 @@
         <ResourceDictionary>
             <converters:VideoTypeToBooleanConverter x:Key="VideoTypeToBooleanConverter" />
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <!-- The pop-up calendar: rounded card, quiet chevrons and weekday letters (replaces the built-in look) -->
+            <ControlTheme x:Key="TlCalendarItemTheme" TargetType="CalendarItem">
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Panel>
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}" Padding="8">
+                                <Grid RowDefinitions="Auto,*" ColumnDefinitions="Auto,*,Auto">
+                                    <Grid.Styles>
+                                        <Style Selector="Button.CalendarHeader">
+                                            <Setter Property="Cursor" Value="Hand" />
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderThickness" Value="0" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                                        </Style>
+                                        <Style Selector="Button.CalendarHeader:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="Transparent" />
+                                        </Style>
+                                        <Style Selector="Button.CalendarNavigation">
+                                            <Setter Property="Height" Value="28" />
+                                            <Setter Property="Width" Value="32" />
+                                        </Style>
+                                        <Style Selector="Button.CalendarNavigation > Path">
+                                            <Setter Property="Stroke" Value="{DynamicResource TextMutedBrush}" />
+                                        </Style>
+                                        <Style Selector="Button.CalendarNavigation:pointerover > Path">
+                                            <Setter Property="Stroke" Value="{DynamicResource TextPrimaryBrush}" />
+                                        </Style>
+                                    </Grid.Styles>
+
+                                    <Button Name="PART_PreviousButton" Classes="CalendarHeader CalendarNavigation"
+                                            HorizontalAlignment="Left" IsVisible="False">
+                                        <Path Width="7" Height="12" Data="M6,1 L1.5,6 L6,11" StrokeThickness="2"
+                                              StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Button>
+                                    <Button Name="PART_HeaderButton" Grid.Column="1" Classes="CalendarHeader"
+                                            Padding="6,4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            FontSize="13" FontWeight="SemiBold" />
+                                    <Button Name="PART_NextButton" Grid.Column="2" Classes="CalendarHeader CalendarNavigation"
+                                            HorizontalAlignment="Right" IsVisible="False">
+                                        <Path Width="7" Height="12" Data="M1.5,1 L6,6 L1.5,11" StrokeThickness="2"
+                                              StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Button>
+
+                                    <Grid Name="PART_MonthView" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,4,0,0" IsVisible="False">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                    </Grid>
+                                    <Grid Name="PART_YearView" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,4,0,0" IsVisible="False">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Panel>
+                    </ControlTemplate>
+                </Setter>
+                <Setter Property="DayTitleTemplate">
+                    <Template x:DataType="x:String">
+                        <TextBlock Margin="0,4,0,6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Text="{Binding}" />
+                    </Template>
+                </Setter>
+            </ControlTheme>
+
+            <!-- Date field: one bordered box, with a card-coloured calendar button on the right -->
+            <ControlTheme x:Key="TlDatePickerTheme" TargetType="CalendarDatePicker">
+                <Setter Property="Padding" Value="10,0" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}" ClipToBounds="True" MinHeight="36">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Name="PART_TextBox" Grid.Column="0"
+                                         Padding="{TemplateBinding Padding}"
+                                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                         Background="Transparent" BorderThickness="0" MinHeight="0"
+                                         DataValidationErrors.Errors="{TemplateBinding (DataValidationErrors.Errors)}"
+                                         UseFloatingWatermark="{TemplateBinding UseFloatingWatermark}"
+                                         Watermark="{TemplateBinding Watermark}" />
+                                <Button Name="PART_Button" Grid.Column="1" Width="36" Padding="0" Focusable="False" Cursor="Hand"
+                                        Background="{DynamicResource CardBackgroundBrush}"
+                                        BorderBrush="{DynamicResource InputBorderBrush}" BorderThickness="1,0,0,0">
+                                    <Button.Template>
+                                        <ControlTemplate>
+                                            <Border Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                <avalonia:Icon Value="fa-regular fa-calendar" Width="15" Height="15"
+                                                               Foreground="{DynamicResource AccentBrush}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <Popup Name="PART_Popup" PlacementTarget="{TemplateBinding}" IsLightDismissEnabled="True">
+                                    <Calendar Name="PART_Calendar"
+                                              DisplayDate="{TemplateBinding DisplayDate}"
+                                              DisplayDateEnd="{TemplateBinding DisplayDateEnd}"
+                                              DisplayDateStart="{TemplateBinding DisplayDateStart}"
+                                              FirstDayOfWeek="{TemplateBinding FirstDayOfWeek}"
+                                              IsTodayHighlighted="{TemplateBinding IsTodayHighlighted}"
+                                              SelectedDate="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SelectedDate, Mode=TwoWay}">
+                                        <Calendar.Styles>
+                                            <Style Selector="CalendarItem">
+                                                <Setter Property="Theme" Value="{StaticResource TlCalendarItemTheme}" />
+                                            </Style>
+                                        </Calendar.Styles>
+                                    </Calendar>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter>
+                <Style Selector="^ /template/ Button#PART_Button:pointerover">
+                    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+                </Style>
+            </ControlTheme>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -247,13 +384,13 @@
                         </StackPanel>
                         <Grid ColumnDefinitions="40,*" RowDefinitions="Auto,6,Auto" IsVisible="{Binding IsCustomRange}">
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="From" VerticalAlignment="Center" />
-                            <CalendarDatePicker Grid.Row="0" Grid.Column="1" Classes="TlDatePicker"
+                            <CalendarDatePicker Grid.Row="0" Grid.Column="1" Classes="TlDatePicker" Theme="{StaticResource TlDatePickerTheme}"
                                                 HorizontalAlignment="Stretch"
                                                 AutomationProperties.Name="From date" Watermark="Choose a date"
                                                 DisplayDateEnd="{x:Static sys:DateTime.Today}"
                                                 SelectedDate="{Binding SearchParams.LoadFrom}" />
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="To" VerticalAlignment="Center" />
-                            <CalendarDatePicker Grid.Row="2" Grid.Column="1" Classes="TlDatePicker"
+                            <CalendarDatePicker Grid.Row="2" Grid.Column="1" Classes="TlDatePicker" Theme="{StaticResource TlDatePickerTheme}"
                                                 HorizontalAlignment="Stretch"
                                                 AutomationProperties.Name="To date" Watermark="Choose a date"
                                                 DisplayDateStart="{Binding SearchParams.LoadFrom}"
