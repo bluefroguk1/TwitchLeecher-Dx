@@ -170,8 +170,9 @@
                         <DataTemplate x:DataType="models:WatchedSearch">
                             <Border Classes="row" Classes.off="{Binding !Active}" Classes.editing="{Binding IsEditing}">
                                 <StackPanel Spacing="10">
-                                    <!-- one line: title shrinks (trimmed); the controls keep fixed widths so they line up across rows -->
-                                    <Grid ColumnDefinitions="*,150,56,88,38">
+                                    <!-- The text and "When found" stack on the left and shrink (trimmed); only Edit, Active and the
+                                         bin sit on the right at fixed widths, so rows always line up and never overflow -->
+                                    <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" MinWidth="0">
                                             <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
@@ -192,29 +193,33 @@
                                             </ItemsControl>
                                             <TextBlock Text="{Binding LatestResult}" Classes="muted"
                                                        TextTrimming="CharacterEllipsis" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                                <TextBlock Text="When found" Classes="muted" VerticalAlignment="Center" />
+                                                <ComboBox Classes="ws" Width="170" VerticalAlignment="Center"
+                                                          SelectedIndex="{Binding WhenFoundIndex}"
+                                                          AutomationProperties.Name="When found">
+                                                    <ComboBoxItem Content="Download now" />
+                                                    <ComboBoxItem Content="Add to queue, paused" />
+                                                </ComboBox>
+                                            </StackPanel>
                                         </StackPanel>
-                                        <ComboBox Grid.Column="1" Classes="ws" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                                  Margin="12,0,0,0"
-                                                  SelectedIndex="{Binding WhenFoundIndex}"
-                                                  ToolTip.Tip="When a new video is found"
-                                                  AutomationProperties.Name="When found">
-                                            <ComboBoxItem Content="Download now" />
-                                            <ComboBoxItem Content="Add to queue, paused" />
-                                        </ComboBox>
-                                        <Button Grid.Column="2" Classes="ws" Content="Edit" Margin="8,0,0,0" VerticalAlignment="Center"
-                                                Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
-                                                CommandParameter="{Binding}" />
-                                        <CheckBox Grid.Column="3" Content="Active" Margin="10,0,0,0"
-                                                  IsChecked="{Binding Active}" VerticalAlignment="Center" />
-                                        <Button Grid.Column="4" Classes="ws" Margin="6,0,0,0" Width="32" Padding="0"
-                                                VerticalAlignment="Center" HorizontalContentAlignment="Center"
-                                                Foreground="{DynamicResource ErrorBrush}"
-                                                ToolTip.Tip="Remove watched search"
-                                                AutomationProperties.Name="Remove watched search"
-                                                Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).RemoveCommand}"
-                                                CommandParameter="{Binding}">
-                                            <avalonia:Icon Value="fa-solid fa-trash" Width="13" Height="13" />
-                                        </Button>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="12,0,0,0"
+                                                    VerticalAlignment="Center">
+                                            <Button Classes="ws" Content="Edit" Width="52" VerticalAlignment="Center"
+                                                    HorizontalContentAlignment="Center" Padding="0"
+                                                    Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
+                                                    CommandParameter="{Binding}" />
+                                            <CheckBox Content="Active" Width="82" IsChecked="{Binding Active}" VerticalAlignment="Center" />
+                                            <Button Classes="ws" Width="32" Padding="0"
+                                                    VerticalAlignment="Center" HorizontalContentAlignment="Center"
+                                                    Foreground="{DynamicResource ErrorBrush}"
+                                                    ToolTip.Tip="Remove watched search"
+                                                    AutomationProperties.Name="Remove watched search"
+                                                    Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).RemoveCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <avalonia:Icon Value="fa-solid fa-trash" Width="13" Height="13" />
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
 
                                     <!-- Editor -->
