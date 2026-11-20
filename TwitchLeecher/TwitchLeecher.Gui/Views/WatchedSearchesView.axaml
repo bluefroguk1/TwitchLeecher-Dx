@@ -172,48 +172,43 @@
                                 <StackPanel Spacing="10">
                                     <!-- The text and "When found" stack on the left and shrink (trimmed); only Edit, Active and the
                                          bin sit on the right at fixed widths, so rows always line up and never overflow -->
-                                    <!-- one cell: the left block keeps a right margin the size of the controls, so its text always
-                                         trims to what is left and can never push the controls past the edge -->
-                                    <Grid>
-                                        <StackPanel Margin="0,0,194,0" Spacing="4" VerticalAlignment="Center" MinWidth="0">
-                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       TextTrimming="CharacterEllipsis" />
-                                            <ItemsControl ItemsSource="{Binding Tags}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal" Spacing="4" />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate x:DataType="x:String">
-                                                        <Border Classes="tag">
-                                                            <TextBlock Text="{Binding}" />
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                            <TextBlock Text="{Binding LatestResult}" Classes="muted"
-                                                       TextTrimming="CharacterEllipsis" />
-                                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                                                <TextBlock Text="When found" Classes="muted" VerticalAlignment="Center" />
-                                                <ComboBox Classes="ws" Width="170" VerticalAlignment="Center"
-                                                          SelectedIndex="{Binding WhenFoundIndex}"
-                                                          AutomationProperties.Name="When found">
-                                                    <ComboBoxItem Content="Download now" />
-                                                    <ComboBoxItem Content="Add to queue, paused" />
-                                                </ComboBox>
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center">
-                                            <Button Classes="ws" Content="Edit" Width="52" VerticalAlignment="Center"
-                                                    HorizontalContentAlignment="Center" Padding="0"
+                                    <!-- Three short lines. The long texts have a hard maximum width, so a row can never grow
+                                         past the pane; the controls get their own line and sit flush right -->
+                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" HorizontalAlignment="Left"
+                                               MaxWidth="460" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <ItemsControl ItemsSource="{Binding Tags}" HorizontalAlignment="Left">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="4" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Border Classes="tag">
+                                                    <TextBlock Text="{Binding}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="{Binding LatestResult}" Classes="muted" HorizontalAlignment="Left"
+                                               MaxWidth="460" TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding LatestResult}" />
+                                    <Grid ColumnDefinitions="Auto,8,170,*,Auto" Margin="0,2,0,0">
+                                        <TextBlock Grid.Column="0" Text="When found" Classes="muted" VerticalAlignment="Center" />
+                                        <ComboBox Grid.Column="2" Classes="ws" VerticalAlignment="Center"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectedIndex="{Binding WhenFoundIndex}"
+                                                  AutomationProperties.Name="When found">
+                                            <ComboBoxItem Content="Download now" />
+                                            <ComboBoxItem Content="Add to queue, paused" />
+                                        </ComboBox>
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Button Classes="ws" Content="Edit" Width="52" HorizontalContentAlignment="Center" Padding="0"
                                                     Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
                                                     CommandParameter="{Binding}" />
                                             <CheckBox Content="Active" Width="82" IsChecked="{Binding Active}" VerticalAlignment="Center" />
-                                            <Button Classes="ws" Width="32" Padding="0"
-                                                    VerticalAlignment="Center" HorizontalContentAlignment="Center"
+                                            <Button Classes="ws" Width="32" Padding="0" HorizontalContentAlignment="Center"
                                                     Foreground="{DynamicResource ErrorBrush}"
                                                     ToolTip.Tip="Remove watched search"
                                                     AutomationProperties.Name="Remove watched search"
@@ -285,7 +280,7 @@
                                                    Classes.success="{Binding IsSuccess}"
                                                    Classes.warning="{Binding IsWarning}"
                                                    Classes.error="{Binding IsError}" />
-                                        <TextBlock Grid.Column="2" Text="{Binding Text}" FontSize="12"
+                                        <TextBlock Grid.Column="2" Text="{Binding Text}" FontSize="12" HorizontalAlignment="Left" MaxWidth="440"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                                    TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Text}" />
                                     </Grid>
