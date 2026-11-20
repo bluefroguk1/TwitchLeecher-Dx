@@ -4,6 +4,20 @@
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              x:Class="TwitchLeecher.App"
              RequestedThemeVariant="Dark">
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <!-- Avalonia has no double-click event, so a single click restores the window -->
+            <TrayIcon Icon="avares://TwitchLeecher.Gui/Assets/TL_Icon.ico" ToolTipText="Twitch Leecher DX"
+                      Clicked="TrayIcon_OnClicked">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Open" Click="TrayOpen_OnClick" />
+                        <NativeMenuItem Header="Exit" Click="TrayExit_OnClick" />
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
     <Application.Resources>
         <system:Double x:Key="GlobalFontSize">14</system:Double>
         <system:Double x:Key="GlobalFontEmphasizeSize">18</system:Double>
