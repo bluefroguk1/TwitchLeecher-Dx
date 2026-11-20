@@ -4,8 +4,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
+using TwitchLeecher.Core;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
@@ -26,6 +28,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IPreferencesService _preferencesService;
         private readonly ISearchService _searchService;
+        private readonly IApiService _apiService;
         private readonly IQuickDownloadService _quickDownloadService;
         private readonly IDownloadService _downloadService;
         private readonly INotificationService _notificationService;
@@ -37,6 +40,11 @@ namespace TwitchLeecher.Gui.ViewModels
         private ICommand _downloadCommand;
         private ICommand _seachCommand;
 
+
+        // the search these results came from; SearchService resets its LastSearchParams when preferences are saved
+        private SearchParameters _resultParams;
+        private string _channelDisplayName;
+        private Bitmap _channelAvatar;
 
         private bool _hideDownloaded;
         private int _sortIndex;
@@ -58,6 +66,7 @@ namespace TwitchLeecher.Gui.ViewModels
             INavigationService navigationService,
             IPreferencesService preferencesService,
             ISearchService searchService,
+            IApiService apiService,
             IQuickDownloadService quickDownloadService,
             IDownloadService downloadService,
             INotificationService notificationService,
@@ -69,6 +78,7 @@ namespace TwitchLeecher.Gui.ViewModels
             _navigationService = navigationService;
             _preferencesService = preferencesService;
             _searchService = searchService;
+            _apiService = apiService;
             _quickDownloadService = quickDownloadService;
             _downloadService = downloadService;
             _notificationService = notificationService;
@@ -76,6 +86,12 @@ namespace TwitchLeecher.Gui.ViewModels
             _searchService.PropertyChanged += SearchService_PropertyChanged;
 
             _commandLockObject = new object();
+
+            // favourites may be edited in Settings while this page is kept alive
+            _eventAggregator.GetEvent<PreferencesSavedEvent>().Subscribe(() => FirePropertyChanged(nameof(IsFavourite)));
+
+            _resultParams = _searchService.LastSearchParams;
+            LoadChannelHeader();
 
             // queue changes may come from a background thread (e.g. automatic downloads)
             _downloadService.Downloads.CollectionChanged += (s, e) => Dispatcher.UIThread.Post(RefreshStatusesAndList);
@@ -99,23 +115,37 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             get
             {
-                SearchParameters p = _searchService.LastSearchParams;
+                SearchParameters p = _resultParams;
 
                 switch (p.SearchType)
                 {
                     case SearchType.Urls: return "Video URLs";
                     case SearchType.Ids: return "Video IDs";
                     case SearchType.Favorites: return "Favourites";
-                    default: return p.Channel;
+                    default: return _channelDisplayName ?? p.Channel;
                 }
             }
         }
+
+        // Channel header: avatar and favourite star, channel searches only
+        public bool IsChannelSearch => _resultParams.SearchType == SearchType.Channel;
+
+        public Bitmap ChannelAvatar
+        {
+            get => _channelAvatar;
+            private set => SetProperty(ref _channelAvatar, value, nameof(ChannelAvatar));
+        }
+
+        public bool IsFavourite =>
+            IsChannelSearch
+            && _preferencesService.CurrentPreferences.SearchFavouriteChannels.Any(c =>
+                c.Equals(_resultParams.Channel, StringComparison.OrdinalIgnoreCase));
 
         public string SearchSummary
         {
             get
             {
-                SearchParameters p = _searchService.LastSearchParams;
+                SearchParameters p = _resultParams;
                 List<string> parts = new List<string>();
 
                 if (p.SearchType == SearchType.Channel || p.SearchType == SearchType.Favorites)
@@ -457,6 +487,81 @@ namespace TwitchLeecher.Gui.ViewModels
             FireSelectionChanged();
         }
 
+        private async void LoadChannelHeader()
+        {
+            SearchParameters p = _resultParams;
+
+            _channelDisplayName = null;
+            ChannelAvatar = null;
+            FirePropertyChanged(nameof(IsChannelSearch));
+            FirePropertyChanged(nameof(IsFavourite));
+
+            if (p.SearchType != SearchType.Channel || string.IsNullOrWhiteSpace(p.Channel))
+            {
+                return;
+            }
+
+            try
+            {
+                var info = await Task.Run(() => _apiService.GetChannelInfo(p.Channel));
+
+                // a newer search may have finished meanwhile
+                if (info == null || p != _resultParams)
+                {
+                    return;
+                }
+
+                _channelDisplayName = info.Value.DisplayName;
+                FirePropertyChanged(nameof(SearchTitle));
+
+                if (Uri.TryCreate(info.Value.ProfileImageUrl, UriKind.Absolute, out Uri avatarUrl))
+                {
+                    Bitmap avatar = await ImageHelper.LoadFromWeb(avatarUrl);
+
+                    if (p == _resultParams)
+                    {
+                        ChannelAvatar = avatar;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // the header is cosmetic, the results stay usable without it
+                Console.WriteLine($"Could not load channel header for '{p.Channel}': {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private void ToggleFavourite()
+        {
+            try
+            {
+                lock (_commandLockObject)
+                {
+                    Preferences prefs = _preferencesService.CurrentPreferences;
+                    string existing = prefs.SearchFavouriteChannels.FirstOrDefault(c =>
+                        c.Equals(_resultParams.Channel, StringComparison.OrdinalIgnoreCase));
+
+                    if (existing != null)
+                    {
+                        prefs.SearchFavouriteChannels.Remove(existing);
+                    }
+                    else
+                    {
+                        prefs.SearchFavouriteChannels.Add(_resultParams.Channel);
+                    }
+
+                    _preferencesService.Save(prefs);
+                    _notificationService.ShowNotification(existing != null ? "Removed from favourites" : "Added to favourites");
+                    FirePropertyChanged(nameof(IsFavourite));
+                }
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowAndLogException(ex);
+            }
+        }
+
         private void FireSelectionChanged()
         {
             FirePropertyChanged(nameof(AllSelected));
@@ -662,6 +767,8 @@ namespace TwitchLeecher.Gui.ViewModels
 
             if (propertyName.Equals(nameof(Videos)))
             {
+                _resultParams = _searchService.LastSearchParams;
+                LoadChannelHeader();
                 ScrollPosition = Vector.Zero;
                 HookVideos();
             }
