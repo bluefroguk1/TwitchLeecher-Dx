@@ -30,3 +30,7 @@ The app opens two pop-up windows (`DialogService`):
 ## Merge notes
 Touches only `MessageBoxWindow.axaml` (2 lines) and adds one new file. No overlap expected with other branches
 unless one restyles `MessageBoxWindow`.
+
+## Added after second test round
+
+- Message boxes opened far from the main window (no startup location was set). `MessageBoxWindow` now uses `WindowStartupLocation="CenterOwner"` with the main window as owner. When the main window is minimised or hidden in the tray, the box is centred on the screen instead.
