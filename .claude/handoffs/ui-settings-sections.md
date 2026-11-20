@@ -35,3 +35,5 @@ Only three files: `TwitchLeecher.Gui/Views/PreferencesView.axaml` (+ `.axaml.cs`
 
 - Search section: removed the Favourite channels list (the user does not need it there; favourites are added/removed with the star on results and picked with the chips on the Search page). A plain DEFAULT CHANNEL box remains because Search on start uses it. The favourites commands in the view model are now unused; remove them when this becomes a PR.
 - General: a SUB-ONLY DOWNLOADS row (On/Off + Set up), replacing the header button the header branch removed. It binds to `MainWindowVM` via `$parent[Window]`.
+
+- **Sub-only row removed again (user decision):** sub-only is turned on during the in-app Twitch sign-in (branch `claude/in-app-signin`), and the app prompts to sign in again if the token stops working, so Settings needs no on/off switch.
