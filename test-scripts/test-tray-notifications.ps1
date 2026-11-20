@@ -1,5 +1,5 @@
 ﻿# Test script for the "feature-tray-notifications" branch.
-# Builds the app, then walks you through the tray icon and minimise-to-tray checks (desktop notifications were removed).
+# Builds the app, then walks you through the first-minimise prompt, the tray icon and minimise-to-tray checks (desktop notifications were removed).
 # Windows:  powershell -ExecutionPolicy Bypass -File test-scripts\test-tray-notifications.ps1
 # Linux:    pwsh test-scripts/test-tray-notifications.ps1   (needs ffmpeg on PATH)
 param([switch]$SkipBuild)
@@ -28,7 +28,26 @@ if (-not $SkipBuild) {
 }
 if (-not (Test-Path $dll)) { throw "App not found at $dll" }
 
+# Start from a clean prompt state: remove the saved flag so the first-minimise question shows.
+$cfg = Get-ChildItem -Path ([Environment]::GetFolderPath('ApplicationData')) -Directory -Filter '*Leecher*' -ErrorAction SilentlyContinue |
+    ForEach-Object { Get-Item (Join-Path $_.FullName 'config.xml') -ErrorAction SilentlyContinue } | Select-Object -First 1
+if ($cfg) {
+    [xml]$x = Get-Content $cfg.FullName
+    $app = $x.Preferences.Application
+    foreach ($n in 'TrayPromptShown', 'MinimiseToTray') { $el = $app.SelectSingleNode($n); if ($el) { [void]$app.RemoveChild($el) } }
+    $x.Save($cfg.FullName)
+    Write-Host "Reset tray prompt in $($cfg.FullName)"
+} else { Write-Host 'No config.xml found; assuming a fresh install.' -ForegroundColor Yellow }
+
 $p = Start-App
+
+# --- 0. First-minimise prompt ---------------------------------------------------
+Ask 'prompt on first minimise' 'Minimise the window. It goes to the taskbar, then a small dialog asks "Minimise to the system tray instead?" with "Don''t ask again" ticked. Is that what you see, in the app''s theme colours?'
+Ask 'prompt No' 'UNTICK "Don''t ask again" and click "No, keep it on the taskbar". Does the window stay minimised on the taskbar?'
+Ask 'prompt asks again' 'Restore the window and minimise it again. Does the dialog appear again (because "Don''t ask again" was unticked)?'
+Ask 'prompt Yes' 'Leave "Don''t ask again" ticked and click "Yes, use the tray". Does the window leave the taskbar, with the tray icon still there?'
+Ask 'prompt not again' 'Click the tray icon to restore, then open Settings. Is "Minimise to tray" ticked? Minimise again: does it go straight to the tray with no dialog?'
+Ask 'reset for next steps' 'Untick "Minimise to tray" in Settings and save, so the next checks start from the default.'
 
 # --- 1. Tray icon ------------------------------------------------------------
 Ask 'tray icon shown' 'Is the Twitch Leecher icon in the system tray (check the ^ overflow on Windows)? Hovering shows "Twitch Leecher DX".'

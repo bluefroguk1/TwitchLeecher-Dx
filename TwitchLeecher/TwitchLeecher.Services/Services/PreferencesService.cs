@@ -31,6 +31,7 @@ namespace TwitchLeecher.Services.Services
         private const string APP_CHECKFORUPDATES_EL = "CheckForUpdates";
         private const string APP_SHOWDONATIONBUTTON_EL = "ShowDonationButton";
         private const string APP_MINIMISETOTRAY_EL = "MinimiseToTray";
+        private const string APP_TRAYPROMPTSHOWN_EL = "TrayPromptShown";
 
         private const string SEARCH_EL = "Search";
         private const string SEARCH_FAVCHANNELS_EL = "FavChannels";
@@ -171,6 +172,10 @@ namespace TwitchLeecher.Services.Services
                 XElement appMinimiseToTrayEl = new XElement(APP_MINIMISETOTRAY_EL);
                 appMinimiseToTrayEl.SetValue(preferences.AppMinimiseToTray);
                 appEl.Add(appMinimiseToTrayEl);
+
+                XElement appTrayPromptShownEl = new XElement(APP_TRAYPROMPTSHOWN_EL);
+                appTrayPromptShownEl.SetValue(preferences.AppTrayPromptShown);
+                appEl.Add(appTrayPromptShownEl);
 
                 // Search
                 RangeObservableCollection<string> favChannels = preferences.SearchFavouriteChannels;
@@ -351,6 +356,20 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     preferences.AppMinimiseToTray = appMinimiseToTrayEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appTrayPromptShownEl = appEl.Element(APP_TRAYPROMPTSHOWN_EL);
+
+                            if (appTrayPromptShownEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppTrayPromptShown = appTrayPromptShownEl.GetValueAsBool();
                                 }
                                 catch
                                 {
@@ -684,6 +703,7 @@ namespace TwitchLeecher.Services.Services
                 AppCheckForUpdates = true,
                 AppShowDonationButton = true,
                 AppMinimiseToTray = false,
+                AppTrayPromptShown = false,
                 SearchChannelName = null,
                 SearchVideoType = VideoType.Broadcast,
                 SearchLoadLimitType = LoadLimitType.Timespan,
