@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Shared.Extensions;
 using TwitchLeecher.Shared.IO;
 using TwitchLeecher.Shared.Notification;
@@ -27,6 +28,7 @@ namespace TwitchLeecher.Core.Models
         private bool _disableConversion;
         private bool _downloadChat;
         private bool _saveVodInfo;
+        private ChatFormat _chatFormat;
 
         private TimeSpan _cropStartTime;
         private TimeSpan _cropEndTime;
@@ -156,6 +158,13 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _saveVodInfo; }
             set { SetProperty(ref _saveVodInfo, value, nameof(SaveVodInfo)); }
+        }
+
+        // Text keeps the .chat.txt output; the HTML formats write .chat.html with emotes
+        public ChatFormat ChatFormat
+        {
+            get { return _chatFormat; }
+            set { SetProperty(ref _chatFormat, value, nameof(ChatFormat)); }
         }
 
         public bool CropStart

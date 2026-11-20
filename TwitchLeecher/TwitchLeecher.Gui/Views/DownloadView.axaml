@@ -247,9 +247,18 @@
                     <StackPanel Spacing="8">
                         <TextBlock Classes="label" Text="EXTRAS" Margin="0" />
                         <!-- clips have no chat replay -->
-                        <CheckBox Content="Save chat as text" IsChecked="{Binding DownloadParams.DownloadChat}"
-                                  IsVisible="{Binding !DownloadParams.Video.IsClip}"
-                                  ToolTip.Tip="Saves the chat next to the video as timestamped text, matching the part you download." />
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !DownloadParams.Video.IsClip}">
+                            <CheckBox Content="Save chat" IsChecked="{Binding DownloadParams.DownloadChat}"
+                                      VerticalAlignment="Center"
+                                      ToolTip.Tip="Saves the chat next to the video, matching the part you download." />
+                            <ComboBox SelectedIndex="{Binding ChatFormatIndex}" IsEnabled="{Binding DownloadParams.DownloadChat}"
+                                      MinWidth="150" VerticalAlignment="Center" AutomationProperties.Name="Chat format"
+                                      ToolTip.Tip="Text: timestamped lines. HTML: names in chat colours with emotes. Offline HTML also embeds the emote images.">
+                                <ComboBoxItem Content="as text" />
+                                <ComboBoxItem Content="as HTML with emotes" />
+                                <ComboBoxItem Content="as HTML (works offline)" />
+                            </ComboBox>
+                        </StackPanel>
                         <CheckBox Content="Save video details" IsChecked="{Binding DownloadParams.SaveVodInfo}"
                                   ToolTip.Tip="Saves title, channel, id, link, date, length and quality in a small file next to the video." />
                     </StackPanel>
