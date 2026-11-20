@@ -87,7 +87,12 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Where to look:** `.claude/pr-drafts/README.md` has the waves, dependencies, test status, how to submit and the "no Claude references" check. Descriptions are in `.claude/pr-drafts/bodies/`, and the overview for the developer is in `.claude/pr-drafts/overview-issue.md`.
 - **Not prepared:** slow-downloads (no measured gain) and login-page-and-icon (superseded by the in-app sign-in).
 
-**Optimisation opportunities found in `combined-all` (not built yet), biggest first:**
+**Optimisations 1-3 are now BUILT** (2026-11-21), each on its own working branch with a test script, and as clean `pr/perf-*` branches. They're merged into `combined-all` (build run 44721562021 passed) but not run yet:
+- `perf-downloads-idle` (`test-perf-downloads-idle.ps1`, needs one short download). The Downloads page tick runs only while something downloads; idle CPU is measured automatically. In `combined-all` the watched-searches count refreshes on its own event.
+- `perf-result-badges` (`test-perf-result-badges.ps1`, needs one short download). Cheaper badge refresh, and **DOWNLOADED now appears when a download finishes** (a bug fix).
+- `perf-parallel-chat` (`test-perf-parallel-chat.ps1`, needs a 1-hour chat download). Chat is fetched in 10-minute segments, 4 at once.
+
+**Optimisation opportunities found in `combined-all`, biggest first (1-3 built, 4-6 not):**
 1. **Downloads page timer:** it ticks every second for ever, even with nothing downloading and the page closed. That's a small but constant idle wake-up, which is what the original "resource heavy" complaint was about. Run it only while a download is active (and the page is open).
 2. **Results badges:**
    - **Cost:** every time the download queue gains or loses an item, the results page rebuilds every result's default file path and checks the disk (`File.Exists`) and the queue (linear) for each one, on the UI thread. That's O(results × downloads) per change.

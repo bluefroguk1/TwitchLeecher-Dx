@@ -1,6 +1,6 @@
 # PR submission guide (prepared 2026-11-21, nothing submitted)
 
-All 22 changes not yet sent upstream are now **clean PR branches** named `pr/*` (pushed to the fork). Each one is:
+All 25 changes not yet sent upstream are now **clean PR branches** named `pr/*` (pushed to the fork). Each one is:
 - **one squashed commit** with a plain message, on the right base;
 - **free of tooling:** no test scripts, no `.claude/` notes, no AI attribution;
 - **compiled on GitHub Actions** on its own (see "Build check" below).
@@ -9,8 +9,8 @@ All 22 changes not yet sent upstream are now **clean PR branches** named `pr/*` 
 
 ## Making the developer's life easier
 
-1. **Don't add 22 PRs on top of 16 unreviewed ones in one go.** Send them in the waves below, starting once the developer starts responding. A maintainer facing 38 open PRs from one person is likely to stall.
-2. **Post one overview first.** The ready-made text is in `overview-issue.md`, for an issue or a comment on #104. It lists every PR, what it does, and the order and dependencies, so the developer can pick and choose without reading 38 descriptions.
+1. **Don't add 25 PRs on top of 16 unreviewed ones in one go.** Send them in the waves below, starting once the developer starts responding. A maintainer facing 41 open PRs from one person is likely to stall.
+2. **Post one overview first.** The ready-made text is in `overview-issue.md`, for an issue or a comment on #104. It lists every PR, what it does, and the order and dependencies, so the developer can pick and choose without reading 41 descriptions.
 3. **Stacked PRs go up as drafts.** Where a PR builds on another unmerged one, its diff includes that one until it merges. Open those as **draft** PRs, say "depends on #…, please review only the last commit", and rebase once the dependency lands.
 4. **Two branches are deliberately not prepared:**
    - **slow-downloads:** the Windows test showed no speed gain (8.74 vs 8.31 MB/s), and it conflicts with the per-download pause.
@@ -63,6 +63,9 @@ These sit on `pr/_after-open-prs`: a single commit on `master` holding the code 
 | `pr/desktop-notifications` | Desktop notifications when downloads finish | tray | – (toasts never showed in round 1) |
 | `pr/watched-searches` | Watched searches: automatically download new VODs and clips | Settings, Downloads page, #106, #108 | T\* (live-stream fix, layout new) |
 | `pr/download-schedule` | Off-peak download schedule | watched searches | – |
+| `pr/perf-downloads-idle` | Downloads page: only refresh every second while something downloads | Downloads page PR | – |
+| `pr/perf-result-badges` | Search results: cheaper badge refresh, and DOWNLOADED when a download finishes | results toolbar PR | – |
+| `pr/perf-parallel-chat` | Chat export: fetch long ranges in parallel | chat export PR | – |
 
 **Recommendation:** hold back `pr/desktop-notifications` and `pr/download-schedule` until they've passed a Windows test. Submit the rest of a wave once `combined-all` has passed the current test round.
 
@@ -78,7 +81,7 @@ Remove `--draft` for Wave 1 and for any PR whose dependencies have merged. Bodie
 
 ## Build check
 
-Each `pr/*` branch was pushed as `ci-check/<name>` with the CI workflow added, and built on GitHub Actions (Windows + Linux). **All 22 built successfully** on 2026-11-21 (runs 44719692910–44719828045). The temporary `ci-check/*` branches were deleted afterwards.
+Each `pr/*` branch was pushed as `ci-check/<name>` with the CI workflow added, and built on GitHub Actions (Windows + Linux). **All 22 built successfully** on 2026-11-21 (runs 44719692910–44719828045), and the 3 optimisation branches after them (runs 44721593073–44721602281). The temporary `ci-check/*` branches were deleted afterwards.
 
 After that, the stacked branches were re-based onto a **clean one-commit base on `master`** (`pr/_after-open-prs`), with identical code. Previously their history included `combined`'s working commits, which carry AI co-author lines. A full check from `master` (commit messages, author and committer details, file paths and added lines) now finds **no reference to Claude, AI tools or co-authors in any `pr/*` branch**. The 16 open PRs and their descriptions are clean too.
 
