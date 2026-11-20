@@ -495,7 +495,7 @@
 
             <TabItem Header="Watched searches">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <views:WatchedSearchesView DataContext="{Binding WatchedSearches}" Margin="24,16" />
+                    <views:WatchedSearchesView DataContext="{Binding WatchedSearches}" />
                 </ScrollViewer>
             </TabItem>
 

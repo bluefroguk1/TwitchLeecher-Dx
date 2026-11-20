@@ -52,23 +52,33 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
-        <Style Selector="TextBlock.caption">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-        </Style>
         <Style Selector="TextBlock.muted">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
 
-        <Style Selector="Border.search">
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12,10" />
+        <!-- Flat rows like the other Settings sections: 1px divider, card colour only on hover or while editing.
+             Transparent (not null) background so the whole row takes the pointer. -->
+        <Style Selector="Border.row">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="10,12" />
         </Style>
-        <Style Selector="Border.search.off">
+        <Style Selector="Border.row:pointerover, Border.row.editing">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+        </Style>
+        <Style Selector="Border.row.off > StackPanel">
             <Setter Property="Opacity" Value="0.6" />
+        </Style>
+        <Style Selector="Border.row.activity">
+            <Setter Property="Padding" Value="10,8" />
+        </Style>
+        <!-- top line of a row list; -10 margins line row text up with the headings above -->
+        <Style Selector="Border.rows">
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+            <Setter Property="Margin" Value="-10,0" />
         </Style>
 
         <Style Selector="Border.tag">
@@ -77,7 +87,7 @@
             <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
         </Style>
         <Style Selector="Border.tag TextBlock">
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
@@ -104,53 +114,49 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="16">
-        <!-- Heading + master switch -->
-        <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Grid.Column="0" Text="Watched searches" FontSize="20" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-            <CheckBox Grid.Column="1" Content="On" FontWeight="SemiBold" IsChecked="{Binding Enabled}"
-                      VerticalAlignment="Center" />
-        </Grid>
+    <!-- Uses the host page's section/h1/label/sub styles (PreferencesView), so it reads like the other Settings sections. -->
+    <StackPanel Classes="section">
+        <TextBlock Classes="h1" Text="Watched searches" />
+
+        <CheckBox IsChecked="{Binding Enabled}">
+            <StackPanel>
+                <TextBlock Text="Check watched searches for new videos" />
+                <TextBlock Classes="sub" Text="Checks only run while Twitch Leecher is open" />
+            </StackPanel>
+        </CheckBox>
 
         <!-- Status: last/next check, interval, check now -->
-        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="12,8">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
-                <Ellipse Grid.Column="0" Classes="dot" Classes.off="{Binding !Enabled}" Width="8" Height="8"
-                         VerticalAlignment="Center" Margin="0,0,10,0" />
-                <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="13" VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
-                <TextBlock Grid.Column="2" Text="Every" Classes="muted" FontSize="13" VerticalAlignment="Center"
-                           Margin="10,0,8,0" />
-                <ComboBox Grid.Column="3" Classes="ws" MinWidth="90" ItemsSource="{Binding IntervalOptions}"
-                          SelectedItem="{Binding SelectedInterval}" />
-                <Button Grid.Column="4" Classes="ws" Margin="10,0,0,0" Command="{Binding CheckNowCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <avalonia:Icon Value="fa-solid fa-arrows-rotate" />
-                        <TextBlock Text="Check now" />
-                    </StackPanel>
-                </Button>
-            </Grid>
-        </Border>
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+            <Ellipse Grid.Column="0" Classes="dot" Classes.off="{Binding !Enabled}" Width="8" Height="8"
+                     VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBlock Grid.Column="1" Text="{Binding StatusText}" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Grid.Column="2" Text="Every" Classes="muted" VerticalAlignment="Center"
+                       Margin="10,0,8,0" />
+            <ComboBox Grid.Column="3" Classes="ws" MinWidth="90" ItemsSource="{Binding IntervalOptions}"
+                      SelectedItem="{Binding SelectedInterval}" />
+            <Button Grid.Column="4" Classes="ws" Margin="10,0,0,0" Command="{Binding CheckNowCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:Icon Value="fa-solid fa-arrows-rotate" />
+                    <TextBlock Text="Check now" />
+                </StackPanel>
+            </Button>
+        </Grid>
 
         <!-- Searches -->
         <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0" Text="SEARCHES" Classes="caption" VerticalAlignment="Center" />
-                <Button Grid.Column="1" Classes="ws accent" Content="+ Add watched search" FontSize="13"
+                <TextBlock Grid.Column="0" Text="SEARCHES" Classes="label" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Classes="ws accent" Content="+ Add watched search"
                         Command="{Binding AddCommand}" />
             </Grid>
-            <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding !HasSearches}"
+            <TextBlock Classes="sub" IsVisible="{Binding !HasSearches}"
                        Text="No watched searches yet. Add one here, or search a channel and press Watch this search." />
+            <Border Classes="rows" IsVisible="{Binding HasSearches}">
             <ItemsControl ItemsSource="{Binding Searches}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="8" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:WatchedSearch">
-                        <Border Classes="search" Classes.off="{Binding !Active}">
+                        <Border Classes="row" Classes.off="{Binding !Active}" Classes.editing="{Binding IsEditing}">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                     <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
@@ -176,7 +182,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Spacing="3" Margin="12,0,0,0"
                                                 VerticalAlignment="Center">
-                                        <TextBlock Text="When found" Classes="muted" FontSize="11" />
+                                        <TextBlock Text="When found" Classes="muted" />
                                         <ComboBox Classes="ws" Width="160" SelectedIndex="{Binding WhenFoundIndex}">
                                             <ComboBoxItem Content="Download now" />
                                             <ComboBoxItem Content="Add to queue, paused" />
@@ -185,7 +191,7 @@
                                     <Button Grid.Column="2" Classes="ws" Content="Edit" Margin="10,0,0,0"
                                             Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
                                             CommandParameter="{Binding}" />
-                                    <CheckBox Grid.Column="3" Content="Active" FontSize="12" Margin="10,0,0,0"
+                                    <CheckBox Grid.Column="3" Content="Active" Margin="10,0,0,0"
                                               IsChecked="{Binding Active}" VerticalAlignment="Center" />
                                 </Grid>
 
@@ -235,20 +241,19 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            </Border>
         </StackPanel>
 
         <!-- Recent activity, from auto_download.log -->
         <StackPanel Spacing="6">
-            <TextBlock Text="RECENT ACTIVITY" Classes="caption" />
-            <TextBlock Classes="muted" IsVisible="{Binding !HasActivity}"
+            <TextBlock Text="RECENT ACTIVITY" Classes="label" />
+            <TextBlock Classes="sub" IsVisible="{Binding !HasActivity}"
                        Text="Nothing yet. Activity shows here after the first check." />
-            <Border Background="{DynamicResource PanelBackgroundBrush}" CornerRadius="8"
-                    IsVisible="{Binding HasActivity}">
+            <Border Classes="rows" IsVisible="{Binding HasActivity}">
                 <ItemsControl ItemsSource="{Binding Activity}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="interfaces:WatchedActivity">
-                            <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
-                                    Padding="12,7">
+                            <Border Classes="row activity">
                                 <Grid ColumnDefinitions="52,80,*">
                                     <TextBlock Grid.Column="0" Text="{Binding TimeText}" Classes="muted" />
                                     <TextBlock Grid.Column="1" Text="{Binding Kind}" FontSize="12" Classes="kind"
@@ -266,7 +271,7 @@
             </Border>
         </StackPanel>
 
-        <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="Checks only run while Twitch Leecher is open. Videos that already exist when a search is first checked are marked as seen, not downloaded." />
+        <TextBlock Classes="sub"
+                   Text="Videos that already exist when a search is first checked are marked as seen, not downloaded." />
     </StackPanel>
 </UserControl>
