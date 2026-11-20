@@ -169,6 +169,12 @@
                                 <TextBlock Classes="sub" Text="The $ button in the title bar" />
                             </StackPanel>
                         </CheckBox>
+                        <CheckBox IsChecked="{Binding CurrentPreferences.AppMinimiseToTray}">
+                            <StackPanel>
+                                <TextBlock Text="Minimise to the system tray" />
+                                <TextBlock Classes="sub" Text="Minimising hides the window; click the tray icon to bring it back" />
+                            </StackPanel>
+                        </CheckBox>
 
                         <StackPanel Classes="field">
                             <CheckBox IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}">

@@ -17,6 +17,7 @@ namespace TwitchLeecher.Gui.Views
 
         private readonly IDialogService _dialogService;
         private readonly IRuntimeDataService _runtimeDataService;
+        private readonly IPreferencesService _preferencesService;
         private readonly NamedPipeManager _namedPipeManager;
 
         private bool _shown;
@@ -29,10 +30,12 @@ namespace TwitchLeecher.Gui.Views
             MainWindowVM viewModel,
             IDialogService dialogService,
             IRuntimeDataService runtimeDataService,
-            IEventAggregator eventAggregator)
+            IEventAggregator eventAggregator,
+            IPreferencesService preferencesService)
         {
             _dialogService = dialogService;
             _runtimeDataService = runtimeDataService;
+            _preferencesService = preferencesService;
 
             _namedPipeManager = new NamedPipeManager("TwitchLeecher-DX");
             _namedPipeManager.OnMessage += OnPipeMessage;
@@ -72,6 +75,16 @@ namespace TwitchLeecher.Gui.Views
                 }
 
                 LoadWindowState();
+            };
+
+            PropertyChanged += (s, e) =>
+            {
+                // the tray icon in App.axaml brings the window back
+                if (e.Property == WindowStateProperty && WindowState == WindowState.Minimized &&
+                    _preferencesService.CurrentPreferences.AppMinimiseToTray)
+                {
+                    Hide();
+                }
             };
 
             Activated += (s, e) =>
@@ -123,11 +136,14 @@ namespace TwitchLeecher.Gui.Views
             }
         }
 
-        // safe to call from any thread
-        private void BringToFront()
+        // safe to call from any thread; also used by the tray icon
+        public void BringToFront()
         {
             Dispatcher.UIThread.Post(() =>
             {
+                // the window may be hidden in the tray
+                Show();
+
                 if (WindowState == WindowState.Minimized)
                 {
                     WindowState = WindowState.Normal;
