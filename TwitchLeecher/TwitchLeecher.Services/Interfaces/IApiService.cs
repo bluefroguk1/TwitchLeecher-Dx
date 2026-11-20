@@ -8,6 +8,10 @@ namespace TwitchLeecher.Services.Interfaces
     {
         bool ValidateAuthentication(string accessToken, bool subOnly);
 
+        // true = Twitch accepts the token, false = Twitch rejected it (expired, revoked, password changed),
+        // null = could not tell (offline, Twitch down). Unlike ValidateAuthentication it changes nothing.
+        bool? CheckToken(string accessToken, bool subOnly);
+
         void RevokeAuthentication(string accessToken, bool subOnly);
 
         TwitchVideoAuthInfo GetVodAuthInfo(string id);

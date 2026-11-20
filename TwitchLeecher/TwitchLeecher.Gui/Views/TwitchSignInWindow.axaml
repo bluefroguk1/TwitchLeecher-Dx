@@ -1,0 +1,12 @@
+<Window x:Class="TwitchLeecher.Gui.Views.TwitchSignInWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sign in to Twitch"
+        WindowStartupLocation="CenterOwner"
+        Width="500"
+        Height="760"
+        MinWidth="400"
+        MinHeight="500"
+        Background="{DynamicResource AppBackgroundBrush}">
+    <NativeWebView x:Name="WebView" />
+</Window>
