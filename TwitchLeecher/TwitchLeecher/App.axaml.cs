@@ -70,6 +70,7 @@ public partial class App : Application
         kernel.Bind<MainWindow>().ToSelf().InSingletonScope();
         kernel.Bind<MainWindowVM>().ToSelf().InSingletonScope();
         kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
+        kernel.Bind<IDesktopNotificationService>().To<DesktopNotificationService>().InSingletonScope();
     }
 
     private void LoadModules(IKernel kernel)
@@ -97,6 +98,9 @@ public partial class App : Application
         SyncAutoStart(preferencesService);
         _kernel.Get<IEventAggregator>().GetEvent<PreferencesSavedEvent>()
             .Subscribe(() => SyncAutoStart(preferencesService), true);
+
+        // on Windows this registers the toast identity (AUMID); it must happen before any window is created
+        _kernel.Get<IDesktopNotificationService>();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

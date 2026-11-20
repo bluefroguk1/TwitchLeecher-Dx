@@ -188,6 +188,12 @@
                                 <TextBlock Classes="sub" Text="Opens hidden; click the tray icon to show the window" />
                             </StackPanel>
                         </CheckBox>
+                        <CheckBox IsChecked="{Binding CurrentPreferences.AppShowNotifications}">
+                            <StackPanel>
+                                <TextBlock Text="Show desktop notifications" />
+                                <TextBlock Classes="sub" Text="When a download finishes, and when a whole batch is done" />
+                            </StackPanel>
+                        </CheckBox>
 
                         <StackPanel Classes="field">
                             <CheckBox IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}">
