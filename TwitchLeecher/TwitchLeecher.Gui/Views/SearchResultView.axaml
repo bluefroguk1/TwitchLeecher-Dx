@@ -217,9 +217,9 @@
                             Command="{Binding WatchSearchCommand}"
                             ToolTip.Tip="Check this search for new videos and download them automatically"
                             AutomationProperties.Name="Watch this search">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="0">
                             <avalonia:Icon Value="fa-solid fa-eye" />
-                            <TextBlock Classes="collapsible" Text="Watch this search" VerticalAlignment="Center" />
+                            <TextBlock Classes="collapsible" Padding="6,0,0,0" Text="Watch this search" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,12,0" VerticalAlignment="Center"
