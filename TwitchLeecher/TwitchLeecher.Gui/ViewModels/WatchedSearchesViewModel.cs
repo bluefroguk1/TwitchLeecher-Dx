@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
+using TwitchLeecher.Gui.Types;
 using TwitchLeecher.Shared.Commands;
 
 namespace TwitchLeecher.Gui.ViewModels
@@ -23,6 +24,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly IAutoDownloadService _autoDownloadService;
 
         private readonly DispatcherTimer _clockTimer;
+        private readonly IDialogService _dialogService;
 
         private string _statusText;
         private List<WatchedActivity> _activity = new List<WatchedActivity>();
@@ -32,14 +34,15 @@ namespace TwitchLeecher.Gui.ViewModels
 
         #region Constructors
 
-        public WatchedSearchesViewModel(IAutoDownloadService autoDownloadService)
+        public WatchedSearchesViewModel(IAutoDownloadService autoDownloadService, IDialogService dialogService)
         {
             _autoDownloadService = autoDownloadService;
+            _dialogService = dialogService;
 
             CheckNowCommand = new DelegateCommand(CheckNow);
             AddCommand = new DelegateCommand(Add);
             EditCommand = new DelegateCommand<WatchedSearch>(s => s.IsEditing = !s.IsEditing);
-            RemoveCommand = new DelegateCommand<WatchedSearch>(s => Searches.Remove(s));
+            RemoveCommand = new DelegateCommand<WatchedSearch>(ConfirmRemove);
 
             _autoDownloadService.Changed += (_, _) => Refresh();
 
@@ -116,6 +119,23 @@ namespace TwitchLeecher.Gui.ViewModels
         public ICommand AddCommand { get; }
 
         public ICommand EditCommand { get; }
+
+        private async void ConfirmRemove(WatchedSearch search)
+        {
+            if (search == null)
+            {
+                return;
+            }
+
+            MessageBoxResult answer = await _dialogService.ShowMessageBox(
+                "Stop watching " + search.Label + "?", "Remove watched search",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (answer == MessageBoxResult.Yes)
+            {
+                Searches.Remove(search);
+            }
+        }
 
         public ICommand RemoveCommand { get; }
 

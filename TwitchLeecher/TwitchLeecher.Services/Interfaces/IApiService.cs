@@ -23,6 +23,10 @@ namespace TwitchLeecher.Services.Interfaces
 
         bool ChannelExists(string channel);
 
+        // When the channel is streaming now: the UTC start of that stream; null when it is offline.
+        // Throws on network or API errors so callers can play safe.
+        DateTime? GetLiveStreamStart(string channel);
+
         string GetChannelIdByName(string channel);
 
         // Helix users: display name and avatar URL, null when the channel is not found
