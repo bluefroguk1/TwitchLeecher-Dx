@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using Avalonia;
@@ -10,6 +12,8 @@ using Avalonia.Threading;
 using Ninject;
 using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Events;
+using TwitchLeecher.Core.Models;
+using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.Modules;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Gui.Views;
@@ -124,14 +128,86 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    private DispatcherTimer _tooltipTimer;
+    private bool _tooltipPending;
+
     // The tray icon's tooltip says what is going on: % left on current downloads, else how many are paused,
-    // else how many watched searches there are.
+    // else how many watched searches there are. It is refreshed when downloads or watched searches change,
+    // at most once a second; the timer only runs while an update is waiting, so an idle app does no wake-ups.
     private void StartTrayTooltip()
     {
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        timer.Tick += (_, _) => UpdateTrayTooltip();
-        timer.Start();
+        var downloadService = _kernel.Get<IDownloadService>();
+
+        foreach (TwitchVideoDownload download in downloadService.Downloads.ToList())
+        {
+            download.PropertyChanged += TrayDownload_PropertyChanged;
+        }
+
+        downloadService.Downloads.CollectionChanged += TrayDownloads_CollectionChanged;
+        _kernel.Get<IAutoDownloadService>().Changed += (_, _) => RequestTrayTooltip();
+
+        _tooltipTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _tooltipTimer.Tick += (_, _) =>
+        {
+            if (_tooltipPending)
+            {
+                _tooltipPending = false;
+                UpdateTrayTooltip(); // keep the timer running for one more interval
+            }
+            else
+            {
+                _tooltipTimer.Stop();
+            }
+        };
+
+        RequestTrayTooltip();
+    }
+
+    private void TrayDownloads_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        foreach (TwitchVideoDownload download in e.NewItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
+        {
+            download.PropertyChanged += TrayDownload_PropertyChanged;
+        }
+
+        foreach (TwitchVideoDownload download in e.OldItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
+        {
+            download.PropertyChanged -= TrayDownload_PropertyChanged;
+        }
+
+        RequestTrayTooltip();
+    }
+
+    private void TrayDownload_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TwitchVideoDownload.DownloadState) || e.PropertyName == nameof(TwitchVideoDownload.Progress))
+        {
+            RequestTrayTooltip();
+        }
+    }
+
+    // first change after a quiet spell updates at once; changes within the next second are folded into one update
+    private void RequestTrayTooltip()
+    {
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(RequestTrayTooltip);
+            return;
+        }
+
+        if (_tooltipTimer == null)
+        {
+            return;
+        }
+
+        if (_tooltipTimer.IsEnabled)
+        {
+            _tooltipPending = true;
+            return;
+        }
+
         UpdateTrayTooltip();
+        _tooltipTimer.Start();
     }
 
     private void UpdateTrayTooltip()
@@ -145,33 +221,13 @@ public partial class App : Application
                 return;
             }
 
-            var downloads = _kernel.Get<TwitchLeecher.Services.Interfaces.IDownloadService>().Downloads.ToList();
+            var downloads = _kernel.Get<IDownloadService>().Downloads.ToList();
             var active = downloads.Where(d => d.IsDownloading).ToList();
-            int paused = downloads.Count(d => d.IsPaused);
-            var watched = _kernel.Get<TwitchLeecher.Gui.Interfaces.IAutoDownloadService>();
+            var watched = _kernel.Get<IAutoDownloadService>();
             int searches = watched.Enabled ? watched.Searches.Count(w => w.Active) : 0;
+            double left = active.Count > 0 ? active.Average(d => 100 - d.Progress) : 0;
 
-            string detail;
-
-            if (active.Count > 0)
-            {
-                double left = active.Average(d => 100 - d.Progress);
-                detail = (active.Count == 1 ? "Downloading" : active.Count + " downloading") + " · " + left.ToString("0") + "% left";
-            }
-            else if (paused > 0)
-            {
-                detail = paused + (paused == 1 ? " paused download" : " paused downloads");
-            }
-            else if (searches > 0)
-            {
-                detail = searches + (searches == 1 ? " watched search" : " watched searches");
-            }
-            else
-            {
-                detail = null;
-            }
-
-            icon.ToolTipText = detail == null ? "Twitch Leecher DX" : "Twitch Leecher DX · " + detail;
+            icon.ToolTipText = TrayTooltipBuilder.Build(active.Count, left, downloads.Count(d => d.IsPaused), searches);
         }
         catch
         {
