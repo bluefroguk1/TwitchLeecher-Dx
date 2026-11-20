@@ -19,6 +19,11 @@ $questions = @(
   'Click Download on one video: card shows QUEUED badge?',
   'After that download finishes, return to results: card shows DOWNLOADED, and Hide downloaded hides it?',
   'Download N videos queues the ticked videos?',
+  'Channel search: summary bar shows the channel display name (Twitch capitalisation) with its round avatar and a star button?',
+  'Star is an outline for a non-favourite channel; click it: star fills in the accent colour and "Added to favourites" shows?',
+  'Click the filled star: it becomes an outline and "Removed from favourites" shows; Settings favourites list matches?',
+  'After toggling the star, the summary still shows the same channel and search (not the default search)?',
+  'Links / IDs search and All favourites search: no avatar and no star in the summary bar?',
   'Switch theme New <-> Original in Settings and return to results: colours follow the theme, text on the accent button and CLIP badge is readable?'
 )
 $results = foreach ($q in $questions) { $a = Read-Host "$q (y/n/s)"; "$a`t$q" }

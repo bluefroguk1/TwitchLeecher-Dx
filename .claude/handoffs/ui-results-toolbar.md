@@ -13,3 +13,9 @@ Test needs: instant (UI only) for layout/sort/toggle/select; a quick download fo
 ## Not verified
 - Never compiled (no .NET SDK on the Mac). Build on Windows first; fix any XAML/compile errors.
 - Shortcuts: DOWNLOADED only detects default-named files and not when the filename uses `{res}`; size estimate makes 2 API calls per ticked video; QUEUED badge refreshes on queue add/remove and when the page is shown, not when a download finishes while you watch.
+
+## Added after testing
+- Channel header: for channel searches the summary bar shows the Twitch display name, the round avatar (Helix `users` `profile_image_url` via new `IApiService.GetChannelInfo`, loaded with `ImageHelper`) and a ★ toggle. Hidden for Links / IDs and Favourites searches.
+- ★ (`ToggleFavouriteCommand`) adds/removes the channel in `Preferences.SearchFavouriteChannels`, saves preferences and notifies "Added to / Removed from favourites". Outline star = not a favourite, solid accent star = favourite.
+- `SearchResultViewModel` now keeps its own `_resultParams` (the search the results came from) because `SearchService` resets `LastSearchParams` on every preferences save; without it the ★ would flip the summary to the default search.
+- Not compiled. The header costs one extra Helix `users` call per channel search.
