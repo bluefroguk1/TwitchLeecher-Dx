@@ -9,6 +9,9 @@ namespace TwitchLeecher.Services.Interfaces
     {
         bool ValidateAuthentication(string accessToken, bool subOnly);
 
+        // Twitch login of the last main token that validated, for "Signed in as"
+        string SignedInLogin { get; }
+
         void RevokeAuthentication(string accessToken, bool subOnly);
 
         TwitchVideoAuthInfo GetVodAuthInfo(string id);
