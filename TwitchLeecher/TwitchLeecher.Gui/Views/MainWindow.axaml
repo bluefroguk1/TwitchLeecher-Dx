@@ -151,16 +151,6 @@
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
                             IsVisible="{Binding IsAuthenticated}">
-                    <Button Classes="TlHeaderButton" Classes.on="{Binding IsAuthenticatedSubOnly}"
-                            Command="{Binding ShowSubOnlyCommand}"
-                            ToolTip.Tip="Sub-only support: log in with a subscriber account to download sub-only videos"
-                            AutomationProperties.Name="{Binding SubOnlyLabel}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <avalonia:Icon Value="fa-solid fa-star" Width="12" Height="12" />
-                            <TextBlock Text="{Binding SubOnlyLabel, FallbackValue='Sub-only: off'}"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
                     <Button Classes="TlHeaderButton" Command="{Binding ShowPreferencesCommand}"
                             ToolTip.Tip="Settings"
                             AutomationProperties.Name="Settings">
