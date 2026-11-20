@@ -112,14 +112,22 @@ namespace TwitchLeecher.Services.Services
 
         public void Enqueue(DownloadParameters downloadParams)
         {
-            if (_paused)
-            {
-                return;
-            }
+            Enqueue(downloadParams, false);
+        }
 
+        public void Enqueue(DownloadParameters downloadParams, bool startPaused)
+        {
+            // Queue even while the service is paused; the timer picks it up on resume.
             lock (_changeDownloadLockObject)
             {
-                _downloads.Add(new TwitchVideoDownload(downloadParams));
+                TwitchVideoDownload download = new TwitchVideoDownload(downloadParams);
+
+                if (startPaused)
+                {
+                    download.SetDownloadState(DownloadState.Paused);
+                }
+
+                _downloads.Add(download);
             }
         }
 
@@ -161,8 +169,7 @@ namespace TwitchLeecher.Services.Services
 
                         string downloadId = download.Id;
                         string vodId = downloadParams.Video.Id;
-                        string tempDir = Path.Combine(_preferencesService.CurrentPreferences.DownloadTempFolder,
-                            downloadId);
+                        string tempDir = GetTempDir(downloadId);
                         string ffmpegFile = _processingService.FFMPEGExe;
                         string concatFile = Path.Combine(tempDir,
                             Path.GetFileNameWithoutExtension(downloadParams.FullPath) + ".ts");
@@ -183,11 +190,20 @@ namespace TwitchLeecher.Services.Services
                         Action<double> setProgress = download.SetProgress;
                         Action<bool> setIsIndeterminate = download.SetIsIndeterminate;
 
+                        // Names the step that is running, so a failure can say what went wrong.
+                        string stage = "Couldn't start the download";
+
+                        download.PauseRequested = false;
+                        download.ResetTransfer();
+
                         Task<IEnumerable<string>> downloadVideoTask = new Task<IEnumerable<string>>(() =>
                         {
                             setStatus("Initializing");
 
-                            log("Download task has been started!");
+                            // A paused download keeps its temp folder with the chunks already fetched.
+                            bool resuming = Directory.Exists(tempDir);
+
+                            log(resuming ? "Download task has been resumed!" : "Download task has been started!");
 
                             WriteDownloadInfo(log, downloadParams, ffmpegFile, tempDir);
 
@@ -207,6 +223,7 @@ namespace TwitchLeecher.Services.Services
                                 return clipWarnings;
                             }
 
+                            stage = "Couldn't get VOD access";
                             log(Environment.NewLine + Environment.NewLine + "Retrieving VOD access information...");
                             TwitchVideoAuthInfo vodAuthInfo = _apiService.GetVodAuthInfo(vodId);
                             log(" done!");
@@ -217,10 +234,12 @@ namespace TwitchLeecher.Services.Services
 
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            CheckTempDirectory(log, tempDir);
+                            stage = "Couldn't create the temp folder";
+                            CheckTempDirectory(log, tempDir, resuming);
 
                             cancellationToken.ThrowIfCancellationRequested();
 
+                            stage = "Couldn't load the playlist";
                             log(Environment.NewLine + Environment.NewLine +
                                 "Retrieving playlist information for all VOD qualities...");
                             Dictionary<TwitchVideoQuality, string> playlistInfo =
@@ -242,14 +261,19 @@ namespace TwitchLeecher.Services.Services
 
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            var downloadWarnings = DownloadParts(log, setStatus, setProgress, vodPlaylist,
+                            stage = "Network error";
+                            var downloadWarnings = DownloadParts(log, setStatus, setProgress, download, vodPlaylist,
                                 cancellationToken);
 
                             cancellationToken.ThrowIfCancellationRequested();
 
+                            stage = "Couldn't create the output folder";
                             CheckOutputDirectory(log, Path.GetDirectoryName(outputFile));
 
                             cancellationToken.ThrowIfCancellationRequested();
+
+                            // A pause after an earlier join leaves a half-written join file behind.
+                            FileSystem.DeleteFile(concatFile);
 
                             IEnumerable<string> processingWarnings;
 
@@ -257,6 +281,7 @@ namespace TwitchLeecher.Services.Services
                             // merged temp file; revisit if ffmpeg gains seekable stdin or crop-start moves to output -ss
                             if (!disableConversion && !cropInfo.CropStart)
                             {
+                                stage = "Conversion failed";
                                 try
                                 {
                                     processingWarnings = _processingService.ConvertParts(log, setStatus, setProgress,
@@ -268,17 +293,20 @@ namespace TwitchLeecher.Services.Services
                                     string fallbackFile = Path.ChangeExtension(outputFile, ".ts");
                                     _processingService.ConcatParts(log, setStatus, setProgress, vodPlaylist, fallbackFile);
                                     log(Environment.NewLine + Environment.NewLine + "Conversion failed, kept unconverted video as '" + fallbackFile + "'");
+                                    stage = "Conversion failed; kept .ts";
                                     throw;
                                 }
                             }
                             else
                             {
+                                stage = "Joining chunks failed";
                                 processingWarnings = _processingService.ConcatParts(log, setStatus, setProgress,
                                     vodPlaylist, disableConversion ? outputFile : concatFile);
 
                                 if (!disableConversion)
                                 {
                                     cancellationToken.ThrowIfCancellationRequested();
+                                    stage = "Conversion failed";
                                     try
                                     {
                                         _processingService.ConvertVideo(log, setStatus, setProgress, setIsIndeterminate,
@@ -290,6 +318,7 @@ namespace TwitchLeecher.Services.Services
                                         string fallbackFile = Path.ChangeExtension(outputFile, ".ts");
                                         File.Move(concatFile, fallbackFile, true);
                                         log(Environment.NewLine + Environment.NewLine + "Conversion failed, kept unconverted video as '" + fallbackFile + "'");
+                                        stage = "Conversion failed; kept .ts";
                                         throw;
                                     }
                                 }
@@ -317,19 +346,47 @@ namespace TwitchLeecher.Services.Services
 
                         Task continueTask = downloadVideoTask.ContinueWith((Task<IEnumerable<string>> task) =>
                         {
-                            log(Environment.NewLine + Environment.NewLine +
-                                "Starting temporary download folder cleanup!");
-                            CleanUp(tempDir, log);
-
-                            setProgress(100);
+                            download.SetTransferring(false);
                             setIsIndeterminate(false);
 
-                            bool success = false;
+                            bool pausing = task.IsCanceled && download.PauseRequested;
+                            download.PauseRequested = false;
+
+                            string failureReason = null;
 
                             if (task.IsFaulted)
                             {
+                                failureReason = GetFailureReason(stage, task.Exception);
+
+                                if (stage == "Conversion failed" && KeepConcatFile(concatFile, outputFile, log))
+                                {
+                                    failureReason += "; kept .ts";
+                                }
+                            }
+
+                            if (!pausing)
+                            {
+                                log(Environment.NewLine + Environment.NewLine +
+                                    "Starting temporary download folder cleanup!");
+                                CleanUp(tempDir, log);
+
+                                setProgress(100);
+                            }
+
+                            bool success = false;
+
+                            if (pausing)
+                            {
+                                setDownloadState(DownloadState.Paused);
+                                log(Environment.NewLine + Environment.NewLine +
+                                    "Download task was paused! Finished chunks are kept in '" + tempDir + "'.");
+                            }
+                            else if (task.IsFaulted)
+                            {
+                                download.SetFailureReason(failureReason);
                                 setDownloadState(DownloadState.Error);
-                                log(Environment.NewLine + Environment.NewLine + "Download task ended with an error!");
+                                log(Environment.NewLine + Environment.NewLine + "Download task ended with an error! (" +
+                                    failureReason + ")");
 
                                 if (task.Exception != null)
                                 {
@@ -440,7 +497,51 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
-        private void CheckTempDirectory(Action<string> log, string tempDir)
+        private string GetTempDir(string downloadId)
+        {
+            return Path.Combine(_preferencesService.CurrentPreferences.DownloadTempFolder, downloadId);
+        }
+
+        private static string GetFailureReason(string stage, AggregateException exception)
+        {
+            Exception inner = exception?.Flatten().InnerException;
+
+            if (inner is IOException && !(inner is FileNotFoundException))
+            {
+                return "Disk error: " + inner.Message;
+            }
+
+            if ((inner is WebException || inner is System.Net.Http.HttpRequestException) && stage != "Network error")
+            {
+                return stage + " (network error)";
+            }
+
+            return stage;
+        }
+
+        /// <summary>Moves the joined but unconverted .ts next to the wanted output, so a failed conversion loses nothing.</summary>
+        private static bool KeepConcatFile(string concatFile, string outputFile, Action<string> log)
+        {
+            try
+            {
+                string target = Path.ChangeExtension(outputFile, ".ts");
+
+                if (!File.Exists(concatFile) || File.Exists(target))
+                {
+                    return false;
+                }
+
+                File.Move(concatFile, target);
+                log(Environment.NewLine + Environment.NewLine + "Kept the unconverted video as '" + target + "'");
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void CheckTempDirectory(Action<string> log, string tempDir, bool resuming)
         {
             if (!Directory.Exists(tempDir))
             {
@@ -450,7 +551,7 @@ namespace TwitchLeecher.Services.Services
                 log(" done!");
             }
 
-            if (Directory.EnumerateFileSystemEntries(tempDir).Any())
+            if (!resuming && Directory.EnumerateFileSystemEntries(tempDir).Any())
             {
                 throw new ApplicationException("Temporary download directory '" + tempDir + "' is not empty!");
             }
@@ -563,6 +664,7 @@ namespace TwitchLeecher.Services.Services
 
         private IEnumerable<string> DownloadParts(Action<string> log, Action<string> setStatus,
             Action<double> setProgress,
+            TwitchVideoDownload download,
             TwitchPlaylist vodPlaylist,
             CancellationToken cancellationToken)
         {
@@ -576,7 +678,7 @@ namespace TwitchLeecher.Services.Services
 
             setStatus("Downloading");
 
-            if (vodPlaylist.InitSegment != null)
+            if (vodPlaylist.InitSegment != null && !File.Exists(vodPlaylist.InitSegment.LocalFile))
             {
                 log(Environment.NewLine + Environment.NewLine + "Downloading VOD init segment...");
                 DownloadInitSegment(vodPlaylist.InitSegment, log);
@@ -587,7 +689,23 @@ namespace TwitchLeecher.Services.Services
 
             long completedPartDownloads = 0;
 
-            Parallel.ForEach(vodPlaylist,
+            // Chunks kept from before a pause count as done, but not towards the speed.
+            foreach (TwitchPlaylistPart part in vodPlaylist.Where(p => File.Exists(p.LocalFile)))
+            {
+                completedPartDownloads++;
+                download.AddDownloadedBytes(new FileInfo(part.LocalFile).Length,
+                    (double)completedPartDownloads / partsCount);
+            }
+
+            if (completedPartDownloads > 0)
+            {
+                log(Environment.NewLine + "Chunks kept from before the pause: " + completedPartDownloads);
+                setProgress((double)completedPartDownloads / partsCount * 100);
+            }
+
+            download.SetTransferring(true);
+
+            Parallel.ForEach(vodPlaylist.Where(p => !File.Exists(p.LocalFile)).ToList(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Math.Max(1, maxConnectionCount - 1) },
                 (part, loopState) =>
                 {
@@ -601,12 +719,14 @@ namespace TwitchLeecher.Services.Services
                         {
                             byte[] bytes = _httpClient.GetByteArrayAsync(part.RemoteFile).GetAwaiter().GetResult();
 
-                            FileSystem.DeleteFile(part.LocalFile);
-
-                            File.WriteAllBytes(part.LocalFile, bytes);
+                            // Write then rename, so a chunk file on disk is always complete (resume trusts it).
+                            string partFile = part.LocalFile + ".part";
+                            File.WriteAllBytes(partFile, bytes);
+                            File.Move(partFile, part.LocalFile, true);
 
                             long completed = Interlocked.Increment(ref completedPartDownloads);
 
+                            download.AddDownloadedBytes(bytes.Length, (double)completed / partsCount);
                             setProgress((double)completed / partsCount * 100);
 
                             success = true;
@@ -636,7 +756,7 @@ namespace TwitchLeecher.Services.Services
                             }
                             else
                             {
-                                // previously looped forever with no delay, hammering the CDN and a CPU core
+                                // Out of retries: fail the download instead of spinning on this chunk forever.
                                 throw;
                             }
                         }
@@ -647,6 +767,10 @@ namespace TwitchLeecher.Services.Services
                         loopState.Stop();
                     }
                 });
+
+            download.SetTransferring(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             setProgress(100);
 
@@ -664,9 +788,9 @@ namespace TwitchLeecher.Services.Services
                 {
                     byte[] bytes = _httpClient.GetByteArrayAsync(initSegment.RemoteFile).GetAwaiter().GetResult();
 
-                    FileSystem.DeleteFile(initSegment.LocalFile);
-
-                    File.WriteAllBytes(initSegment.LocalFile, bytes);
+                    string partFile = initSegment.LocalFile + ".part";
+                    File.WriteAllBytes(partFile, bytes);
+                    File.Move(partFile, initSegment.LocalFile, true);
 
                     return;
                 }
@@ -856,6 +980,7 @@ namespace TwitchLeecher.Services.Services
                                              download.DownloadState == DownloadState.Error))
                     {
                         download.ResetLog();
+                        download.ResetTransfer();
                         download.SetProgress(0);
                         download.SetDownloadState(DownloadState.Queued);
                         download.SetStatus("Initializing");
@@ -874,8 +999,86 @@ namespace TwitchLeecher.Services.Services
 
                     if (download != null)
                     {
+                        if (download.DownloadState == DownloadState.Paused)
+                        {
+                            CleanUp(GetTempDir(id), _ => { });
+                        }
+
                         _downloads.Remove(download);
                     }
+                }
+            }
+        }
+
+        public void Pause(string id)
+        {
+            lock (_changeDownloadLockObject)
+            {
+                TwitchVideoDownload download = _downloads.FirstOrDefault(d => d.Id == id);
+
+                if (download == null)
+                {
+                    return;
+                }
+
+                if (download.DownloadState == DownloadState.Queued)
+                {
+                    download.SetDownloadState(DownloadState.Paused);
+                }
+                else if (download.DownloadState == DownloadState.Downloading &&
+                         _downloadTasks.TryGetValue(id, out DownloadTask downloadTask))
+                {
+                    // The continuation sees PauseRequested and parks the item as Paused, keeping its chunks.
+                    download.PauseRequested = true;
+                    download.SetStatus("Pausing");
+                    downloadTask.CancellationTokenSource.Cancel();
+                }
+            }
+        }
+
+        public void Resume(string id)
+        {
+            lock (_changeDownloadLockObject)
+            {
+                TwitchVideoDownload download = _downloads.FirstOrDefault(d => d.Id == id);
+
+                // A task still in the collection is the paused one finishing up; resume after it is gone.
+                if (download != null && download.DownloadState == DownloadState.Paused &&
+                    !_downloadTasks.ContainsKey(id))
+                {
+                    download.SetDownloadState(DownloadState.Queued);
+                }
+            }
+        }
+
+        public void MoveUp(string id)
+        {
+            lock (_changeDownloadLockObject)
+            {
+                int index = _downloads.IndexOf(_downloads.FirstOrDefault(d => d.Id == id));
+
+                // Swap with the nearest waiting item above; finished or running items don't affect queue order.
+                for (int target = index - 1; target >= 0; target--)
+                {
+                    DownloadState state = _downloads[target].DownloadState;
+
+                    if (state == DownloadState.Queued || state == DownloadState.Paused)
+                    {
+                        _downloads.Move(index, target);
+                        return;
+                    }
+                }
+            }
+        }
+
+        public void ClearFinished()
+        {
+            lock (_changeDownloadLockObject)
+            {
+                foreach (TwitchVideoDownload download in _downloads
+                             .Where(d => d.IsFinished && !_downloadTasks.ContainsKey(d.Id)).ToList())
+                {
+                    _downloads.Remove(download);
                 }
             }
         }
@@ -899,7 +1102,8 @@ namespace TwitchLeecher.Services.Services
             try
             {
                 return !_downloads.Where(d =>
-                    d.DownloadState == DownloadState.Downloading || d.DownloadState == DownloadState.Queued).Any();
+                    d.DownloadState == DownloadState.Downloading || d.DownloadState == DownloadState.Queued ||
+                    d.DownloadState == DownloadState.Paused).Any();
             }
             finally
             {
@@ -939,7 +1143,8 @@ namespace TwitchLeecher.Services.Services
         public bool IsFileNameUsed(string fullPath)
         {
             IEnumerable<TwitchVideoDownload> downloads = _downloads.Where(d =>
-                d.DownloadState == DownloadState.Downloading || d.DownloadState == DownloadState.Queued);
+                d.DownloadState == DownloadState.Downloading || d.DownloadState == DownloadState.Queued ||
+                d.DownloadState == DownloadState.Paused);
 
             foreach (TwitchVideoDownload download in downloads)
             {

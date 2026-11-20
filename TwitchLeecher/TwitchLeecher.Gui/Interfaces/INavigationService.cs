@@ -20,6 +20,9 @@ namespace TwitchLeecher.Gui.Interfaces
 
         void ShowPreferences();
 
+        // Settings, scrolled to the Watched searches section.
+        void ShowWatchedSearches();
+
         void ShowInfo();
 
         void ShowLog(TwitchVideoDownload download);

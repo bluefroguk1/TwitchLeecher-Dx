@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Shared.Helpers;
@@ -64,6 +65,16 @@ namespace TwitchLeecher.Core.Models
         private bool _downloadDisableConversion;
 
         private bool _downloadQuickDownload;
+
+        private bool _autoDownloadEnabled;
+
+        private int _autoDownloadInterval;
+
+        private string _autoDownloadChannels;
+
+        private bool _autoDownloadClips;
+
+        private int _autoDownloadClipMinViews;
 
         private bool _miscUseExternalPlayer;
 
@@ -221,6 +232,46 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _downloadQuickDownload, value); }
         }
 
+        public bool AutoDownloadEnabled
+        {
+            get { return _autoDownloadEnabled; }
+            set { SetProperty(ref _autoDownloadEnabled, value); }
+        }
+
+        // minutes between channel checks
+        public int AutoDownloadInterval
+        {
+            get { return _autoDownloadInterval; }
+            set { SetProperty(ref _autoDownloadInterval, value); }
+        }
+
+        // channel names separated by commas, semicolons or spaces
+        public string AutoDownloadChannels
+        {
+            get { return _autoDownloadChannels; }
+            set { SetProperty(ref _autoDownloadChannels, value); }
+        }
+
+        public bool AutoDownloadClips
+        {
+            get { return _autoDownloadClips; }
+            set { SetProperty(ref _autoDownloadClips, value); }
+        }
+
+        public int AutoDownloadClipMinViews
+        {
+            get { return _autoDownloadClipMinViews; }
+            set { SetProperty(ref _autoDownloadClipMinViews, value); }
+        }
+
+        public string[] GetAutoDownloadChannels()
+        {
+            return (_autoDownloadChannels ?? string.Empty)
+                .Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
         public int MaxConnectionCount
         {
             get { return _maxConnectionCount; }
@@ -291,6 +342,26 @@ namespace TwitchLeecher.Core.Models
                 }
             }
 
+            currentProperty = nameof(AutoDownloadInterval);
+
+            if (string.IsNullOrWhiteSpace(propertyName) || propertyName == currentProperty)
+            {
+                if (_autoDownloadInterval < 5 || _autoDownloadInterval > 1440)
+                {
+                    AddError(currentProperty, "Value has to be between 5 and 1440!");
+                }
+            }
+
+            currentProperty = nameof(AutoDownloadClipMinViews);
+
+            if (string.IsNullOrWhiteSpace(propertyName) || propertyName == currentProperty)
+            {
+                if (_autoDownloadClipMinViews < 0)
+                {
+                    AddError(currentProperty, "Value cannot be negative!");
+                }
+            }
+
             currentProperty = nameof(DownloadTempFolder);
 
             if (string.IsNullOrWhiteSpace(propertyName) || propertyName == currentProperty)
@@ -356,6 +427,11 @@ namespace TwitchLeecher.Core.Models
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
+                AutoDownloadEnabled = AutoDownloadEnabled,
+                AutoDownloadInterval = AutoDownloadInterval,
+                AutoDownloadChannels = AutoDownloadChannels,
+                AutoDownloadClips = AutoDownloadClips,
+                AutoDownloadClipMinViews = AutoDownloadClipMinViews,
                 Theme = Theme,
                 MaxConnectionCount = MaxConnectionCount
             };
