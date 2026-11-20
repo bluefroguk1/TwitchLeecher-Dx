@@ -15,8 +15,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="15" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="15" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Padding="0,0,0,5" BorderThickness="0,0,0,1">
@@ -27,13 +25,7 @@
                    TextWrapping="Wrap"
                    Text="In order to use the Twitch Leecher and search for videos, you need to connect it with your Twitch Account. This step generates a necessary authentication token. No user data or personal information gets collected or shared." />
 
-        <StackPanel Grid.Row="4">
-            <CheckBox IsChecked="{Binding EnableSubOnly}" Content="Also enable sub-only downloads" />
-            <TextBlock Margin="28,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"
-                       Text="This stores a token that gives full access to your Twitch account on this computer." />
-        </StackPanel>
-
-        <Button Grid.Row="6" Command="{Binding ConnectCommand}" HorizontalAlignment="Left">
+        <Button Grid.Row="4" Command="{Binding ConnectCommand}" HorizontalAlignment="Left">
             <StackPanel Orientation="Horizontal">
                 <avalonia:Icon Value="fa-solid fa-right-to-bracket" Margin="0,4,0,2" Width="16" Height="16"
                                RenderTransformOrigin="0.5,0.5" />

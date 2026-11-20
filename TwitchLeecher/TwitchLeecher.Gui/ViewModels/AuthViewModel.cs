@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Windows.Input;
 using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Events;
@@ -20,7 +20,6 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly IEventAggregator _eventAggregator;
 
         private ICommand _connectCommand;
-        private bool _enableSubOnly;
 
         #endregion Fields
 
@@ -44,12 +43,6 @@ namespace TwitchLeecher.Gui.ViewModels
 
         public ICommand ConnectCommand => _connectCommand ??= new DelegateCommand(Connect);
 
-        public bool EnableSubOnly
-        {
-            get => _enableSubOnly;
-            set => SetProperty(ref _enableSubOnly, value);
-        }
-
         #endregion Properties
 
         #region Methods
@@ -58,7 +51,7 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             try
             {
-                TwitchSignInResult result = await _dialogService.ShowTwitchSignIn(true, EnableSubOnly);
+                TwitchSignInResult result = await _dialogService.ShowTwitchSignIn(true, true);
 
                 if (result == null)
                 {
@@ -79,10 +72,11 @@ namespace TwitchLeecher.Gui.ViewModels
                     return;
                 }
 
-                if (EnableSubOnly && (result.SubOnlyToken == null || !_authService.ValidateAuthentication(result.SubOnlyToken, true)))
+                // sub-only access is always set up at sign-in, so the user never has to ask for it
+                if (result.SubOnlyToken == null || !_authService.ValidateAuthentication(result.SubOnlyToken, true))
                 {
                     await _dialogService.ShowMessageBox(
-                        "You are signed in, but sub-only downloads could not be enabled. To try again, log out and sign in with \"Also enable sub-only downloads\" ticked.",
+                        "You are signed in, but sub-only downloads could not be enabled. To try again, log out and sign in again.",
                         "Sub-only", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 

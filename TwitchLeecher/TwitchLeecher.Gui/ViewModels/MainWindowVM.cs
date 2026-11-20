@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -426,8 +426,7 @@ namespace TwitchLeecher.Gui.ViewModels
             }
             else if (subOnly == false)
             {
-                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again " +
-                                  "(tick \"Also enable sub-only downloads\") to turn them back on?");
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again to turn them back on?");
             }
         }
 
@@ -451,8 +450,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
             if (_showAuthSubOnlyError)
             {
-                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again " +
-                                  "(tick \"Also enable sub-only downloads\") to turn them back on?");
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again to turn them back on?");
             }
 
             StartTokenChecks();
