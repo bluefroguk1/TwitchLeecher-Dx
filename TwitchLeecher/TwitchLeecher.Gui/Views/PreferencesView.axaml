@@ -47,6 +47,8 @@
                     <RowDefinition SharedSizeGroup="r1" />
                     <RowDefinition Height="10" />
                     <RowDefinition SharedSizeGroup="r1" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition SharedSizeGroup="r1" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -86,7 +88,24 @@
                         </ToolTip>
                     </ToolTip.Tip>
                 </avalonia:Icon>
-                <Grid Grid.Row="4" Grid.Column="0">
+
+                <CheckBox Grid.Row="4" Grid.Column="0" Content="Minimise to tray"
+                          IsChecked="{Binding CurrentPreferences.AppMinimiseToTray}" VerticalAlignment="Center"
+                          HorizontalAlignment="Left" />
+                <avalonia:Icon Grid.Row="4" Grid.Column="2" Classes="Img_Help" Value="fa-solid fa-circle-question">
+                    <ToolTip.Tip>
+                        <ToolTip Width="350">
+                            <StackPanel>
+                                <TextBlock Classes="TlToolTipHeadlineText" Text="Minimise to tray" />
+                                <TextBlock TextAlignment="Left">
+                                    Minimising hides the window. Click the tray icon or use its Open entry to bring it back.
+                                </TextBlock>
+                            </StackPanel>
+                        </ToolTip>
+                    </ToolTip.Tip>
+                </avalonia:Icon>
+
+                <Grid Grid.Row="6" Grid.Column="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />

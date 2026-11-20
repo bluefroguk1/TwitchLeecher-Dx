@@ -15,9 +15,12 @@ namespace TwitchLeecher.Gui.Views
 
         private readonly IDialogService _dialogService;
         private readonly IRuntimeDataService _runtimeDataService;
+        private readonly IPreferencesService _preferencesService;
         private readonly NamedPipeManager _namedPipeManager;
 
         private bool _shown;
+
+        private bool _trayPromptOpen;
 
         #endregion Fields
 
@@ -26,10 +29,12 @@ namespace TwitchLeecher.Gui.Views
         public MainWindow(
             MainWindowVM viewModel,
             IDialogService dialogService,
-            IRuntimeDataService runtimeDataService)
+            IRuntimeDataService runtimeDataService,
+            IPreferencesService preferencesService)
         {
             _dialogService = dialogService;
             _runtimeDataService = runtimeDataService;
+            _preferencesService = preferencesService;
 
             _namedPipeManager = new NamedPipeManager("TwitchLeecher-DX");
             _namedPipeManager.OnMessage += OnPipeMessage;
@@ -65,6 +70,27 @@ namespace TwitchLeecher.Gui.Views
                 }
 
                 LoadWindowState();
+            };
+
+            PropertyChanged += (s, e) =>
+            {
+                if (e.Property != WindowStateProperty || WindowState != WindowState.Minimized)
+                {
+                    return;
+                }
+
+                Preferences preferences = _preferencesService.CurrentPreferences;
+
+                // the tray icon in App.axaml brings the window back
+                if (preferences.AppMinimiseToTray)
+                {
+                    Hide();
+                }
+                else if (!preferences.AppTrayPromptShown && !_trayPromptOpen)
+                {
+                    // let the minimise finish first
+                    Dispatcher.UIThread.Post(AskAboutTray);
+                }
             };
 
             Activated += (s, e) =>
@@ -104,20 +130,65 @@ namespace TwitchLeecher.Gui.Views
         {
             if (message == "Activate")
             {
-                Dispatcher.UIThread.Invoke(() =>
-                {
-                    if (WindowState == WindowState.Minimized)
-                    {
-                        WindowState = WindowState.Normal;
-                    }
-
-                    this.Topmost = true;
-
-                    this.Activate();
-
-                    Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
-                });
+                BringToFront();
             }
+        }
+
+        public void BringToFront()
+        {
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                // the window may be hidden in the tray
+                Show();
+
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+
+                this.Topmost = true;
+
+                this.Activate();
+
+                Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
+            });
+        }
+
+        private void AskAboutTray()
+        {
+            _trayPromptOpen = true;
+
+            // no owner: an owned dialog would be minimised along with this window
+            TrayPromptWindow prompt = new TrayPromptWindow();
+
+            prompt.Closed += (s, e) =>
+            {
+                _trayPromptOpen = false;
+
+                if (prompt.UseTray is not bool useTray)
+                {
+                    return;
+                }
+
+                try
+                {
+                    Preferences preferences = _preferencesService.CurrentPreferences.Clone();
+                    preferences.AppMinimiseToTray = useTray;
+                    preferences.AppTrayPromptShown = prompt.DontAskAgainChecked;
+                    _preferencesService.Save(preferences);
+                }
+                catch (Exception ex)
+                {
+                    _dialogService.ShowAndLogException(ex);
+                }
+
+                if (useTray && WindowState == WindowState.Minimized)
+                {
+                    Hide();
+                }
+            };
+
+            prompt.Show();
         }
 
         public void LoadWindowState()
