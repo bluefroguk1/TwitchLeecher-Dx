@@ -25,6 +25,7 @@ namespace TwitchLeecher.Gui.ViewModels
         // the last name made from the template; while the field still shows it, crop/quality changes refresh it
         private string _templateFilename;
         private List<IImage> _previewFrames;
+        private bool _previewsLoading;
         private int _previewInterval;
 
         private ICommand _downloadCommand;
@@ -99,6 +100,8 @@ namespace TwitchLeecher.Gui.ViewModels
 
                 if (_downloadParams.CanCrop)
                 {
+                    // reserve the preview boxes from the first frame, so the dialog doesn't grow when they arrive
+                    _previewsLoading = true;
                     _ = LoadPreviewsAsync(_downloadParams);
                 }
             }
@@ -192,6 +195,17 @@ namespace TwitchLeecher.Gui.ViewModels
         public bool HasPreviews
         {
             get { return _previewFrames != null; }
+        }
+
+        // true until the storyboard has loaded (or failed): placeholders hold the space meanwhile
+        public bool PreviewsLoading
+        {
+            get { return _previewsLoading; }
+        }
+
+        public bool ShowPreviewArea
+        {
+            get { return _previewsLoading || _previewFrames != null; }
         }
 
         public IReadOnlyList<IImage> PreviewFrames
@@ -351,6 +365,23 @@ namespace TwitchLeecher.Gui.ViewModels
 
         // shortcut: previews are Twitch's storyboard stills (one every few seconds to minutes), not exact frames; upgrade by grabbing frames with ffmpeg if exact cut points matter
         private async Task LoadPreviewsAsync(DownloadParameters downloadParams)
+        {
+            try
+            {
+                await LoadPreviewsCoreAsync(downloadParams);
+            }
+            finally
+            {
+                if (downloadParams == _downloadParams)
+                {
+                    _previewsLoading = false;
+                    FirePropertyChanged(nameof(PreviewsLoading));
+                    FirePropertyChanged(nameof(ShowPreviewArea));
+                }
+            }
+        }
+
+        private async Task LoadPreviewsCoreAsync(DownloadParameters downloadParams)
         {
             try
             {
