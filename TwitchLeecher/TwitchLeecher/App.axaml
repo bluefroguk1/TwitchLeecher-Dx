@@ -418,6 +418,26 @@
             </Style>
             <!-- /TextBlock -->
 
+            <!-- shared by views: loading placeholder (soft pulse) and accent on/off switch (class "accent": muted track off, accent on) -->
+            <Style Selector="Border.skeleton">
+                <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+                <Style.Animations>
+                    <Animation Duration="0:0:1.3" IterationCount="Infinite" Easing="SineEaseInOut">
+                        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.35" /></KeyFrame>
+                        <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
+                        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.35" /></KeyFrame>
+                    </Animation>
+                </Style.Animations>
+            </Style>
+            <Style Selector="ToggleSwitch.accent /template/ Border#SwitchKnobBounds">
+                <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            </Style>
+            <Style Selector="ToggleSwitch.accent:checked /template/ Border#SwitchKnobBounds, ToggleSwitch.accent:checked:pointerover /template/ Border#SwitchKnobBounds">
+                <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Style>
+
             <!-- Button -->
             <Style Selector="Button.TlMiniButton">
                 <Setter Property="Width" Value="30" />

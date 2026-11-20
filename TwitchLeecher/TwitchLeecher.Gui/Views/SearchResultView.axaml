@@ -85,14 +85,6 @@
             <Setter Property="OnContent" Value="" />
             <Setter Property="OffContent" Value="" />
         </Style>
-        <Style Selector="ToggleSwitch /template/ Border#SwitchKnobBounds">
-            <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
-        </Style>
-        <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds, ToggleSwitch:checked:pointerover /template/ Border#SwitchKnobBounds">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-        </Style>
         <!-- play icon over a thumbnail while the pointer is on it (a click opens the video) -->
         <Style Selector="Border.playOverlay">
             <Setter Property="Opacity" Value="0" />
@@ -196,7 +188,7 @@
                                 ToolTip.Tip="Hide videos already saved in your download folder">
                         <TextBlock Classes="collapsible" Text="Hide downloaded" FontSize="13" VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextPrimaryBrush}" />
-                        <ToggleSwitch IsChecked="{Binding HideDownloaded}" VerticalAlignment="Center" Margin="0,0,-4,0"
+                        <ToggleSwitch Classes="accent" IsChecked="{Binding HideDownloaded}" VerticalAlignment="Center" Margin="0,0,-4,0"
                                       AutomationProperties.Name="Hide downloaded" />
                     </StackPanel>
                     <ComboBox Height="30" MinWidth="130" FontSize="13" Margin="0,2,10,2"

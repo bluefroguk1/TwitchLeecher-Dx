@@ -226,17 +226,6 @@
             <Setter Property="Margin" Value="0,0,6,6" />
             <Setter Property="FontSize" Value="12" />
         </Style>
-        <!-- loading placeholders: a soft pulse instead of a spinner -->
-        <Style Selector="Border.skeleton">
-            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
-            <Style.Animations>
-                <Animation Duration="0:0:1.3" IterationCount="Infinite" Easing="SineEaseInOut">
-                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.35" /></KeyFrame>
-                    <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
-                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.35" /></KeyFrame>
-                </Animation>
-            </Style.Animations>
-        </Style>
         <Style Selector="Button.recent">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />

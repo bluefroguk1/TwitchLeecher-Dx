@@ -115,10 +115,6 @@
         <Style Selector="StackPanel.wsBody:disabled">
             <Setter Property="Opacity" Value="0.45" />
         </Style>
-        <Style Selector="ToggleSwitch /template/ Border#SwitchKnobBounds, ToggleSwitch:pointerover /template/ Border#SwitchKnobBounds">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-        </Style>
     </UserControl.Styles>
 
     <!-- Uses the host page's section/h1/label/sub styles (PreferencesView), so it reads like the other Settings sections. -->
@@ -130,7 +126,7 @@
                 <TextBlock Text="Check watched searches for new videos" Foreground="{DynamicResource TextPrimaryBrush}" />
                 <TextBlock Classes="sub" Text="Checks only run while Twitch Leecher is open" />
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" IsChecked="{Binding Enabled}" OnContent="On" OffContent="Off"
+            <ToggleSwitch Classes="accent" Grid.Column="1" IsChecked="{Binding Enabled}" OnContent="On" OffContent="Off"
                           VerticalAlignment="Center" AutomationProperties.Name="Check watched searches for new videos" />
         </Grid>
 
