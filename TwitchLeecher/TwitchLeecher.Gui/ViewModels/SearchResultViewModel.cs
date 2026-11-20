@@ -407,7 +407,13 @@ namespace TwitchLeecher.Gui.ViewModels
                             if (_preferencesService.CurrentPreferences.DownloadQuickDownload)
                             {
                                 // #96: skip the dialog and queue with the default settings
-                                _quickDownloadService.TryEnqueue(downloadParams);
+                                string notQueued = _quickDownloadService.TryEnqueue(downloadParams);
+                                if (notQueued != null)
+                                {
+                                    // the only feedback for a click that queued nothing
+                                    _dialogService.ShowMessageBox(notQueued, "Download", MessageBoxButton.OK,
+                                        MessageBoxImage.Exclamation);
+                                }
                             }
                             else
                             {
