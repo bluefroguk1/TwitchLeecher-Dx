@@ -19,5 +19,6 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.23" />
     <PackageReference Include="Ninject" Version="4.0.0-beta.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
   </ItemGroup>
 </Project>

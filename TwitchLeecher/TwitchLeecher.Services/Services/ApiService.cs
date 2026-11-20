@@ -161,6 +161,39 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
+        public bool? CheckToken(string accessToken, bool subOnly)
+        {
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return false;
+            }
+
+            using (WebClient webClient = CreateWebClientWithEncoding())
+            {
+                webClient.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+                try
+                {
+                    JObject json = JObject.Parse(webClient.DownloadString(AUTH_URL));
+                    string clientId = json.Value<string>("client_id");
+                    string expected = subOnly ? Constants.ClientIdWeb : Constants.ClientId;
+
+                    return !string.IsNullOrWhiteSpace(json.Value<string>("user_id")) &&
+                           string.Equals(clientId, expected, StringComparison.OrdinalIgnoreCase);
+                }
+                catch (WebException ex) when (ex.Response is HttpWebResponse response &&
+                                              response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return false;
+                }
+                catch (Exception)
+                {
+                    // network or Twitch trouble: don't tell the user their login is broken
+                    return null;
+                }
+            }
+        }
+
         public bool ValidateAuthentication(string accessToken, bool subOnly)
         {
             if (string.IsNullOrWhiteSpace(accessToken))

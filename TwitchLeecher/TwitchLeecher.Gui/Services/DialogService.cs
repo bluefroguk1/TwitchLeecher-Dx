@@ -175,6 +175,18 @@ namespace TwitchLeecher.Gui.Services
             view.ShowDialog(mainWindow);
         }
 
+        public async Task<TwitchSignInResult> ShowTwitchSignIn(bool signIn, bool subOnly)
+        {
+            if (!TwitchSignInWindow.IsWebViewAvailable())
+            {
+                return null;
+            }
+
+            var window = new TwitchSignInWindow(signIn, subOnly, _kernel.Get<IFolderService>().GetAppDataFolder());
+            await window.ShowDialog(_kernel.Get<MainWindow>());
+            return window.Result;
+        }
+
         public void SetBusy()
         {
             SetBusy(true);

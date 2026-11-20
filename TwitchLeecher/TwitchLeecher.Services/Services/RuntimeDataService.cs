@@ -113,6 +113,12 @@ namespace TwitchLeecher.Services.Services
 
                 doc.Save(configFile);
 
+                if (!OperatingSystem.IsWindows())
+                {
+                    // Holds the Twitch tokens; on Windows they are DPAPI-encrypted instead.
+                    File.SetUnixFileMode(configFile, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
+
                 _runtimeData = runtimeData;
             }
         }

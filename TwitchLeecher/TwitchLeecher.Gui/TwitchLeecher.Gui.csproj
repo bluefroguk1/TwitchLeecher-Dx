@@ -125,6 +125,7 @@
         <AdditionalFiles Include="Views\SearchResultView.axaml" />
         <AdditionalFiles Include="Views\SearchView.axaml" />
         <AdditionalFiles Include="Views\SubOnlyView.axaml" />
+        <AdditionalFiles Include="Views\TwitchSignInWindow.axaml" />
         <AdditionalFiles Include="Views\UpdateInfoView.axaml" />
     </ItemGroup>
 
@@ -138,6 +139,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.13" />
+        <PackageReference Include="Avalonia.Controls.WebView" Version="11.4.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.11-preview20251127001" />
         <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.2" />
