@@ -72,6 +72,12 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <Style Selector="Button.TlHeaderTab avalonia|Icon">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="Button.TlHeaderTab.active avalonia|Icon">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
         <Style Selector="Button.TlHeaderTab.active TextBlock.TabLabel">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
@@ -141,13 +147,17 @@
                             Command="{Binding ShowSearchCommand}"
                             ToolTip.Tip="Search for videos"
                             AutomationProperties.Name="Search">
-                        <TextBlock Classes="TabLabel" Text="Search" />
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <avalonia:Icon Value="fa-solid fa-magnifying-glass" Width="13" Height="13" VerticalAlignment="Center" />
+                            <TextBlock Classes="TabLabel" Text="Search" VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
                     <Button Classes="TlHeaderTab" Classes.active="{Binding IsDownloadsActive}"
                             Command="{Binding ShowDownloadsCommand}"
                             ToolTip.Tip="Show downloads"
                             AutomationProperties.Name="{Binding DownloadsCount, StringFormat='Downloads ({0})'}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <avalonia:Icon Value="fa-solid fa-download" Width="13" Height="13" VerticalAlignment="Center" />
                             <TextBlock Classes="TabLabel" Text="Downloads" VerticalAlignment="Center" />
                             <Border Background="{DynamicResource DividerBrush}" CornerRadius="10" Padding="7,1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding DownloadsCount, FallbackValue=0}" FontSize="12"
@@ -167,16 +177,16 @@
                             <TextBlock Text="Settings" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Classes="TlHeaderButton" Command="{Binding ShowInfoCommand}"
-                            ToolTip.Tip="Info"
-                            AutomationProperties.Name="Info">
-                        <avalonia:Icon Value="fa-solid fa-circle-question" Width="14" Height="14" />
-                    </Button>
                     <Button Classes="TlHeaderButton" Command="{Binding DonateCommand}"
                             IsVisible="{Binding ShowDonationButton}"
                             ToolTip.Tip="Donate"
                             AutomationProperties.Name="Donate">
                         <avalonia:Icon Value="fa-solid fa-dollar-sign" Width="14" Height="14" />
+                    </Button>
+                    <Button Classes="TlHeaderButton" Command="{Binding ShowInfoCommand}"
+                            ToolTip.Tip="Info"
+                            AutomationProperties.Name="Info">
+                        <avalonia:Icon Value="fa-solid fa-circle-question" Width="14" Height="14" />
                     </Button>
                 </StackPanel>
             </Grid>
