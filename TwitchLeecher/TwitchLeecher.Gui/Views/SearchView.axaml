@@ -203,12 +203,15 @@
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="From" VerticalAlignment="Center" />
                             <CalendarDatePicker Grid.Row="0" Grid.Column="1" Classes="TlDatePicker"
                                                 HorizontalAlignment="Stretch"
-                                                AutomationProperties.Name="From date"
+                                                AutomationProperties.Name="From date" Watermark="Choose a date"
+                                                DisplayDateEnd="{x:Static sys:DateTime.Today}"
                                                 SelectedDate="{Binding SearchParams.LoadFrom}" />
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="To" VerticalAlignment="Center" />
                             <CalendarDatePicker Grid.Row="2" Grid.Column="1" Classes="TlDatePicker"
                                                 HorizontalAlignment="Stretch"
-                                                AutomationProperties.Name="To date"
+                                                AutomationProperties.Name="To date" Watermark="Choose a date"
+                                                DisplayDateStart="{Binding SearchParams.LoadFrom}"
+                                                DisplayDateEnd="{x:Static sys:DateTime.Today}"
                                                 SelectedDate="{Binding SearchParams.LoadTo}" />
                         </Grid>
                     </StackPanel>
