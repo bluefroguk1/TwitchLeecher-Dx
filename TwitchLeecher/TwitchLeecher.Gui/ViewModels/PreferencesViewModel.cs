@@ -60,13 +60,15 @@ namespace TwitchLeecher.Gui.ViewModels
             INotificationService notificationService,
             IPreferencesService preferencesService,
             IThemeService themeService,
-            IFilenameService filenameService)
+            IFilenameService filenameService,
+            WatchedSearchesViewModel watchedSearches)
         {
             _dialogService = dialogService;
             _notificationService = notificationService;
             _preferencesService = preferencesService;
             _themeService = themeService;
             _filenameService = filenameService;
+            WatchedSearches = watchedSearches;
 
             _commandLockObject = new object();
         }
@@ -113,6 +115,25 @@ namespace TwitchLeecher.Gui.ViewModels
         }
 
         // kept here so the page reopens on the section it was left on
+        // Watched searches live in their own section and save straight away (not through the Save bar).
+        public WatchedSearchesViewModel WatchedSearches { get; }
+
+        // position of the "Watched searches" TabItem in PreferencesView
+        private const int WatchedSearchesSectionIndex = 3;
+
+        // The Downloads pill sets this before navigating here, to open Settings on the Watched searches section.
+        public bool ScrollToWatchedSearches
+        {
+            get => false;
+            set
+            {
+                if (value)
+                {
+                    SelectedSectionIndex = WatchedSearchesSectionIndex;
+                }
+            }
+        }
+
         public int SelectedSectionIndex
         {
             get => _selectedSectionIndex;
