@@ -222,6 +222,11 @@ namespace TwitchLeecher.Core.Models
                     default: chip = DownloadState.ToString().ToUpperInvariant(); break;
                 }
 
+                if (DownloadState == DownloadState.Paused && DownloadParams.WaitForSchedule)
+                {
+                    chip = "SCHEDULED";
+                }
+
                 return DownloadParams.FromWatchedSearch ? chip + " · WATCHED" : chip;
             }
         }
@@ -276,6 +281,11 @@ namespace TwitchLeecher.Core.Models
                         return "Starts after the current download";
 
                     case DownloadState.Paused:
+                        if (DownloadParams.WaitForSchedule)
+                        {
+                            return "Waits for the download schedule";
+                        }
+
                         return BytesDownloaded > 0
                             ? "Paused at " + Progress.ToString("0") + "%"
                             : DownloadParams.FromWatchedSearch

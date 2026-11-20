@@ -285,6 +285,86 @@
                         <TextBlock Classes="h1" Text="Download" />
 
                         <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="OFF-PEAK SCHEDULE" />
+                            <CheckBox IsChecked="{Binding CurrentPreferences.ScheduleEnabled}">
+                                <StackPanel>
+                                    <TextBlock Text="Only download watched-search finds during a set time" />
+                                    <TextBlock Classes="sub" Text="For off-peak hours: new finds wait, paused, until the window opens" />
+                                </StackPanel>
+                            </CheckBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0"
+                                        IsEnabled="{Binding CurrentPreferences.ScheduleEnabled}">
+                                <TextBlock Text="From" VerticalAlignment="Center" />
+                                <ComboBox SelectedIndex="{Binding CurrentPreferences.ScheduleStartHour}" MinWidth="90"
+                                          AutomationProperties.Name="Schedule start">
+                                    <ComboBoxItem Content="00:00" />
+                                    <ComboBoxItem Content="01:00" />
+                                    <ComboBoxItem Content="02:00" />
+                                    <ComboBoxItem Content="03:00" />
+                                    <ComboBoxItem Content="04:00" />
+                                    <ComboBoxItem Content="05:00" />
+                                    <ComboBoxItem Content="06:00" />
+                                    <ComboBoxItem Content="07:00" />
+                                    <ComboBoxItem Content="08:00" />
+                                    <ComboBoxItem Content="09:00" />
+                                    <ComboBoxItem Content="10:00" />
+                                    <ComboBoxItem Content="11:00" />
+                                    <ComboBoxItem Content="12:00" />
+                                    <ComboBoxItem Content="13:00" />
+                                    <ComboBoxItem Content="14:00" />
+                                    <ComboBoxItem Content="15:00" />
+                                    <ComboBoxItem Content="16:00" />
+                                    <ComboBoxItem Content="17:00" />
+                                    <ComboBoxItem Content="18:00" />
+                                    <ComboBoxItem Content="19:00" />
+                                    <ComboBoxItem Content="20:00" />
+                                    <ComboBoxItem Content="21:00" />
+                                    <ComboBoxItem Content="22:00" />
+                                    <ComboBoxItem Content="23:00" />
+                                </ComboBox>
+                                <TextBlock Text="to" VerticalAlignment="Center" />
+                                <ComboBox SelectedIndex="{Binding CurrentPreferences.ScheduleEndHour}" MinWidth="90"
+                                          AutomationProperties.Name="Schedule end">
+                                    <ComboBoxItem Content="00:00" />
+                                    <ComboBoxItem Content="01:00" />
+                                    <ComboBoxItem Content="02:00" />
+                                    <ComboBoxItem Content="03:00" />
+                                    <ComboBoxItem Content="04:00" />
+                                    <ComboBoxItem Content="05:00" />
+                                    <ComboBoxItem Content="06:00" />
+                                    <ComboBoxItem Content="07:00" />
+                                    <ComboBoxItem Content="08:00" />
+                                    <ComboBoxItem Content="09:00" />
+                                    <ComboBoxItem Content="10:00" />
+                                    <ComboBoxItem Content="11:00" />
+                                    <ComboBoxItem Content="12:00" />
+                                    <ComboBoxItem Content="13:00" />
+                                    <ComboBoxItem Content="14:00" />
+                                    <ComboBoxItem Content="15:00" />
+                                    <ComboBoxItem Content="16:00" />
+                                    <ComboBoxItem Content="17:00" />
+                                    <ComboBoxItem Content="18:00" />
+                                    <ComboBoxItem Content="19:00" />
+                                    <ComboBoxItem Content="20:00" />
+                                    <ComboBoxItem Content="21:00" />
+                                    <ComboBoxItem Content="22:00" />
+                                    <ComboBoxItem Content="23:00" />
+                                </ComboBox>
+                            </StackPanel>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.ScheduleIncludePaused}" Margin="24,0,0,0"
+                                      IsEnabled="{Binding CurrentPreferences.ScheduleEnabled}">
+                                <TextBlock Text="Also start downloads I paused" />
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.SchedulePauseAtEnd}" Margin="24,0,0,0"
+                                      IsEnabled="{Binding CurrentPreferences.ScheduleEnabled}">
+                                <StackPanel>
+                                    <TextBlock Text="Pause them again when the time is up" />
+                                    <TextBlock Classes="sub" Text="They carry on from where they stopped next time" />
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
                             <TextBlock Classes="label" Text="DOWNLOAD FOLDER" />
                             <Grid ColumnDefinitions="*,6,Auto">
                                 <TextBox Grid.Column="0" IsReadOnly="True"

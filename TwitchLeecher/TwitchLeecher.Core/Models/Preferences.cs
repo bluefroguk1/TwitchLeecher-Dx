@@ -66,6 +66,16 @@ namespace TwitchLeecher.Core.Models
 
         private bool _downloadQuickDownload;
 
+        private bool _scheduleEnabled;
+
+        private int _scheduleStartHour = 1;
+
+        private int _scheduleEndHour = 7;
+
+        private bool _scheduleIncludePaused = true;
+
+        private bool _schedulePauseAtEnd = true;
+
         private bool _autoDownloadEnabled;
 
         private int _autoDownloadInterval;
@@ -224,6 +234,39 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _downloadDisableConversion; }
             set { SetProperty(ref _downloadDisableConversion, value); }
+        }
+
+        // off-peak schedule: watched-search finds wait for this window (see DownloadSchedule)
+        public bool ScheduleEnabled
+        {
+            get { return _scheduleEnabled; }
+            set { SetProperty(ref _scheduleEnabled, value); }
+        }
+
+        public int ScheduleStartHour
+        {
+            get { return _scheduleStartHour; }
+            set { SetProperty(ref _scheduleStartHour, Math.Clamp(value, 0, 23)); }
+        }
+
+        public int ScheduleEndHour
+        {
+            get { return _scheduleEndHour; }
+            set { SetProperty(ref _scheduleEndHour, Math.Clamp(value, 0, 23)); }
+        }
+
+        // also start downloads the user paused when the window opens
+        public bool ScheduleIncludePaused
+        {
+            get { return _scheduleIncludePaused; }
+            set { SetProperty(ref _scheduleIncludePaused, value); }
+        }
+
+        // pause what the schedule started when the window closes
+        public bool SchedulePauseAtEnd
+        {
+            get { return _schedulePauseAtEnd; }
+            set { SetProperty(ref _schedulePauseAtEnd, value); }
         }
 
         public bool DownloadQuickDownload
@@ -427,6 +470,11 @@ namespace TwitchLeecher.Core.Models
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
+                ScheduleEnabled = ScheduleEnabled,
+                ScheduleStartHour = ScheduleStartHour,
+                ScheduleEndHour = ScheduleEndHour,
+                ScheduleIncludePaused = ScheduleIncludePaused,
+                SchedulePauseAtEnd = SchedulePauseAtEnd,
                 AutoDownloadEnabled = AutoDownloadEnabled,
                 AutoDownloadInterval = AutoDownloadInterval,
                 AutoDownloadChannels = AutoDownloadChannels,
