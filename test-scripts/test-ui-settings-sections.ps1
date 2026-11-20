@@ -90,10 +90,6 @@ Click Search. There is NO "Favourite channels" list with +/- buttons any more, j
 (pre-filled on the Search page, used by Search on start).
 '@
 
-Ask 'Sub-only under General' @'
-Click General. A SUB-ONLY DOWNLOADS row shows On or Off, and its Set up button opens the sub-only page.
-'@
-
 Ask 'Advanced expander' 'In Download, expand "Advanced": temporary folder with Browse, and Max connections. Do both still work?'
 
 Ask 'Search + General settings still work' @'

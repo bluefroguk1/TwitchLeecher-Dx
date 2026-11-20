@@ -169,20 +169,6 @@
                             </StackPanel>
                         </CheckBox>
 
-                        <!-- sub-only setup moved here from the header; status and command live on the main window -->
-                        <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="SUB-ONLY DOWNLOADS" />
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock VerticalAlignment="Center" Text="On: subscriber-only videos can be downloaded"
-                                           IsVisible="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).IsAuthenticatedSubOnly}" />
-                                <TextBlock VerticalAlignment="Center" Text="Off"
-                                           IsVisible="{Binding !$parent[Window].((viewModels:MainWindowVM)DataContext).IsAuthenticatedSubOnly}" />
-                                <Button Content="Set up"
-                                        Command="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).ShowSubOnlyCommand}"
-                                        ToolTip.Tip="Sign in with a subscriber account to download sub-only videos"
-                                        AutomationProperties.Name="Set up sub-only downloads" />
-                            </StackPanel>
-                        </StackPanel>
 
                         <StackPanel Classes="field">
                             <CheckBox IsChecked="{Binding CurrentPreferences.MiscUseExternalPlayer}">
