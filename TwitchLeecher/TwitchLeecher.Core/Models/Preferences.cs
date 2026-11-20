@@ -65,6 +65,12 @@ namespace TwitchLeecher.Core.Models
 
         private bool _downloadQuickDownload;
 
+        private bool _downloadCompress;
+
+        private CompressionLevel _downloadCompressLevel = CompressionLevel.Balanced;
+
+        private CompressionEncoder _downloadCompressEncoder = CompressionEncoder.Auto;
+
         private bool _miscUseExternalPlayer;
 
         private string _miscExternalPlayer;
@@ -221,6 +227,53 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _downloadQuickDownload, value); }
         }
 
+        // re-encode finished downloads to make them smaller (default for the download dialog and quick download)
+        public bool DownloadCompress
+        {
+            get { return _downloadCompress; }
+            set { SetProperty(ref _downloadCompress, value); }
+        }
+
+        public CompressionLevel DownloadCompressLevel
+        {
+            get { return _downloadCompressLevel; }
+            set { SetProperty(ref _downloadCompressLevel, value); }
+        }
+
+        public CompressionEncoder DownloadCompressEncoder
+        {
+            get { return _downloadCompressEncoder; }
+            set { SetProperty(ref _downloadCompressEncoder, value); }
+        }
+
+        // the Settings dropdown lists the encoders in enum order
+        public int DownloadCompressEncoderIndex
+        {
+            get { return (int)_downloadCompressEncoder; }
+            set
+            {
+                if (value >= 0)
+                {
+                    DownloadCompressEncoder = (CompressionEncoder)value;
+                    FirePropertyChanged(nameof(DownloadCompressEncoderIndex));
+                }
+            }
+        }
+
+        // the Settings dropdown lists the levels in enum order
+        public int DownloadCompressLevelIndex
+        {
+            get { return (int)_downloadCompressLevel; }
+            set
+            {
+                if (value >= 0)
+                {
+                    DownloadCompressLevel = (CompressionLevel)value;
+                    FirePropertyChanged(nameof(DownloadCompressLevelIndex));
+                }
+            }
+        }
+
         public int MaxConnectionCount
         {
             get { return _maxConnectionCount; }
@@ -356,6 +409,9 @@ namespace TwitchLeecher.Core.Models
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
+                DownloadCompress = DownloadCompress,
+                DownloadCompressLevel = DownloadCompressLevel,
+                DownloadCompressEncoder = DownloadCompressEncoder,
                 Theme = Theme,
                 MaxConnectionCount = MaxConnectionCount
             };
