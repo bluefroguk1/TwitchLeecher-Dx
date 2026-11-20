@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Net;
 using System.Reactive.Linq;
 using System.Text;
@@ -960,7 +961,66 @@ namespace TwitchLeecher.Services.Services
 
         // Pages through VOD chat with the persisted query the Twitch web player uses; anonymous access is enough.
         // Pages by time offset only: Twitch rejects cursor paging without a browser integrity token.
+        // Chat pages come one at a time per position, so a long VOD means thousands of requests in a row.
+        // Split the range into parallel segments (whole seconds, no overlap) and merge them in order.
         public List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to,
+            Action<TimeSpan> onPage)
+        {
+            // shortcut: fixed 10-minute segments, at most 4 at once; raise if Twitch allows more without throttling
+            const int maxParallel = 4;
+            TimeSpan segmentLength = TimeSpan.FromMinutes(10);
+
+            int start = (int)Math.Floor(from.TotalSeconds);
+            int end = (int)Math.Ceiling(to.TotalSeconds);
+            int count = Math.Clamp((int)Math.Ceiling((end - start) / segmentLength.TotalSeconds), 1, 1000);
+
+            if (count == 1)
+            {
+                return GetChatSegment(vodId, from, to, onPage);
+            }
+
+            int size = (int)Math.Ceiling((end - start) / (double)count);
+            List<(TimeSpan From, TimeSpan To)> segments = Enumerable.Range(0, count)
+                .Select(i => (TimeSpan.FromSeconds(start + i * size),
+                    // non-last segments stop one second before the next one starts, so no message is fetched twice
+                    i == count - 1 ? to : TimeSpan.FromSeconds(Math.Min(end, start + (i + 1) * size) - 1)))
+                .Where(seg => seg.Item1 <= seg.Item2)
+                .ToList();
+
+            List<TwitchChatMessage>[] results = new List<TwitchChatMessage>[segments.Count];
+            double[] covered = new double[segments.Count];
+            object progressLock = new object();
+
+            try
+            {
+                Parallel.For(0, segments.Count, new ParallelOptions { MaxDegreeOfParallelism = maxParallel }, i =>
+                {
+                    (TimeSpan segFrom, TimeSpan segTo) = segments[i];
+
+                    results[i] = GetChatSegment(vodId, segFrom, segTo, position =>
+                    {
+                        // report overall progress as if one fetch had covered the same number of seconds
+                        lock (progressLock)
+                        {
+                            covered[i] = Math.Max(0, (position - segFrom).TotalSeconds);
+                            onPage(from + TimeSpan.FromSeconds(covered.Sum()));
+                        }
+                    });
+                });
+            }
+            catch (AggregateException ex) when (ex.InnerExceptions.Count > 0)
+            {
+                // keep cancellation (and the first real error) as the caller expects
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                    ex.InnerExceptions.FirstOrDefault(e => e is OperationCanceledException) ?? ex.InnerExceptions[0]).Throw();
+                throw;
+            }
+
+            // segments are in time order and each is in order, so concatenating keeps the chat order
+            return results.Where(r => r != null).SelectMany(r => r).ToList();
+        }
+
+        private List<TwitchChatMessage> GetChatSegment(string vodId, TimeSpan from, TimeSpan to,
             Action<TimeSpan> onPage)
         {
             List<TwitchChatMessage> messages = new List<TwitchChatMessage>();
