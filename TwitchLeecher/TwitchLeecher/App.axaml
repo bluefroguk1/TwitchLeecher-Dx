@@ -404,7 +404,8 @@
                  which left the date sitting high against its label -->
             <Style Selector="CalendarDatePicker">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
-                <Setter Property="Padding" Value="8,0" />
+                <Setter Property="Padding" Value="10,0" />
+                <Setter Property="ClipToBounds" Value="True" />
             </Style>
             <!-- Pop-up calendar in theme colours: accent for the chosen day, outlined accent for today -->
             <Style Selector="Calendar">
@@ -413,13 +414,41 @@
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Padding" Value="6" />
             </Style>
             <Style Selector="CalendarItem /template/ Border > Border">
                 <Setter Property="BorderBrush" Value="Transparent" />
             </Style>
             <Style Selector="CalendarItem /template/ Button.CalendarNavigation > Path">
-                <Setter Property="Fill" Value="{DynamicResource TextPrimaryBrush}" />
+                <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+            </Style>
+            <!-- weekday letters are quieter than the dates -->
+            <Style Selector="CalendarItem /template/ Grid#PART_MonthView > TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <!-- rounded day cells; the chosen day and today are circles -->
+            <!-- days that cannot be chosen (the future): dimmed, with no cross -->
+            <Style Selector="CalendarDayButton:blackout /template/ Path#BlackoutVisual">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+            <Style Selector="CalendarDayButton:blackout /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Opacity" Value="0.35" />
+            </Style>
+            <!-- square day cells, so the hover, today and chosen-day shapes are true circles -->
+            <Style Selector="CalendarDayButton">
+                <Setter Property="Width" Value="30" />
+                <Setter Property="Height" Value="30" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style Selector="CalendarDayButton /template/ Rectangle#Background, CalendarDayButton /template/ Rectangle#SelectedBackground, CalendarDayButton /template/ Rectangle#TodayBackground">
+                <Setter Property="RadiusX" Value="15" />
+                <Setter Property="RadiusY" Value="15" />
             </Style>
             <Style Selector="CalendarDayButton, CalendarButton">
                 <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
