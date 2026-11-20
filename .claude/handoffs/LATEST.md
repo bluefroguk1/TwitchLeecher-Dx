@@ -79,6 +79,42 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
+## TEST PLAN FOR combined-all: START HERE (updated 2026-11-21)
+
+`combined-all` holds **every change** (the 16 open PRs plus all new work) and **compiles on GitHub Actions** (Windows + Linux, run 44722012484 at commit 66d816f). It has **not been run yet** in this form, so this round is about finding cross-change bugs before any more PRs go upstream.
+
+**1. Get the build:**
+- **Quickest:** GitHub → Actions → latest "Build" run on `combined-all` → Artifacts → `TwitchLeecher-combined-all-win-x64`. Unzip it into `TwitchLeecher\TwitchLeecher\bin\Release\net10.0`, then run the script with `-SkipBuild`.
+- **Or build it:** `git fetch origin; git checkout combined-all; git pull`, then let the script build. It uses `C:\Program Files\dotnet\dotnet.exe`.
+
+**2. Close every running copy first:** `Get-Process TwitchLeecher | Stop-Process -Force`.
+
+**3. Run ONE script, which walks through everything with the right screen locations:**
+
+```
+powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1            # build + Tier 1 and 2
+powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild -Tier 3   # long downloads, later
+powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild -Tier 4   # waiting / reboot, later
+```
+
+| Tier | Needs | Covers |
+|---|---|---|
+| 1 | nothing (~25 min) | process name (auto); in-app sign-in with sub-only; opens on Search with logo + version; header (no Sub-only); search sidebar, Links/IDs box, Search tab → form; results toolbar, channel ★, Clips; Settings side menu and every new toggle; New/Original/Coyote themes on every page; dialogs centred + draggable; second launch wakes the app; tray first-minimise prompt; watched-search rows, bin, first run; **idle CPU (auto)** |
+| 2 | one 3-minute download (~20 min) | download dialog (filmstrip, editable name, Extras); Downloads page speed / pause / resume; **chat JSON (auto check)**, VOD info (auto), **compression to HEVC + no leftovers (auto)**, encoder in log; chat HTML; badges QUEUED → DOWNLOADED by themselves; Download Selected; desktop notification; "This video is for subscribers only."; clip download |
+| 3 | an hour of a busy VOD's chat (optional) | parallel chat speed; CPU vs graphics-card compression |
+| 4 | waiting / a live channel / a Windows sign-out (optional) | off-peak schedule; live stream held back; start with Windows; token stopped working → prompt |
+
+**4. Send back** the results file the script saves in `%TEMP%` (`twitchleecher-combined-all-*.txt`). Each FAIL carries your one-line note.
+
+**Most likely to break**, because these are places where several changes meet:
+- **In-app sign-in:** never run on Windows. It uses a web view.
+- **Desktop notifications:** in round 1 no toast ever appeared.
+- **Settings › General:** it holds tray, start-with-Windows and notification toggles from three branches.
+- **Results page:** results toolbar, quick-download service, channel ★ and the new badge refresh all meet there.
+- **Download dialog Extras:** chat formats, video details and compression from three branches.
+
+**About the other `test-scripts/*.ps1`:** each one is for **re-testing a single PR branch on its own**, before submitting that PR. Several describe that branch's own screens, not `combined-all`. For example, `test-ui-header-nav.ps1` expects the old Settings page, and `test-login-and-icon.ps1` tests the old browser login, which is not used any more. Don't use them for this round.
+
 ## PR preparation and optimisation review (2026-11-21), READ THIS BEFORE SUBMITTING ANYTHING
 
 **PRs:** 22 clean, single-commit `pr/*` branches are prepared and pushed to the fork. **None are submitted.**
@@ -103,7 +139,7 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 5. **Watched searches:** each check makes one Helix `/streams` call per Broadcast search. `/streams` accepts up to 100 `user_login`s, so one call per check would do.
 6. **Old network code:** `WebClient` (27 uses, obsolete, blocks a thread per request) and `Thread.Sleep` in retries. Moving to async `HttpClient` is the bigger rewrite (issue #31).
 
-## Second test round: fixes and additions (2026-11-20), START HERE
+## Second test round: fixes and additions (2026-11-20) (details; the TEST PLAN above supersedes the order here)
 
 Everything below is on the branch it belongs to (for its PR) **and** merged into `combined-all`. **`combined-all` compiles on GitHub Actions** (Windows + Linux, run 44657053198, commit 194a3bc). None of it has been run yet. Get the latest Windows zip from that run's Artifacts, or `git pull` on `combined-all` and build.
 
