@@ -168,8 +168,9 @@ namespace TwitchLeecher.Gui.ViewModels
                     string.Equals(a.Search, search.Label, StringComparison.OrdinalIgnoreCase));
 
                 // shortcut: matched by label, so renaming a channel loses its latest result until the next event; store the result per search if that matters
+                // a switched-off search shows no result line at all
                 search.LatestResult = !search.Active
-                    ? "Search switched off"
+                    ? string.Empty
                     : latest == null
                         ? "Nothing found yet"
                         : $"{Describe(latest.Kind)} {FormatWhen(latest.Time)} · {latest.Message}";
