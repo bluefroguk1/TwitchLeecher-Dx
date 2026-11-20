@@ -159,11 +159,13 @@
 
                         <!-- logging out lives here (not in the top bar) -->
                         <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="TWITCH ACCOUNT" />
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <!-- the Twitch logo keeps its brand purple in every theme -->
-                                <avalonia:Icon Value="fa-brands fa-twitch" Width="20" Height="20" VerticalAlignment="Center"
+                            <!-- the Twitch logo keeps its brand purple in every theme -->
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <avalonia:Icon Value="fa-brands fa-twitch" Width="14" Height="14" VerticalAlignment="Center"
                                                Foreground="#9146FF" />
+                                <TextBlock Classes="label" Text="TWITCH ACCOUNT" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" VerticalAlignment="Center"
                                         Background="{DynamicResource ControlBorderBrush}"
                                         IsVisible="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).UserAvatar, Converter={x:Static ObjectConverters.IsNotNull}}">
