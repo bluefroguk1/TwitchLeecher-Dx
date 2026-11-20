@@ -367,14 +367,14 @@
                             <CalendarDatePicker Grid.Row="0" Grid.Column="1" Classes="TlDatePicker" Theme="{StaticResource TlDatePickerTheme}"
                                                 HorizontalAlignment="Stretch"
                                                 AutomationProperties.Name="From date" Watermark="Choose a date"
-                                                DisplayDateEnd="{x:Static sys:DateTime.Today}"
+                                                x:Name="FromPicker"
                                                 SelectedDate="{Binding SearchParams.LoadFrom}" />
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="To" VerticalAlignment="Center" />
                             <CalendarDatePicker Grid.Row="2" Grid.Column="1" Classes="TlDatePicker" Theme="{StaticResource TlDatePickerTheme}"
                                                 HorizontalAlignment="Stretch"
                                                 AutomationProperties.Name="To date" Watermark="Choose a date"
                                                 DisplayDateStart="{Binding SearchParams.LoadFrom}"
-                                                DisplayDateEnd="{x:Static sys:DateTime.Today}"
+                                                x:Name="ToPicker"
                                                 SelectedDate="{Binding SearchParams.LoadTo}" />
                         </Grid>
                     </StackPanel>
