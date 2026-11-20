@@ -37,6 +37,10 @@ namespace TwitchLeecher.Core.Models
 
         private bool _appTrayPromptShown;
 
+        private bool _appStartWithOs;
+
+        private bool _appStartMinimised;
+
         private RangeObservableCollection<string> _searchFavouriteChannels;
 
         private string _searchChannelName;
@@ -107,6 +111,18 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _appTrayPromptShown; }
             set { SetProperty(ref _appTrayPromptShown, value); }
+        }
+
+        public bool AppStartWithOs
+        {
+            get { return _appStartWithOs; }
+            set { SetProperty(ref _appStartWithOs, value); }
+        }
+
+        public bool AppStartMinimised
+        {
+            get { return _appStartMinimised; }
+            set { SetProperty(ref _appStartMinimised, value); }
         }
 
         public bool MiscUseExternalPlayer
@@ -357,6 +373,8 @@ namespace TwitchLeecher.Core.Models
                 AppShowDonationButton = AppShowDonationButton,
                 AppMinimiseToTray = AppMinimiseToTray,
                 AppTrayPromptShown = AppTrayPromptShown,
+                AppStartWithOs = AppStartWithOs,
+                AppStartMinimised = AppStartMinimised,
                 MiscUseExternalPlayer = MiscUseExternalPlayer,
                 MiscExternalPlayer = MiscExternalPlayer,
                 SearchChannelName = SearchChannelName,

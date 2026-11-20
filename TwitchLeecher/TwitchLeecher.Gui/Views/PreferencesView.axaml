@@ -49,6 +49,10 @@
                     <RowDefinition SharedSizeGroup="r1" />
                     <RowDefinition Height="10" />
                     <RowDefinition SharedSizeGroup="r1" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition SharedSizeGroup="r1" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition SharedSizeGroup="r1" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -116,6 +120,39 @@
                               SelectedValue="{Binding CurrentPreferences.Theme}">
                     </ComboBox>
                 </Grid>
+
+                <CheckBox Grid.Row="8" Grid.Column="0" Content="Start Twitch Leecher when Windows starts"
+                          IsChecked="{Binding CurrentPreferences.AppStartWithOs}" VerticalAlignment="Center"
+                          HorizontalAlignment="Left" />
+                <avalonia:Icon Grid.Row="8" Grid.Column="2" Classes="Img_Help" Value="fa-solid fa-circle-question">
+                    <ToolTip.Tip>
+                        <ToolTip Width="350">
+                            <StackPanel>
+                                <TextBlock Classes="TlToolTipHeadlineText" Text="Start with the system" />
+                                <TextBlock TextAlignment="Left" TextWrapping="Wrap">
+                                    Start Twitch Leecher when you sign in to Windows or your Linux desktop.
+                                </TextBlock>
+                            </StackPanel>
+                        </ToolTip>
+                    </ToolTip.Tip>
+                </avalonia:Icon>
+
+                <CheckBox Grid.Row="10" Grid.Column="0" Content="Start minimised to the tray" Margin="20,0,0,0"
+                          IsChecked="{Binding CurrentPreferences.AppStartMinimised}"
+                          IsEnabled="{Binding CurrentPreferences.AppStartWithOs}" VerticalAlignment="Center"
+                          HorizontalAlignment="Left" />
+                <avalonia:Icon Grid.Row="10" Grid.Column="2" Classes="Img_Help" Value="fa-solid fa-circle-question">
+                    <ToolTip.Tip>
+                        <ToolTip Width="350">
+                            <StackPanel>
+                                <TextBlock Classes="TlToolTipHeadlineText" Text="Start minimised to the tray" />
+                                <TextBlock TextAlignment="Left" TextWrapping="Wrap">
+                                    When started with the system, stay hidden in the tray. Click the tray icon to open the window.
+                                </TextBlock>
+                            </StackPanel>
+                        </ToolTip>
+                    </ToolTip.Tip>
+                </avalonia:Icon>
             </Grid>
 
             <Border Grid.Row="2" Margin="0, 20, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
