@@ -183,10 +183,7 @@
                     <Button Classes="TlHeaderButton" Command="{Binding ShowPreferencesCommand}"
                             ToolTip.Tip="Settings"
                             AutomationProperties.Name="Settings">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <avalonia:Icon Value="fa-solid fa-gear" Width="12" Height="12" />
-                            <TextBlock Text="Settings" VerticalAlignment="Center" />
-                        </StackPanel>
+                        <avalonia:Icon Value="fa-solid fa-gear" Width="14" Height="14" />
                     </Button>
                     <Button Classes="TlHeaderButton" Command="{Binding DonateCommand}"
                             IsVisible="{Binding ShowDonationButton}"
