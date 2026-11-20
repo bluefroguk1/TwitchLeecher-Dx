@@ -79,6 +79,46 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
+## Second test round: fixes and additions (2026-11-20), START HERE
+
+Everything below is on the branch it belongs to (for its PR) **and** merged into `combined-all`. **`combined-all` compiles on GitHub Actions** (Windows + Linux, run 44657053198, commit 194a3bc). None of it has been run yet. Get the latest Windows zip from that run's Artifacts, or `git pull` on `combined-all` and build.
+
+Before testing, kill any running copy: `Get-Process TwitchLeecher | Stop-Process -Force`.
+
+### 1. Instant checks (UI only)
+
+| Fix | Branch | What to check |
+|---|---|---|
+| Search: no ★ by the Channel field | `claude/ui-search-sidebar-93487b` (56835dd) | Only the favourites chips under the field |
+| Search: no bottom Search/Cancel | same | The bottom bar is empty on Search; the sidebar button and Enter (in the Channel field) still search |
+| Search: Links / IDs box | same | **Root cause:** Enter-to-search was bound to the whole page, so Enter in this box searched instead of adding a line. Now each link goes on its own line, long links wrap, and the box scrolls |
+| Header: no Sub-only button | `claude/ui-header-nav-d65209` (596c24d) | Top bar shows tabs, Settings, Info/Donate/Log out only |
+| Settings › General: Sub-only row | `claude/ui-settings-sections-v2` (f03c4e2) | SUB-ONLY DOWNLOADS shows On/Off, and "Set up" opens the sub-only page |
+| Settings › Search: no favourites list | same | Only a DEFAULT CHANNEL box (Search on start uses it). Favourites are managed with the ★ on results |
+| Watched searches row layout | `claude/ui-watched-searches-in-settings` (3397903) | Each row on one line: title, "When found", dropdown, Edit, Active, a red bin. Rows line up, nothing is cut off, even at the minimum window width |
+| Watched searches bin | same | The bin asks "Stop watching …?"; Edit no longer has Remove |
+| Dialogs centred | `ui-draggable-dialogs` (edf3118) | Move the window to a corner or second monitor, trigger a message box (search a channel that doesn't exist). It opens centred over the window |
+| Settings › Download: compression | `feature-compress-video` (3ec4898) | "Compress videos after download" plus a level (Light / Balanced / Strong) under Quick download |
+
+### 2. One short download (3-minute crop)
+
+| Item | Branch | What to check |
+|---|---|---|
+| Chat as JSON | `feature-chat-html` (1e68853) | Dialog › Extras › Save chat › "as JSON (for other tools)" writes `<video>.chat.json`. The script parses it and checks the messages are in order |
+| Compress after download | `feature-compress-video` | Dialog › Extras › "Compress after download" follows Settings. Status goes Downloading → Converting → **Compressing** with progress, and the log says "Compressed X → Y". The file is HEVC (Balanced), plays, and is smaller. Cancelling while compressing leaves no `.compressing` file. **CPU encoding: a long VOD takes a while** (GPU encoders are a noted follow-up) |
+| Dependency updates | `deps-patch-updates` (e1868c6), `deps-remove-unused` (7a0d896) | The app starts, signs in (uses the localhost listener), searches, downloads, opens Settings. Avalonia is 11.3.23, Mvvm 8.4.2, ReactiveUI 11.3.9. SQLite, Annotations, the migration analysers, stale DLL hint paths and the unused ASP.NET framework reference are removed, so the zip should be noticeably smaller |
+
+### 3. Needs a channel that is live now
+
+| Fix | Branch | What to check |
+|---|---|---|
+| **Watched search downloaded a stream still in progress** (kibblethegoat) | `claude/ui-watched-searches-in-settings` (3397903) | Twitch now gives a recording VOD a normal thumbnail, so the old live check missed it. Broadcast searches now ask Helix `/streams` whether the channel is live, and hold back VODs from the current stream (WAITING … still live). If that check fails, the newest VOD is held back. Test: a watched Broadcasts search for a live channel. Check now must show WAITING and start nothing; after the stream ends, the next check starts it |
+
+### Answers to the user's questions this round
+
+- **.NET:** stay on .NET 10 (LTS, supported to Nov 2028). .NET 11 is out but adds nothing needed. The safe package updates and removals are the two `deps-*` branches. Avalonia 12 and replacing Ninject come later.
+- **Chat export:** text, HTML with emotes, offline HTML, and now **JSON**.
+
 ## Post-testing notes: built and in combined-all (2026-11-20)
 
 All the user's notes and both tidy-ups are built on the branch each belongs to (for its PR) and merged into `combined-all`. **`combined-all` compiles on GitHub Actions** (Windows + Linux, run 44646475701). None of this has been **run** yet. Test on `combined-all`, quickest first; each branch's own test script has the detailed steps.
