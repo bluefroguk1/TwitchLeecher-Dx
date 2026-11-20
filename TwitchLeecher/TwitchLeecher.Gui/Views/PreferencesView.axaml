@@ -121,7 +121,7 @@
                     </ComboBox>
                 </Grid>
 
-                <CheckBox Grid.Row="8" Grid.Column="0" Content="Start with the system"
+                <CheckBox Grid.Row="8" Grid.Column="0" Content="Start Twitch Leecher when Windows starts"
                           IsChecked="{Binding CurrentPreferences.AppStartWithOs}" VerticalAlignment="Center"
                           HorizontalAlignment="Left" />
                 <avalonia:Icon Grid.Row="8" Grid.Column="2" Classes="Img_Help" Value="fa-solid fa-circle-question">
