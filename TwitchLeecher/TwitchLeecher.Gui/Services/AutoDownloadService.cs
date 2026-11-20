@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -259,6 +260,40 @@ namespace TwitchLeecher.Gui.Services
             }
         }
 
+        // Only finished VODs may be downloaded. Twitch now gives a VOD that is still recording a normal thumbnail,
+        // so TwitchVideo.Live alone misses it: ask Helix whether the channel is streaming, and treat broadcasts
+        // created since that stream started as live. If that check fails, the newest broadcast is held back too.
+        private Func<TwitchVideo, bool> LiveCheck(string channel, VideoType videoType, List<TwitchVideo> videos, string label)
+        {
+            if (videoType != VideoType.Broadcast)
+            {
+                // highlights, uploads and clips are always complete
+                return v => false;
+            }
+
+            DateTime? streamStart;
+
+            try
+            {
+                streamStart = _apiService.GetLiveStreamStart(channel);
+            }
+            catch (Exception ex)
+            {
+                TwitchVideo newest = videos.OrderByDescending(v => v.RecordedDate).FirstOrDefault();
+                Log("ERROR", label, "Could not check whether the channel is live, holding back the newest VOD: " + ex.Message);
+                return v => v.Live || (newest != null && v.Id == newest.Id);
+            }
+
+            if (streamStart == null)
+            {
+                return v => v.Live;
+            }
+
+            // shortcut: a stream restarted within this tolerance can make the previous VOD look live for one check
+            DateTime from = streamStart.Value.AddMinutes(-10);
+            return v => v.Live || v.RecordedDate.ToUniversalTime() >= from;
+        }
+
         private async Task CheckSearch(WatchedSearch search)
         {
             // read once: the user may edit the search on the UI thread while this runs
@@ -284,11 +319,13 @@ namespace TwitchLeecher.Gui.Services
 
             List<TwitchVideo> videos = _apiService.Search(searchParams).ToList();
 
+            Func<TwitchVideo, bool> isLive = LiveCheck(channel, videoType, videos, label);
+
             if (!_seen.TryGetValue(key, out HashSet<string> seen))
             {
                 // first check of this search: finished videos are history, only newer ones get downloaded.
                 // A stream that is live right now is left unseen, so its VOD downloads once the stream ends.
-                List<TwitchVideo> finished = videos.Where(v => !v.Live).ToList();
+                List<TwitchVideo> finished = videos.Where(v => !isLive(v)).ToList();
                 _seen[key] = new HashSet<string>(finished.Select(v => v.Id));
                 SaveSeen();
                 bool liveNow = finished.Count < videos.Count;
@@ -300,7 +337,7 @@ namespace TwitchLeecher.Gui.Services
             foreach (TwitchVideo video in videos.Where(v => !seen.Contains(v.Id)))
             {
                 // not ready: left unseen so a later check picks it up
-                if (isClip ? video.Views < minViews : video.Live)
+                if (isClip ? video.Views < minViews : isLive(video))
                 {
                     if (!isClip && _waitingLogged.Add(video.Id))
                     {

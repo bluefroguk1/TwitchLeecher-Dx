@@ -29,6 +29,7 @@ namespace TwitchLeecher.Services.Services
         private const string AUTH_URL = "https://id.twitch.tv/oauth2/validate";
         private const string REVOKE_URL = "https://id.twitch.tv/oauth2/revoke";
         private const string USERS_URL = "https://api.twitch.tv/helix/users";
+        private const string STREAMS_URL = "https://api.twitch.tv/helix/streams";
         private const string VIDEOS_URL = "https://api.twitch.tv/helix/videos";
         private const string CHANNELS_URL = "https://api.twitch.tv/helix/channels";
         private const string CLIPS_URL = "https://api.twitch.tv/helix/clips";
@@ -245,6 +246,37 @@ namespace TwitchLeecher.Services.Services
             }
 
             return GetChannelIdByName(channel) != null;
+        }
+
+        public DateTime? GetLiveStreamStart(string channel)
+        {
+            if (string.IsNullOrWhiteSpace(channel))
+            {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            using (WebClient webClient = CreateApiWebClient())
+            {
+                webClient.QueryString.Add("user_login", channel);
+
+                WaitForNextRequest();
+
+                string result = webClient.DownloadString(STREAMS_URL);
+
+                SetNextRequestTime(webClient);
+
+                JArray streams = JObject.Parse(result).Value<JArray>("data");
+                JToken stream = streams?.FirstOrDefault(s => s.Value<string>("type") == "live");
+                string startedAt = stream?.Value<string>("started_at");
+
+                if (string.IsNullOrWhiteSpace(startedAt))
+                {
+                    return null;
+                }
+
+                return DateTime.Parse(startedAt, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+            }
         }
 
         public string GetChannelIdByName(string channel)
@@ -1214,7 +1246,8 @@ namespace TwitchLeecher.Services.Services
             bool muted = mutedSegments != null && mutedSegments.Count > 0;
             bool live = false;
 
-            if (string.IsNullOrWhiteSpace(thumbnail))
+            // a VOD still being recorded has no thumbnail, or Twitch's "processing" placeholder
+            if (string.IsNullOrWhiteSpace(thumbnail) || thumbnail.Contains("processing", StringComparison.OrdinalIgnoreCase))
             {
                 thumbnail = PROCESSING_THUMBNAIL;
                 live = true;

@@ -51,3 +51,9 @@ The section was dark nested cards and didn't look like the other Settings sectio
 ## Added after testing
 
 - **Live at setup:** if the channel is live when a watched search first runs, that stream is no longer marked as seen. Its VOD downloads (or waits paused) once the stream ends. The FIRST RUN log line says so.
+
+## Added after second test round
+
+- **Bug fixed: a VOD still being recorded was downloaded** (seen with kibblethegoat). `TwitchVideo.Live` relied on an empty thumbnail, but Twitch now gives recording VODs a normal thumbnail. New `IApiService.GetLiveStreamStart(channel)` (Helix `/streams`): for Broadcast searches, VODs created since the current stream started (10 min tolerance) count as live and wait. If that call fails, the newest VOD is held back for that check. A "processing" thumbnail also counts as live.
+- Row layout: title (trimmed) | "When found" | dropdown | Edit | Active | bin, all on one line with fixed widths so rows line up and nothing is cut off.
+- Removing a search is the bin button (with a Yes/No confirmation), no longer inside Edit.

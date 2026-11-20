@@ -124,6 +124,22 @@ and NOTHING was added to Downloads.
 '@
 Show-Log 8
 
+Ask 'Row layout' @'
+In Settings > Watched searches, with at least two searches: on each row the "When found" label, its dropdown, Edit,
+the Active tick box and a red bin button sit on ONE line, lined up with the row above. Nothing is cut off at the right edge
+(also at the smallest window width); long titles end in ....
+'@
+
+Ask 'Bin button' @'
+Click the bin on a search: a dialog asks "Stop watching ...?". No keeps it, Yes removes it. Edit no longer has a Remove button.
+'@
+
+Ask 'Live stream is never downloaded mid-stream (needs a live channel; optional)' @'
+With a watched Broadcasts search for a channel that is streaming now (and its first run already done), press Check now.
+RECENT ACTIVITY shows WAITING "(still live, retry next check)" for the current stream and NOTHING starts downloading.
+After the stream ends, the next check STARTS (or PAUSES) it. Answer s to skip.
+'@
+
 Ask 'First run while the channel is live (optional)' @'
 Only if a channel is streaming right now: add a Broadcasts search for it and press Check now. The FIRST RUN line ends with
 "the current live stream will download when it ends". Later checks show a WAITING line while it is live, and once the stream
