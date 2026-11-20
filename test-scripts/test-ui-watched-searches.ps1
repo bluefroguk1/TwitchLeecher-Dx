@@ -124,6 +124,12 @@ and NOTHING was added to Downloads.
 '@
 Show-Log 8
 
+Ask 'First run while the channel is live (optional)' @'
+Only if a channel is streaming right now: add a Broadcasts search for it and press Check now. The FIRST RUN line ends with
+"the current live stream will download when it ends". Later checks show a WAITING line while it is live, and once the stream
+has ended the next check STARTS (or PAUSES) that VOD. Answer s to skip if no channel is live.
+'@
+
 Simulate-NewVideo
 Ask 'Download now' @'
 (Check the removed id is not a live VOD.) With "When found" = "Download now", press Check now. RECENT ACTIVITY shows a green

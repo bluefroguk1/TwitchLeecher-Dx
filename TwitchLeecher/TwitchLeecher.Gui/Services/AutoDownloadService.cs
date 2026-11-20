@@ -286,10 +286,14 @@ namespace TwitchLeecher.Gui.Services
 
             if (!_seen.TryGetValue(key, out HashSet<string> seen))
             {
-                // first check of this search: what is there already is history, only newer videos get downloaded
-                _seen[key] = new HashSet<string>(videos.Select(v => v.Id));
+                // first check of this search: finished videos are history, only newer ones get downloaded.
+                // A stream that is live right now is left unseen, so its VOD downloads once the stream ends.
+                List<TwitchVideo> finished = videos.Where(v => !v.Live).ToList();
+                _seen[key] = new HashSet<string>(finished.Select(v => v.Id));
                 SaveSeen();
-                Log("FIRST RUN", label, $"{videos.Count} existing videos marked as seen, not downloaded");
+                bool liveNow = finished.Count < videos.Count;
+                Log("FIRST RUN", label, $"{finished.Count} existing videos marked as seen, not downloaded" +
+                                        (liveNow ? "; the current live stream will download when it ends" : ""));
                 return;
             }
 

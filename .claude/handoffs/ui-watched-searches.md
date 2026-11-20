@@ -47,3 +47,7 @@ The section was dark nested cards and didn't look like the other Settings sectio
 - ComboBoxes with inline `ComboBoxItem`s bound by `SelectedIndex` to `WatchedSearch.*Index`.
 - `IsVisible="{Binding WatchedSearchesText, Converter={x:Static ObjectConverters.IsNotNull}}"` on the Downloads pill.
 - Settings scroll-to-section timing against `ScrollPositionRestorer` (posted at Background priority).
+
+## Added after testing
+
+- **Live at setup:** if the channel is live when a watched search first runs, that stream is no longer marked as seen. Its VOD downloads (or waits paused) once the stream ends. The FIRST RUN log line says so.
