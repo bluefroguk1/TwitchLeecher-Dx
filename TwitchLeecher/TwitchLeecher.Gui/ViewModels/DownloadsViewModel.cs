@@ -72,10 +72,17 @@ namespace TwitchLeecher.Gui.ViewModels
             ClearFinishedCommand = new DelegateCommand(ClearFinished);
             OpenWatchedSearchesCommand = new DelegateCommand(() => _navigationService.ShowWatchedSearches());
 
-            // Speed, time left and the summary bar all refresh on this one-second tick.
+            // Speed, time left and the summary bar refresh on this one-second tick, which only runs while
+            // something is downloading or queued; otherwise the page updates when a download changes state.
             _refreshTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background,
                 (_, _) => Refresh());
-            _refreshTimer.Start();
+
+            Downloads.CollectionChanged += Downloads_CollectionChanged;
+
+            foreach (TwitchVideoDownload download in Downloads)
+            {
+                download.PropertyChanged += Download_PropertyChanged;
+            }
 
             Refresh();
         }
@@ -216,9 +223,40 @@ namespace TwitchLeecher.Gui.ViewModels
 
         #region Methods
 
+        private void Downloads_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            foreach (TwitchVideoDownload download in e.NewItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
+            {
+                download.PropertyChanged += Download_PropertyChanged;
+            }
+
+            foreach (TwitchVideoDownload download in e.OldItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
+            {
+                download.PropertyChanged -= Download_PropertyChanged;
+            }
+
+            Dispatcher.UIThread.Post(Refresh, DispatcherPriority.Background);
+        }
+
+        // a state change (started, paused, finished) may need the tick back, or the summary updated once
+        private void Download_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(TwitchVideoDownload.DownloadState))
+            {
+                Dispatcher.UIThread.Post(Refresh, DispatcherPriority.Background);
+            }
+        }
+
         private void Refresh()
         {
             List<TwitchVideoDownload> downloads = Downloads.ToList();
+
+            bool active = downloads.Any(d => d.IsDownloading || d.IsQueued);
+
+            if (active != _refreshTimer.IsEnabled)
+            {
+                _refreshTimer.IsEnabled = active;
+            }
 
             foreach (TwitchVideoDownload download in downloads.Where(d => d.IsDownloading))
             {
