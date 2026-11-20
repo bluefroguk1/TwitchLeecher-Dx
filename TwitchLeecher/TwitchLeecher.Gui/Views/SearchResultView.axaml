@@ -120,7 +120,7 @@
             <Setter Property="Margin" Value="0,8,0,0" />
         </Style>
         <!-- very narrow: "Watch this search" and "Hide downloaded" keep only their icon and switch (the tooltips still name them) -->
-        <Style Selector="Grid.toolbar.tight .collapsible">
+        <Style Selector="Grid.toolbar.tight TextBlock.collapsible">
             <Setter Property="IsVisible" Value="False" />
         </Style>
         <Style Selector="Border.card">
