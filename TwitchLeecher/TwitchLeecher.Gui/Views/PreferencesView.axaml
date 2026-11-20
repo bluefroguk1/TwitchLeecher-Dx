@@ -161,6 +161,15 @@
                         <StackPanel Classes="field">
                             <TextBlock Classes="label" Text="TWITCH ACCOUNT" />
                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                <!-- the Twitch logo keeps its brand purple in every theme -->
+                                <avalonia:Icon Value="fa-brands fa-twitch" Width="20" Height="20" VerticalAlignment="Center"
+                                               Foreground="#9146FF" />
+                                <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" VerticalAlignment="Center"
+                                        Background="{DynamicResource ControlBorderBrush}"
+                                        IsVisible="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).UserAvatar, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <Image Source="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).UserAvatar}"
+                                           Stretch="UniformToFill" />
+                                </Border>
                                 <TextBlock VerticalAlignment="Center"
                                            Text="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).UserName, StringFormat='Signed in as {0}', FallbackValue='Signed in'}" />
                                 <Button Classes="outline" Content="Log out"

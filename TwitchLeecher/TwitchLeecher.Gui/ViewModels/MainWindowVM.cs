@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using TwitchLeecher.Core;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
@@ -146,6 +148,52 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated));
                 FirePropertyChanged(nameof(UserName));
+
+                if (value)
+                {
+                    LoadUserAvatar();
+                }
+            }
+        }
+
+        private Bitmap _userAvatar;
+
+        // the signed-in user's Twitch profile picture, shown next to "Signed in as" in Settings
+        public Bitmap UserAvatar
+        {
+            get => _userAvatar;
+            private set => SetProperty(ref _userAvatar, value);
+        }
+
+        private async void LoadUserAvatar()
+        {
+            string login = UserName;
+
+            if (string.IsNullOrWhiteSpace(login))
+            {
+                // the sign-in name arrives with the token check, which can finish just after sign-in
+                await Task.Delay(2500);
+                login = UserName;
+            }
+
+            if (string.IsNullOrWhiteSpace(login) || _userAvatar != null)
+            {
+                return;
+            }
+
+            try
+            {
+                var info = await Task.Run(() => _apiService.GetChannelInfo(login));
+
+                if (info != null && Uri.TryCreate(info.Value.ProfileImageUrl, UriKind.Absolute, out Uri url))
+                {
+                    UserAvatar = await ImageHelper.LoadFromWeb(url);
+                }
+            }
+            catch (Exception ex)
+            {
+                // cosmetic: the row works without the picture
+                Console.WriteLine("Could not load the profile picture: " + ex.Message);
             }
         }
 
