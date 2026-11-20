@@ -68,6 +68,20 @@ namespace TwitchLeecher.Gui.ViewModels
 
         #region Properties
 
+        // starts from Settings > Download > Compress; ticking it here only affects this download
+        public bool CompressDownload
+        {
+            get { return _downloadParams?.Compress ?? _preferencesService.CurrentPreferences.DownloadCompress; }
+            set
+            {
+                if (_downloadParams != null)
+                {
+                    _downloadParams.Compress = value;
+                    FirePropertyChanged(nameof(CompressDownload));
+                }
+            }
+        }
+
         public DownloadParameters DownloadParams
         {
             get { return _downloadParams; }

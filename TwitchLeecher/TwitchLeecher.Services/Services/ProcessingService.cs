@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Services.Interfaces;
 using TwitchLeecher.Shared.Helpers;
@@ -176,6 +177,145 @@ namespace TwitchLeecher.Services.Services
 
             FileSystem.DeleteFile(file);
             return true;
+        }
+
+        public string CompressVideo(Action<string> log, Action<string> setStatus, Action<double> setProgress,
+            Action<bool> setIsIndeterminate, string file, TimeSpan length, CompressionLevel level,
+            CancellationToken cancellationToken)
+        {
+            // Light keeps H.264 for players that can't do HEVC; the others use H.265, which is about half the size
+            (string codec, string crf) = level switch
+            {
+                CompressionLevel.Light => ("libx264", "23"),
+                CompressionLevel.Strong => ("libx265", "30"),
+                _ => ("libx265", "26")
+            };
+
+            string tempFile = Path.Combine(Path.GetDirectoryName(file),
+                Path.GetFileNameWithoutExtension(file) + ".compressing" + Path.GetExtension(file));
+
+            setStatus("Compressing");
+            setIsIndeterminate(true);
+            setProgress(0);
+            log(Environment.NewLine + Environment.NewLine + "Compressing '" + file + "' (" + level + ")...");
+
+            ProcessStartInfo psi = new ProcessStartInfo(FFMPEGExe)
+            {
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                RedirectStandardInput = true,
+                StandardErrorEncoding = Encoding.UTF8,
+                StandardOutputEncoding = Encoding.UTF8,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            foreach (string arg in new[]
+                     {
+                         "-nostdin", "-y", "-i", file, "-map", "0:v:0?", "-map", "0:a?",
+                         "-c:v", codec, "-preset", "medium", "-crf", crf,
+                         "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", tempFile
+                     })
+            {
+                psi.ArgumentList.Add(arg);
+            }
+
+            // shortcut: CPU encoding only (slow for long VODs), add hevc_nvenc/qsv/amf detection if users find it too slow
+            log(Environment.NewLine + "Command line arguments: " + string.Join(" ", psi.ArgumentList) + Environment.NewLine);
+
+            FixedSizeQueue<string> logQueue = new FixedSizeQueue<string>(200);
+
+            using (Process p = new Process())
+            {
+                DataReceivedEventHandler onData = (s, e) =>
+                {
+                    if (string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        return;
+                    }
+
+                    string line = e.Data.Trim();
+                    logQueue.Enqueue(line);
+
+                    TimeSpan? at = ParseFfmpegTime(line);
+
+                    if (at.HasValue && length > TimeSpan.Zero)
+                    {
+                        setIsIndeterminate(false);
+                        setProgress(Math.Min(100, at.Value.TotalMilliseconds / length.TotalMilliseconds * 100));
+                    }
+                };
+
+                p.OutputDataReceived += onData;
+                p.ErrorDataReceived += onData;
+                p.StartInfo = psi;
+                p.Start();
+                p.BeginErrorReadLine();
+                p.BeginOutputReadLine();
+
+                // poll so a cancel stops the (long) encode straight away
+                while (!p.WaitForExit(500))
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        try { p.Kill(true); } catch { }
+                        p.WaitForExit();
+                        FileSystem.DeleteFile(tempFile);
+                        cancellationToken.ThrowIfCancellationRequested();
+                    }
+                }
+
+                p.WaitForExit();
+
+                if (p.ExitCode != 0 || !File.Exists(tempFile))
+                {
+                    foreach (string line in logQueue)
+                    {
+                        log(Environment.NewLine + line);
+                    }
+
+                    FileSystem.DeleteFile(tempFile);
+                    log(Environment.NewLine + "Compression failed, kept the original video.");
+                    return "Compression failed, the original video was kept";
+                }
+            }
+
+            long before = new FileInfo(file).Length;
+            long after = new FileInfo(tempFile).Length;
+
+            if (after >= before)
+            {
+                FileSystem.DeleteFile(tempFile);
+                log(Environment.NewLine + "Compressed file was not smaller (" + FormatSize(before) + " -> " +
+                    FormatSize(after) + "), kept the original.");
+                return null;
+            }
+
+            File.Move(tempFile, file, true);
+            log(Environment.NewLine + "Compressed " + FormatSize(before) + " -> " + FormatSize(after) + ".");
+            setProgress(100);
+            return null;
+        }
+
+        // ffmpeg progress lines look like "frame=  123 fps=... time=00:01:02.34 bitrate=..."
+        private static TimeSpan? ParseFfmpegTime(string line)
+        {
+            int i = line.IndexOf("time=", StringComparison.Ordinal);
+
+            if (i < 0)
+            {
+                return null;
+            }
+
+            string value = line.Substring(i + 5).Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
+            return TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out TimeSpan t) ? t : null;
+        }
+
+        private static string FormatSize(long bytes)
+        {
+            return bytes >= 1L << 30
+                ? (bytes / (double)(1L << 30)).ToString("0.00", CultureInfo.CurrentCulture) + " GB"
+                : (bytes / (double)(1L << 20)).ToString("0", CultureInfo.CurrentCulture) + " MB";
         }
 
         private void RunFfmpeg(Action<string> log, Action<string> setStatus, Action<double> setProgress,

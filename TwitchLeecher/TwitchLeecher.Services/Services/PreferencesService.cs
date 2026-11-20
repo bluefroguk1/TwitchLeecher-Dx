@@ -55,6 +55,8 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_REMOVECOMPLETED_EL = "RemoveCompleted";
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
         private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
+        private const string DOWNLOAD_COMPRESS_EL = "Compress";
+        private const string DOWNLOAD_COMPRESSLEVEL_EL = "CompressLevel";
 
         private const string AUTODOWNLOAD_EL = "AutoDownload";
         private const string AUTODOWNLOAD_ENABLED_EL = "Enabled";
@@ -291,6 +293,14 @@ namespace TwitchLeecher.Services.Services
                 autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CHANNELS_EL, preferences.AutoDownloadChannels ?? string.Empty));
                 autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CLIPS_EL, preferences.AutoDownloadClips));
                 autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CLIPMINVIEWS_EL, preferences.AutoDownloadClipMinViews));
+
+                XElement downloadCompressEl = new XElement(DOWNLOAD_COMPRESS_EL);
+                downloadCompressEl.SetValue(preferences.DownloadCompress);
+                downloadEl.Add(downloadCompressEl);
+
+                XElement downloadCompressLevelEl = new XElement(DOWNLOAD_COMPRESSLEVEL_EL);
+                downloadCompressLevelEl.SetValue(preferences.DownloadCompressLevel);
+                downloadEl.Add(downloadCompressLevelEl);
 
                 // Miscellanious
                 XElement miscUseExternalPlayerEl = new XElement(MISC_USEEXTERNALPLAYER_EL);
@@ -728,6 +738,34 @@ namespace TwitchLeecher.Services.Services
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
+
+                            XElement downloadCompressEl = downloadEl.Element(DOWNLOAD_COMPRESS_EL);
+
+                            if (downloadCompressEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadCompress = downloadCompressEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadCompressLevelEl = downloadEl.Element(DOWNLOAD_COMPRESSLEVEL_EL);
+
+                            if (downloadCompressLevelEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadCompressLevel = downloadCompressLevelEl.GetValueAsEnum<CompressionLevel>();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
                         }
 
                         XElement autoDownloadEl = preferencesEl.Element(AUTODOWNLOAD_EL);
@@ -813,6 +851,8 @@ namespace TwitchLeecher.Services.Services
                 AutoDownloadChannels = null,
                 AutoDownloadClips = false,
                 AutoDownloadClipMinViews = 100,
+                DownloadCompress = false,
+                DownloadCompressLevel = CompressionLevel.Balanced,
                 MiscUseExternalPlayer = false,
                 MiscExternalPlayer = null,
                 MaxConnectionCount = 10,

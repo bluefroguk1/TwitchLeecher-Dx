@@ -262,6 +262,9 @@
                         </StackPanel>
                         <CheckBox Content="Save video details" IsChecked="{Binding DownloadParams.SaveVodInfo}"
                                   ToolTip.Tip="Saves title, channel, id, link, date, length and quality in a small file next to the video." />
+                        <CheckBox Content="Compress after download" IsChecked="{Binding CompressDownload}"
+                                  IsVisible="{Binding DownloadParams.CanCompress}"
+                                  ToolTip.Tip="Re-encodes the finished video to make it smaller (takes a while). The level is set in Settings > Download." />
                     </StackPanel>
                 </StackPanel>
             </DockPanel>

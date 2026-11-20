@@ -27,6 +27,7 @@ namespace TwitchLeecher.Core.Models
         private bool _cropEnd;
         private bool _disableConversion;
         private bool _downloadChat;
+        private bool? _compress;
         private bool _saveVodInfo;
         private ChatFormat _chatFormat;
 
@@ -89,6 +90,7 @@ namespace TwitchLeecher.Core.Models
             set
             {
                 SetProperty(ref _selectedQuality, value, nameof(SelectedQuality));
+                FirePropertyChanged(nameof(CanCompress));
                 FirePropertyChanged(nameof(EstimatedSizeStr));
             }
         }
@@ -137,6 +139,7 @@ namespace TwitchLeecher.Core.Models
             {
                 SetProperty(ref _disableConversion, value, nameof(DisableConversion));
                 FirePropertyChanged(nameof(CanCrop));
+                FirePropertyChanged(nameof(CanCompress));
             }
         }
 
@@ -145,6 +148,16 @@ namespace TwitchLeecher.Core.Models
 
         // cropping needs the ffmpeg conversion step, which clips don't use
         public bool CanCrop => !_disableConversion && !_video.IsClip;
+
+        // re-encode after download to save space; null = use Settings > Download > Compress
+        public bool? Compress
+        {
+            get { return _compress; }
+            set { SetProperty(ref _compress, value, nameof(Compress)); }
+        }
+
+        // compressing needs the mp4 conversion and makes no sense for audio only
+        public bool CanCompress => !_disableConversion && !(_selectedQuality?.IsAudioOnly ?? false);
 
         // also save the chat as <video>.chat.txt (#71)
         public bool DownloadChat

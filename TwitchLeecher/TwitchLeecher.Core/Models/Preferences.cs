@@ -86,6 +86,10 @@ namespace TwitchLeecher.Core.Models
 
         private int _autoDownloadClipMinViews;
 
+        private bool _downloadCompress;
+
+        private CompressionLevel _downloadCompressLevel = CompressionLevel.Balanced;
+
         private bool _miscUseExternalPlayer;
 
         private string _miscExternalPlayer;
@@ -312,6 +316,33 @@ namespace TwitchLeecher.Core.Models
                 .ToArray();
         }
 
+        // re-encode finished downloads to make them smaller (default for the download dialog and quick download)
+        public bool DownloadCompress
+        {
+            get { return _downloadCompress; }
+            set { SetProperty(ref _downloadCompress, value); }
+        }
+
+        public CompressionLevel DownloadCompressLevel
+        {
+            get { return _downloadCompressLevel; }
+            set { SetProperty(ref _downloadCompressLevel, value); }
+        }
+
+        // the Settings dropdown lists the levels in enum order
+        public int DownloadCompressLevelIndex
+        {
+            get { return (int)_downloadCompressLevel; }
+            set
+            {
+                if (value >= 0)
+                {
+                    DownloadCompressLevel = (CompressionLevel)value;
+                    FirePropertyChanged(nameof(DownloadCompressLevelIndex));
+                }
+            }
+        }
+
         public int MaxConnectionCount
         {
             get { return _maxConnectionCount; }
@@ -477,6 +508,8 @@ namespace TwitchLeecher.Core.Models
                 AutoDownloadChannels = AutoDownloadChannels,
                 AutoDownloadClips = AutoDownloadClips,
                 AutoDownloadClipMinViews = AutoDownloadClipMinViews,
+                DownloadCompress = DownloadCompress,
+                DownloadCompressLevel = DownloadCompressLevel,
                 Theme = Theme,
                 MaxConnectionCount = MaxConnectionCount
             };

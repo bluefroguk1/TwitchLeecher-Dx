@@ -472,6 +472,21 @@
                                     <TextBlock Classes="sub" Text="Skip the download dialog and use these defaults" />
                                 </StackPanel>
                             </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadCompress}">
+                                <StackPanel>
+                                    <TextBlock Text="Compress videos after download" />
+                                    <TextBlock Classes="sub" Text="Re-encodes each finished video to a smaller file; takes a while" />
+                                </StackPanel>
+                            </CheckBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0" IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
+                                <TextBlock Text="Compression" VerticalAlignment="Center" />
+                                <ComboBox SelectedIndex="{Binding CurrentPreferences.DownloadCompressLevelIndex}" MinWidth="260"
+                                          AutomationProperties.Name="Compression level">
+                                    <ComboBoxItem Content="Light: H.264, plays everywhere" />
+                                    <ComboBoxItem Content="Balanced: H.265, about half the size" />
+                                    <ComboBoxItem Content="Strong: H.265, smallest, some quality loss" />
+                                </ComboBox>
+                            </StackPanel>
                             <CheckBox IsChecked="{Binding CurrentPreferences.DownloadRemoveCompleted}">
                                 <TextBlock Text="Remove finished downloads from the queue" />
                             </CheckBox>
