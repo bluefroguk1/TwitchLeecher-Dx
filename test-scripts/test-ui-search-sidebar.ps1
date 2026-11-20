@@ -28,6 +28,9 @@ $checks = @(
  'Run a search with results, then click the Search tab: the search form opens (not the results)',
  'The form shows "<- Back to results (N)" with N = number of videos found; clicking it opens the results page',
  'Run a search that finds nothing, click the Search tab: no "Back to results" link',
+ 'No star button next to the Channel field; favourites show only as chips under it, and clicking a chip searches that channel',
+ 'No Search / Cancel buttons at the bottom of the Search page; the sidebar Search button and Enter (in the Channel field) still search',
+ 'Links / IDs: paste or type several links, pressing Enter between them: each goes on its own line, long links wrap inside the box, and a scrollbar appears when there are many',
  'Switch theme New <-> Original in Settings and back to Search: sidebar, chips, switch and empty state follow the theme, all text readable (incl. on the accent)'
 )
 $results = foreach ($c in $checks) {

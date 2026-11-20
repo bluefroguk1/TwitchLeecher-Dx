@@ -19,11 +19,6 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <UserControl.KeyBindings>
-        <!-- The links box accepts Enter itself (new line), so this only fires outside it -->
-        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
-    </UserControl.KeyBindings>
-
     <UserControl.Styles>
         <Style Selector="TextBlock.label">
             <Setter Property="FontSize" Value="12" />
@@ -122,8 +117,13 @@
 
                     <!-- Channel source -->
                     <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
+                        <!-- Enter searches from the channel field only: on the whole page it also swallowed
+                             Enter in the Links box, which then could not take more than one line -->
+                        <StackPanel.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                        </StackPanel.KeyBindings>
                         <TextBlock Classes="label" Text="CHANNEL" />
-                        <Grid ColumnDefinitions="*,6,36">
+                        <Grid ColumnDefinitions="*">
                             <AutoCompleteBox Grid.Column="0" Height="36"
                                              Watermark="Channel name"
                                              AutomationProperties.Name="Channel name"
@@ -132,14 +132,6 @@
                                              IsDropDownOpen="{Binding IsDropdownOpen, Mode=TwoWay}"
                                              Text="{Binding SearchParams.Channel}"
                                              IsTextCompletionEnabled="True" />
-                            <Button Grid.Column="2" Width="36" Height="36" Padding="0"
-                                    Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6"
-                                    Foreground="{DynamicResource WarningBrush}" FontSize="16"
-                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                    Content="&#x2605;"
-                                    ToolTip.Tip="Pick a favourite"
-                                    AutomationProperties.Name="Pick a favourite"
-                                    Command="{Binding OpenSearchDropDownCommand}" />
                         </Grid>
                         <StackPanel IsVisible="{Binding HasFavChannels}">
                             <ItemsControl ItemsSource="{Binding FavChannels}">
@@ -169,7 +161,8 @@
                     <StackPanel Spacing="6" IsVisible="{Binding IsLinksMode}">
                         <TextBlock Classes="label" Text="LINKS / VIDEO IDS" />
                         <TextBox Classes="TlMultilineTextBox" Height="160" Padding="10,8"
-                                 TextWrapping="NoWrap"
+                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  AutomationProperties.Name="Links or video IDs, one per line"
                                  Watermark="https://www.twitch.tv/videos/123456789&#10;123456789"
                                  Text="{Binding LinksText, Mode=TwoWay}" />
