@@ -16,5 +16,11 @@ namespace TwitchLeecher.Gui.Interfaces
         void ShowUpdateInfoDialog(UpdateInfo updateInfo);
 
         void SetBusy();
+
+        /// <summary>
+        /// Shows the in-app Twitch sign-in. Returns null when this system has no web view,
+        /// so the caller can fall back to the browser.
+        /// </summary>
+        Task<TwitchSignInResult> ShowTwitchSignIn(bool signIn, bool subOnly);
     }
 }
