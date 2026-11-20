@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TwitchLeecher.Gui.Views.TrayPromptWindow"
+        Title="Twitch Leecher DX"
+        Icon="avares://TwitchLeecher.Gui/Assets/TL_Icon.ico"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        CanResize="False"
+        SizeToContent="WidthAndHeight"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
+    <StackPanel Margin="24" Spacing="16" MaxWidth="420">
+        <TextBlock Text="Minimise to the system tray instead?" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock Text="The window leaves the taskbar and stays in the tray. Click the tray icon to bring it back. You can change this later in Settings."
+                   Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+        <CheckBox x:Name="DontAskAgain" Content="Don't ask again" IsChecked="True" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="No, keep it on the taskbar" Click="No_OnClick" />
+            <Button Content="Yes, use the tray" Click="Yes_OnClick" IsDefault="True"
+                    Background="{DynamicResource AccentBrush}"
+                    Foreground="{DynamicResource AccentForegroundBrush}" />
+        </StackPanel>
+    </StackPanel>
+</Window>
