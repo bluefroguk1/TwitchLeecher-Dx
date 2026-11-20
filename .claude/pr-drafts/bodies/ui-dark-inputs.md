@@ -4,7 +4,8 @@
 Text boxes, combo boxes, numeric inputs, date pickers, check boxes and
 radio buttons use the theme's input colours instead of bright white, and
 font sizes follow a 12/14/16/20/24 scale (the 14.667/21.333 sizes came
-from the WPF version).
+from the WPF version). The date picker's text is vertically centred (it sat
+at the top), and its pop-up calendar uses the theme colours.
 
 ## Depends on
 

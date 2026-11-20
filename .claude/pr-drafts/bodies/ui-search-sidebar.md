@@ -8,6 +8,7 @@
 - After sign-in the app opens on Search, showing the logo, name and version;
   the separate Welcome page is removed.
 - The Search tab always opens the form, with a link back to the last results.
+- The custom date range can't pick future dates or end before it starts.
 
 ## Depends on
 

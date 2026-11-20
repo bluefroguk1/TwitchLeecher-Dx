@@ -1,7 +1,7 @@
 <!-- title: Option to start with Windows, minimised to the tray -->
 ## Summary
 
-Settings get "Start Twitch Leecher when I sign in" and "Start minimised to
+Settings get "Start Twitch Leecher when Windows starts" and "Start minimised to
 the tray". On Windows this writes a per-user Run entry (no admin needed),
 on Linux an autostart .desktop file; both are removed when switched off.
 

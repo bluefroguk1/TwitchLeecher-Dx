@@ -77,11 +77,19 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 
 - **Notifications removed from the tray branch.** On Windows the toast backend (`DesktopNotifications.Windows`) initialised and `ShowNotification` returned without error, yet no toast ever appeared (Do Not Disturb checked). Removed: the notification service/interface, the "Show notifications" setting, the download hooks, the `DesktopNotifications*` packages and the Windows-specific target framework (back to plain `net10.0`). To revisit: register the app's toast identity (AppUserModelID + Start Menu shortcut) for an unpackaged exe, or ship packaged. The auto-download and watched-searches branches may call `IDesktopNotificationService.Notify` in their handoffs; that interface no longer exists on the tray branch.
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
-- **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
+- **Header buttons:** Info / Donate are icon-only so the header still fits at the 780px minimum width. Log out moved to Settings › General (round 3).
 
-## TEST PLAN FOR combined-all: START HERE (updated 2026-11-21)
+## TEST PLAN FOR combined-all: START HERE (updated 2026-11-20, round 3 UI tweaks)
 
-`combined-all` holds **every change** (the 16 open PRs plus all new work) and **compiles on GitHub Actions** (Windows + Linux, run 44722012484 at commit 66d816f). It has **not been run yet** in this form, so this round is about finding cross-change bugs before any more PRs go upstream.
+`combined-all` holds **every change** (the 16 open PRs plus all new work) and **compiles on GitHub Actions** (Windows + Linux, run 44752247971 at commit dfccddd). It has **not been run yet** in this form, so this round is about finding cross-change bugs before any more PRs go upstream.
+
+**Round 3 UI tweaks (from the user's screenshot, in combined-all and the matching `pr/*` branches; the test script covers them in Tier 1):**
+- **Header:** no Log out button. Clicking the logo or "Twitch Leecher" goes to Search. (`ui-header-nav`; on its own, the old Settings page shows "Signed in as …" + Log out.)
+- **Settings › General:** TWITCH ACCOUNT "Signed in as <login>" + Log out, then THEME. The Appearance section is gone. The Windows start-up label is now "Start Twitch Leecher when Windows starts". (`ui-settings-sections`, `start-with-windows`.) The login comes from the token validation (`IApiService.SignedInLogin`, then `IAuthService.UserName`, then `MainWindowVM.UserName`), so no extra API call.
+- **Settings › Download:** the Advanced expander is gone. TEMPORARY FOLDER and MAX CONNECTIONS sit with the other fields.
+- **Settings › Watched searches:** an On/Off switch (ToggleSwitch, accent colour) replaces the tick box. Everything below it is disabled and dimmed while Off. (`watched-searches`.)
+- **Date picker:** its text was top-aligned because the picker's inner TextBox takes `VerticalContentAlignment` from the picker, which defaults to Top. It's now centred, and the pop-up calendar is themed (`ui-dark-inputs`). The sidebar's Custom range blocks future dates, and To can't go before From (`ui-search-sidebar`). Other text boxes were already centred.
+- **Note:** the user's screenshot still showed the ★ by the Channel box, which was removed in round 2. They were on an older build, so take the latest `combined-all`.
 
 **1. Get the build:**
 - **Quickest:** GitHub → Actions → latest "Build" run on `combined-all` → Artifacts → `TwitchLeecher-combined-all-win-x64`. Unzip it into `TwitchLeecher\TwitchLeecher\bin\Release\net10.0`, then run the script with `-SkipBuild`.
@@ -99,7 +107,7 @@ powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -Ski
 
 | Tier | Needs | Covers |
 |---|---|---|
-| 1 | nothing (~25 min) | process name (auto); in-app sign-in with sub-only; opens on Search with logo + version; header (no Sub-only); search sidebar, Links/IDs box, Search tab → form; results toolbar, channel ★, Clips; Settings side menu and every new toggle; New/Original/Coyote themes on every page; dialogs centred + draggable; second launch wakes the app; tray first-minimise prompt; watched-search rows, bin, first run; **idle CPU (auto)** |
+| 1 | nothing (~25 min) | process name (auto); in-app sign-in with sub-only; opens on Search with logo + version; header (no Sub-only, no Log out, logo → Search); date picker + centred text; Settings account / Theme in General / no Advanced / watched On-Off switch; search sidebar, Links/IDs box, Search tab → form; results toolbar, channel ★, Clips; Settings side menu and every new toggle; New/Original/Coyote themes on every page; dialogs centred + draggable; second launch wakes the app; tray first-minimise prompt; watched-search rows, bin, first run; **idle CPU (auto)** |
 | 2 | one 3-minute download (~20 min) | download dialog (filmstrip, editable name, Extras); Downloads page speed / pause / resume; **chat JSON (auto check)**, VOD info (auto), **compression to HEVC + no leftovers (auto)**, encoder in log; chat HTML; badges QUEUED → DOWNLOADED by themselves; Download Selected; desktop notification; "This video is for subscribers only."; clip download |
 | 3 | an hour of a busy VOD's chat (optional) | parallel chat speed; CPU vs graphics-card compression |
 | 4 | waiting / a live channel / a Windows sign-out (optional) | off-peak schedule; live stream held back; start with Windows; token stopped working → prompt |

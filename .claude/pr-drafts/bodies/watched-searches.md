@@ -8,8 +8,9 @@
   found": Download now, or Add to queue paused.
 - The first check only records what already exists. A stream that is still
   live is held back (Helix /streams) until it ends.
-- Settings shows each search's latest result, an activity list and Check
-  now; the Downloads page shows how many searches are active.
+- Settings shows an On/Off switch (everything below it is greyed out while
+  Off), each search's latest result, an activity list and Check now; the
+  Downloads page shows how many searches are active.
 
 ## Depends on
 

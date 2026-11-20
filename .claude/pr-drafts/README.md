@@ -40,9 +40,9 @@ All 25 changes not yet sent upstream are now **clean PR branches** named `pr/*` 
 | Branch | PR title | Depends on | Status |
 |---|---|---|---|
 | `pr/ui-theme-keys` | Add named theme colours for the UI refresh | — | T |
-| `pr/ui-dark-inputs` | Dark form controls and a consistent font scale | theme colours | T |
-| `pr/ui-header-nav` | Redesigned header and corner notifications | theme colours | T\* (Sub-only moved) |
-| `pr/ui-search-sidebar` | Search page as a sidebar, opening on Search | theme colours | T\* (round-2 fixes) |
+| `pr/ui-dark-inputs` | Dark form controls and a consistent font scale | theme colours | T\* (date picker centring + calendar new) |
+| `pr/ui-header-nav` | Redesigned header and corner notifications | theme colours | T\* (Sub-only and Log out moved, logo → Search) |
+| `pr/ui-search-sidebar` | Search page as a sidebar, opening on Search | theme colours | T\* (round-2 fixes, date limits new) |
 | `pr/ui-downloads-queue` | Downloads page: speed, time left and per-download pause | theme colours (rebase after #104/#111/#113/#115) | T |
 | `pr/in-app-signin` | Sign in to Twitch inside the app, with sub-only in the same login | theme colours | – |
 
@@ -54,14 +54,14 @@ These sit on `pr/_after-open-prs`: a single commit on `master` holding the code 
 |---|---|---|---|
 | `pr/ui-results-toolbar` | Search results: toolbar, badges, channel header and selection bar | #106, #108, theme colours | T\* (channel ★ new) |
 | `pr/ui-download-dialog` | Download dialog: crop preview filmstrip and tidier layout | #106, #107, #117, #119, theme colours | T |
-| `pr/ui-settings-sections` | Settings with a side menu, filename chips and a save bar | #108, #118, theme colours | T\* (favourites list removed) |
+| `pr/ui-settings-sections` | Settings with a side menu, filename chips and a save bar | #108, #118, theme colours | T\* (account + Theme in General, no Advanced: new) |
 | `pr/theme-coyote` | Add a "Coyote" colour theme | theme colours | T |
 | `pr/chat-export` | Chat export as HTML (with emotes) or JSON | #107, #117 | – |
 | `pr/compress-video` | Option to compress videos after download | open PRs | – |
 | `pr/tray` | System tray icon and minimise to tray | open PRs | T\* (first-minimise prompt new) |
-| `pr/start-with-windows` | Option to start with Windows, minimised to the tray | tray, pipe fix | – |
+| `pr/start-with-windows` | Option to start with Windows, minimised to the tray | tray, pipe fix | – (label now "when Windows starts") |
 | `pr/desktop-notifications` | Desktop notifications when downloads finish | tray | – (toasts never showed in round 1) |
-| `pr/watched-searches` | Watched searches: automatically download new VODs and clips | Settings, Downloads page, #106, #108 | T\* (live-stream fix, layout new) |
+| `pr/watched-searches` | Watched searches: automatically download new VODs and clips | Settings, Downloads page, #106, #108 | T\* (live-stream fix, layout, On/Off switch new) |
 | `pr/download-schedule` | Off-peak download schedule | watched searches | – |
 | `pr/perf-downloads-idle` | Downloads page: only refresh every second while something downloads | Downloads page PR | – |
 | `pr/perf-result-badges` | Search results: cheaper badge refresh, and DOWNLOADED when a download finishes | results toolbar PR | – |
@@ -82,6 +82,8 @@ Remove `--draft` for Wave 1 and for any PR whose dependencies have merged. Bodie
 ## Build check
 
 Each `pr/*` branch was pushed as `ci-check/<name>` with the CI workflow added, and built on GitHub Actions (Windows + Linux). **All 22 built successfully** on 2026-11-21 (runs 44719692910–44719828045), and the 3 optimisation branches after them (runs 44721593073–44721602281). The temporary `ci-check/*` branches were deleted afterwards.
+
+**Round 3 UI tweaks (2026-11-20):** `pr/ui-header-nav`, `pr/ui-dark-inputs`, `pr/ui-search-sidebar`, `pr/start-with-windows`, `pr/ui-settings-sections`, `pr/watched-searches` and `pr/download-schedule` were rebuilt as single commits (same messages) and all **7 built successfully** (runs 44752599273–44752633098; download-schedule's first attempt hit an ffmpeg mirror 503 and passed on re-run). No Claude references (check re-run: clean).
 
 After that, the stacked branches were re-based onto a **clean one-commit base on `master`** (`pr/_after-open-prs`), with identical code. Previously their history included `combined`'s working commits, which carry AI co-author lines. A full check from `master` (commit messages, author and committer details, file paths and added lines) now finds **no reference to Claude, AI tools or co-authors in any `pr/*` branch**. The 16 open PRs and their descriptions are clean too.
 
