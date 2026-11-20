@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -73,41 +74,38 @@ namespace TwitchLeecher.Services.Services
 
         #region Methods
 
-        private WebClient CreateWebClientWithEncoding()
+        private HttpRequestClient CreateWebClientWithEncoding()
         {
-            return new WebClient() { Encoding = Encoding.UTF8 };
+            return new HttpRequestClient();
         }
 
-        private WebClient CreateApiWebClient()
+        private HttpRequestClient CreateApiWebClient()
         {
-            WebClient wc = CreateWebClientWithEncoding();
-            wc.Headers.Add("Client-ID", Constants.ClientId);
-            wc.Headers.Add(
-                "Authorization",
-                $"Bearer {_runtimeDataService.RuntimeData.AuthInfo.AccessToken}"
-            );
+            HttpRequestClient wc = CreateWebClientWithEncoding();
+            wc.AddHeader("Client-ID", Constants.ClientId);
+            wc.AddHeader("Authorization", $"Bearer {_runtimeDataService.RuntimeData.AuthInfo.AccessToken}");
 
             return wc;
         }
 
-        private WebClient CreateGqlWebClient()
+        private HttpRequestClient CreateGqlWebClient()
         {
-            WebClient wc = CreateWebClientWithEncoding();
-            wc.Headers.Add("Client-ID", Constants.ClientIdWeb);
+            HttpRequestClient wc = CreateWebClientWithEncoding();
+            wc.AddHeader("Client-ID", Constants.ClientIdWeb);
 
             string accessTokenSubOnly = _runtimeDataService.RuntimeData.AuthInfo.AccessTokenSubOnly;
 
             if (!string.IsNullOrWhiteSpace(accessTokenSubOnly))
             {
-                wc.Headers.Add("Authorization", $"OAuth {accessTokenSubOnly}");
+                wc.AddHeader("Authorization", $"OAuth {accessTokenSubOnly}");
             }
 
             return wc;
         }
 
-        private void SetNextRequestTime(WebClient wc)
+        private void SetNextRequestTime(HttpRequestClient wc)
         {
-            string resetStr = wc.ResponseHeaders["Ratelimit-Reset"];
+            string resetStr = wc.GetResponseHeader("Ratelimit-Reset");
 
             if (!string.IsNullOrWhiteSpace(resetStr) && long.TryParse(resetStr, out long reset))
             {
@@ -126,6 +124,7 @@ namespace TwitchLeecher.Services.Services
 
             if (utcNow < _nextRequest.Value)
             {
+                // shortcut: blocking wait, callers are synchronous; make async together with the API methods
                 Thread.Sleep((int)Math.Ceiling((_nextRequest.Value - utcNow).TotalMilliseconds));
             }
         }
@@ -137,9 +136,9 @@ namespace TwitchLeecher.Services.Services
                 return false;
             }
 
-            using (WebClient webClient = CreateWebClientWithEncoding())
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
             {
-                webClient.Headers.Add("Authorization", $"Bearer {accessToken}");
+                webClient.AddHeader("Authorization", $"Bearer {accessToken}");
 
                 string jsonStr = null;
 
@@ -147,9 +146,9 @@ namespace TwitchLeecher.Services.Services
                 {
                     jsonStr = webClient.DownloadString(AUTH_URL);
                 }
-                catch (WebException)
+                catch (HttpRequestException)
                 {
-                    // Any WebException indicates that the access token could not be verified
+                    // Any HttpRequestException indicates that the access token could not be verified
                     return false;
                 }
 
@@ -188,19 +187,19 @@ namespace TwitchLeecher.Services.Services
                 return;
             }
 
-            using (WebClient webClient = CreateWebClientWithEncoding())
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
             {
-                webClient.QueryString.Add(
+                webClient.AddQuery(
                     "client_id",
                     subOnly ? Constants.ClientIdWeb : Constants.ClientId
                 );
-                webClient.QueryString.Add("token", accessToken);
+                webClient.AddQuery("token", accessToken);
 
                 try
                 {
                     _ = webClient.UploadString(REVOKE_URL, string.Empty);
                 }
-                catch (WebException)
+                catch (HttpRequestException)
                 {
                     // Ignore potentionally failed revoke requests
                 }
@@ -224,9 +223,9 @@ namespace TwitchLeecher.Services.Services
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            using (WebClient webClient = CreateApiWebClient())
+            using (HttpRequestClient webClient = CreateApiWebClient())
             {
-                webClient.QueryString.Add("login", channel);
+                webClient.AddQuery("login", channel);
 
                 string result = null;
 
@@ -238,7 +237,7 @@ namespace TwitchLeecher.Services.Services
 
                     SetNextRequestTime(webClient);
                 }
-                catch (WebException)
+                catch (HttpRequestException)
                 {
                     return null;
                 }
@@ -259,9 +258,9 @@ namespace TwitchLeecher.Services.Services
 
                             if (!string.IsNullOrWhiteSpace(id))
                             {
-                                using (WebClient webClientChannel = CreateApiWebClient())
+                                using (HttpRequestClient webClientChannel = CreateApiWebClient())
                                 {
-                                    webClientChannel.QueryString.Add("broadcaster_id", id);
+                                    webClientChannel.AddQuery("broadcaster_id", id);
 
                                     try
                                     {
@@ -273,7 +272,7 @@ namespace TwitchLeecher.Services.Services
 
                                         return id;
                                     }
-                                    catch (WebException)
+                                    catch (HttpRequestException)
                                     {
                                         return null;
                                     }
@@ -420,15 +419,15 @@ namespace TwitchLeecher.Services.Services
 
             do
             {
-                using (WebClient webClient = CreateApiWebClient())
+                using (HttpRequestClient webClient = CreateApiWebClient())
                 {
-                    webClient.QueryString.Add("user_id", channelId);
-                    webClient.QueryString.Add("type", broadcastTypeParam);
-                    webClient.QueryString.Add("first", TWITCH_MAX_LOAD_LIMIT.ToString());
+                    webClient.AddQuery("user_id", channelId);
+                    webClient.AddQuery("type", broadcastTypeParam);
+                    webClient.AddQuery("first", TWITCH_MAX_LOAD_LIMIT.ToString());
 
                     if (!string.IsNullOrWhiteSpace(cursor))
                     {
-                        webClient.QueryString.Add("after", cursor);
+                        webClient.AddQuery("after", cursor);
                     }
 
                     WaitForNextRequest();
@@ -590,7 +589,7 @@ namespace TwitchLeecher.Services.Services
                 throw new ArgumentNullException(nameof(id));
             }
 
-            using (WebClient webClient = CreateGqlWebClient())
+            using (HttpRequestClient webClient = CreateGqlWebClient())
             {
                 var gqlPlaybackAccessToken = CreateGqlPlaybackAccessToken(id);
                 string accessTokenStr = webClient.UploadString(GQL_URL, gqlPlaybackAccessToken);
@@ -691,14 +690,14 @@ namespace TwitchLeecher.Services.Services
             TwitchVideoAuthInfo vodAuthInfo
         )
         {
-            using (WebClient webClient = CreateWebClientWithEncoding())
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
             {
-                webClient.Headers.Add("Accept", "*/*");
+                webClient.AddHeader("Accept", "*/*");
 
-                webClient.QueryString.Add("allow_source", "true");
-                webClient.QueryString.Add("allow_audio_only", "true");
-                webClient.QueryString.Add("token", vodAuthInfo.Token);
-                webClient.QueryString.Add("sig", vodAuthInfo.Signature);
+                webClient.AddQuery("allow_source", "true");
+                webClient.AddQuery("allow_audio_only", "true");
+                webClient.AddQuery("token", vodAuthInfo.Token);
+                webClient.AddQuery("sig", vodAuthInfo.Signature);
 
                 string playlist = webClient.DownloadString(string.Format(PLAYLISTS_URL, vodId));
 
@@ -831,11 +830,11 @@ namespace TwitchLeecher.Services.Services
 
         private TwitchVideo GetTwitchVideoFromId(string id)
         {
-            using (WebClient webClient = CreateApiWebClient())
+            using (HttpRequestClient webClient = CreateApiWebClient())
             {
                 try
                 {
-                    webClient.QueryString.Add("id", id);
+                    webClient.AddQuery("id", id);
 
                     string result = webClient.DownloadString(VIDEOS_URL);
 
@@ -856,12 +855,9 @@ namespace TwitchLeecher.Services.Services
                         }
                     }
                 }
-                catch (WebException ex)
+                catch (HttpRequestException ex)
                 {
-                    if (
-                        ex.Response is HttpWebResponse resp
-                        && resp.StatusCode == HttpStatusCode.NotFound
-                    )
+                    if (ex.StatusCode == HttpStatusCode.NotFound)
                     {
                         return null;
                     }

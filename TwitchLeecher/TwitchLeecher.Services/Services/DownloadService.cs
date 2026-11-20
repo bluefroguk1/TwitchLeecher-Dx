@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TwitchLeecher.Core.Enums;
@@ -410,7 +411,7 @@ namespace TwitchLeecher.Services.Services
             log(Environment.NewLine + Environment.NewLine + "Playlist url for selected quality '" +
                 quality.DisplayString + "' is '" + playlistUrl + "'");
 
-            using (WebClient webClient = new WebClient())
+            using (HttpRequestClient webClient = new HttpRequestClient())
             {
                 log(Environment.NewLine + Environment.NewLine + "Retrieving playlist...");
                 string playlistStr = webClient.DownloadString(playlistUrl);
@@ -533,7 +534,7 @@ namespace TwitchLeecher.Services.Services
                     {
                         try
                         {
-                            using (var downloadClient = new WebClient())
+                            using (var downloadClient = new HttpRequestClient())
                             {
                                 byte[] bytes = downloadClient.DownloadData(part.RemoteFile);
 
@@ -548,9 +549,9 @@ namespace TwitchLeecher.Services.Services
                                 success = true;
                             }
                         }
-                        catch (WebException ex)
+                        catch (HttpRequestException ex)
                         {
-                            if (ex.Status == WebExceptionStatus.ProtocolError)
+                            if (ex.StatusCode.HasValue)
                             {
                                 warnings.Add("Video contains missing frames");
                                 log($"{Environment.NewLine}File '{part.RemoteFile}' is not available, skipping");
@@ -569,7 +570,9 @@ namespace TwitchLeecher.Services.Services
                                 log(Environment.NewLine + Environment.NewLine + "Downloading file '" + part.RemoteFile +
                                     "' failed! Trying again in " + DOWNLOAD_RETRY_TIME + "s");
                                 log(Environment.NewLine + ex);
-                                Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
+                                // shortcut: blocks a Parallel.ForEach worker (sync lambda), move to async chunk downloads later
+                                // shortcut: sync method called from the download worker, make async with the chunk download rewrite
+                    Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
                             }
                         }
                     } while (!success);
@@ -594,7 +597,7 @@ namespace TwitchLeecher.Services.Services
             {
                 try
                 {
-                    using (var downloadClient = new WebClient())
+                    using (var downloadClient = new HttpRequestClient())
                     {
                         byte[] bytes = downloadClient.DownloadData(initSegment.RemoteFile);
 
@@ -605,7 +608,7 @@ namespace TwitchLeecher.Services.Services
 
                     return;
                 }
-                catch (WebException ex)
+                catch (HttpRequestException ex)
                 {
                     if (retryCounter >= DOWNLOAD_RETRIES)
                     {
@@ -616,6 +619,7 @@ namespace TwitchLeecher.Services.Services
                     log(Environment.NewLine + Environment.NewLine + "Downloading init segment '" + initSegment.RemoteFile +
                         "' failed! Trying again in " + DOWNLOAD_RETRY_TIME + "s");
                     log(Environment.NewLine + ex);
+                    // shortcut: sync method called from the download worker, make async with the chunk download rewrite
                     Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
                 }
             }
