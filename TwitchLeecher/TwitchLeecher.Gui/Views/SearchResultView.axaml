@@ -108,14 +108,48 @@
         <!-- The toolbar stays on ONE row. As the pane narrows it shrinks in stages (classes set from SizeChanged):
              tight  = Watch and Hide downloaded lose their text (the tooltips still name them)
              tiny   = the summary goes and the title and sort box get smaller -->
+        <Style Selector="Grid.toolbar TextBlock.collapsible">
+            <Setter Property="MaxWidth" Value="140" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="MaxWidth" Duration="0:0:0.22" Easing="CubicEaseOut" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
+        </Style>
         <Style Selector="Grid.toolbar.tight TextBlock.collapsible">
-            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="MaxWidth" Value="0" />
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="Grid.toolbar TextBlock.summary">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Grid.toolbar.tiny TextBlock.summary">
-            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="Grid.toolbar TextBlock.title">
+            <Setter Property="MaxWidth" Value="260" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="MaxWidth" Duration="0:0:0.22" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Grid.toolbar.tiny TextBlock.title">
             <Setter Property="MaxWidth" Value="90" />
+        </Style>
+        <Style Selector="Grid.toolbar ComboBox.sort">
+            <Setter Property="MinWidth" Value="130" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="MinWidth" Duration="0:0:0.22" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Grid.toolbar.tiny ComboBox.sort">
             <Setter Property="MinWidth" Value="100" />
@@ -159,7 +193,7 @@
                                 IsVisible="{Binding IsChannelSearch}">
                             <Image Source="{Binding ChannelAvatar}" Stretch="UniformToFill" />
                         </Border>
-                        <TextBlock Classes="title" Text="{Binding SearchTitle}" FontSize="16" FontWeight="SemiBold" MaxWidth="260"
+                        <TextBlock Classes="title" Text="{Binding SearchTitle}" FontSize="16" FontWeight="SemiBold"
                                    TextTrimming="CharacterEllipsis"
                                    Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                         <Button Classes="star" Classes.fav="{Binding IsFavourite}"
@@ -195,7 +229,7 @@
                         <ToggleSwitch IsChecked="{Binding HideDownloaded}" VerticalAlignment="Center" Margin="0,0,-4,0"
                                       AutomationProperties.Name="Hide downloaded" />
                     </StackPanel>
-                    <ComboBox Classes="sort" Height="30" MinWidth="130" FontSize="13" Margin="0,0,10,0"
+                    <ComboBox Classes="sort" Height="30" FontSize="13" Margin="0,0,10,0"
                               VerticalAlignment="Center" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource InputBorderBrush}" CornerRadius="6"
                               SelectedIndex="{Binding SortIndex}" AutomationProperties.Name="Sort">
                         <ComboBoxItem Content="Newest first" />
