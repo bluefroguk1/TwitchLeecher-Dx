@@ -79,7 +79,35 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
-## Step 1 for the PC: push every tested branch (the Mac cannot see the fixes)
+## combined-all: everything together, for one last round of testing (built 2026-11-20 on the Mac)
+
+`combined-all` = `combined` (the 16 open PRs) plus every tested branch. **It is a test branch only**: PRs are still cut per branch with the recipe below. It has **not been compiled**, because the Mac has no SDK. Build it first and fix any compile errors on `combined-all` itself, noting which branch each fix belongs to.
+
+**Merged in this order:** ui-theme-keys, dark-inputs, header-nav, search-sidebar, watched-searches-in-settings (which brings auto-download, the Downloads queue and settings-sections-v2), downloads-queue-themed (recorded only: it differs just by the brush fix, which ui-theme-keys already brought), results-toolbar, download-dialog, Coyote, login-page-and-icon, tray.
+
+**Left out:**
+- `claude/fix-slow-downloads-15ccca`. It rewrites the same chunk loop the Downloads queue now uses for per-item pause and resume (`loopState`, kept chunks). The speed test showed no gain. Merging it would mean redesigning pause around `Parallel.ForEachAsync`. Decide whether to keep it as a PR at all.
+- `claude/in-app-signin`. Never tested; it conflicts with login-page-and-icon in `AuthListener.cs`.
+
+**How the conflicts were resolved.** Check these first; each is a place where two branches met:
+1. `MainWindow.axaml`: the new header wins, with the window `Icon` attribute from `combined` kept.
+2. `SearchView.axaml`: the sidebar layout wins, with a **"Clips"** type chip re-added (from the clips PR #37).
+3. `MainWindowVM.ShowSearchOnStart()`: it now starts the watched-searches loop, opens Search, then runs the start-up search. The Welcome page is gone.
+4. `PreferencesView.axaml`: the side-menu Settings page wins (with Watched searches as a section). The tray's **"Minimise to the system tray"** toggle was added under General.
+5. `SearchResultViewModel.cs`: the results-toolbar version wins, with **"Watch this search"** (the command, the `IAutoDownloadService` injection and the bottom-bar button) added back. Note: the results VM keeps its own copy of `CreateDownloadParams`/`TryEnqueue`, while auto-download moved the same logic into `IQuickDownloadService`. It works, but it's duplicated. Before the PRs, make results use `IQuickDownloadService` plus its `GetDefaultTarget` helper.
+6. `DownloadView.axaml`: the redesigned dialog wins. Two small leftover font sizes (11 and an odd size) should become 12.
+7. `App.axaml`: Coyote's dictionary added. All three themes define the same redesign keys, with no duplicates and nothing shared. Coyote alone overrides the SimpleTheme control brushes, on purpose.
+8. `MainWindow.axaml.cs`: one `BringToFront()`, public, posting to the UI thread and calling `Show()` (for the tray). It runs on the pipe "Activate", on the tray click, and after sign-in.
+
+**What to test on combined-all (cross-branch, quickest first):**
+- Switch theme New → Original → Coyote on every page: header, sidebar, results, dialog, queue, Settings (all sections), the watched searches section. Look for transparent or unreadable text.
+- Search → results → Search tab → Downloads tab → back. Check the active-tab underline, the counts, and the results scroll position.
+- The Clips chip: a clips search, clip badges, quick download of a clip, and the dialog hiding the crop and chat options for clips.
+- "Watch this search" from results. Then the Downloads pill takes you to Settings › Watched searches.
+- Minimise to tray from the new General toggle; the tray restores the window. Sign out and in again: the window comes to the front.
+- One short cropped download with chat + VOD info: queue speed and ETA, pause and resume, results badges (QUEUED, then DOWNLOADED).
+
+## Step 1 (done 2026-11-20) for the PC: push every tested branch (the Mac cannot see the fixes)
 
 Most fixes made during testing exist only on the PC. For example, 07ed4ee, 923e88c, f242706, 33a265c, 2594d0b, d11f8e7, 4d038e7 and f547349 are **not on GitHub**. The Mac pushed its own brush-fix commits (29bb1b3 and siblings, about 21:47) to the same branches; the PC versions replace them. Push them all from the PC:
 
@@ -91,7 +119,7 @@ foreach ($b in $branches) { git push --force-with-lease origin "${b}:${b}" }
 
 Before pushing, make sure the PC copy of each branch contains everything from the Mac's version. The only Mac-only commits are the literal-brush fixes, which the PC already has as its own commits. If unsure, run `git log origin/<b> --not <b> --oneline` per branch first and check every listed commit is a brush fix.
 
-## Next: an all-in-one test branch, `combined-all` (built on the Mac after the push)
+## combined-all plan (built: see the section above)
 
 `combined` (the 16 open PRs) plus every tested branch, merged in this order:
 1. ui-theme-keys
