@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
@@ -118,7 +119,64 @@ public partial class App : Application
             }
         }
 
+        StartTrayTooltip();
+
         base.OnFrameworkInitializationCompleted();
+    }
+
+    // The tray icon's tooltip says what is going on: % left on current downloads, else how many are paused,
+    // else how many watched searches there are.
+    private void StartTrayTooltip()
+    {
+        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        timer.Tick += (_, _) => UpdateTrayTooltip();
+        timer.Start();
+        UpdateTrayTooltip();
+    }
+
+    private void UpdateTrayTooltip()
+    {
+        try
+        {
+            TrayIcon icon = TrayIcon.GetIcons(this)?.FirstOrDefault();
+
+            if (icon == null || _kernel == null)
+            {
+                return;
+            }
+
+            var downloads = _kernel.Get<TwitchLeecher.Services.Interfaces.IDownloadService>().Downloads.ToList();
+            var active = downloads.Where(d => d.IsDownloading).ToList();
+            int paused = downloads.Count(d => d.IsPaused);
+            var watched = _kernel.Get<TwitchLeecher.Gui.Interfaces.IAutoDownloadService>();
+            int searches = watched.Enabled ? watched.Searches.Count(w => w.Active) : 0;
+
+            string detail;
+
+            if (active.Count > 0)
+            {
+                double left = active.Average(d => 100 - d.Progress);
+                detail = (active.Count == 1 ? "Downloading" : active.Count + " downloading") + " · " + left.ToString("0") + "% left";
+            }
+            else if (paused > 0)
+            {
+                detail = paused + (paused == 1 ? " paused download" : " paused downloads");
+            }
+            else if (searches > 0)
+            {
+                detail = searches + (searches == 1 ? " watched search" : " watched searches");
+            }
+            else
+            {
+                detail = null;
+            }
+
+            icon.ToolTipText = detail == null ? "Twitch Leecher DX" : "Twitch Leecher DX · " + detail;
+        }
+        catch
+        {
+            // the tooltip is cosmetic
+        }
     }
 
     private void TrayIcon_OnClicked(object sender, EventArgs e) => _kernel.Get<MainWindow>().BringToFront();

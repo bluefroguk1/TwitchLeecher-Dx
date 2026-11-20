@@ -167,6 +167,14 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
+        private bool _canPauseOrResume;
+
+        public bool CanPauseOrResume
+        {
+            get { return _canPauseOrResume; }
+            private set { SetProperty(ref _canPauseOrResume, value); }
+        }
+
         public string PauseAllText => CanPauseAll ? "Pause all" : "Resume all";
 
         public ICommand RetryDownloadCommand
@@ -306,6 +314,8 @@ namespace TwitchLeecher.Gui.ViewModels
             OverallProgress = totalBytes > 0 ? (double)doneBytes / totalBytes * 100 : 0;
             HasDownloads = downloads.Count > 0;
             CanPauseAll = downloads.Any(d => d.IsDownloading || d.IsQueued) || !downloads.Any(d => d.IsPaused);
+            // finished, failed and cancelled items cannot be paused or resumed
+            CanPauseOrResume = downloads.Any(d => d.IsDownloading || d.IsQueued || d.IsPaused);
         }
 
         private static void AddCount(List<string> counts, int count, string label)

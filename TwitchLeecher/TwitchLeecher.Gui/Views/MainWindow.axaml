@@ -170,7 +170,8 @@
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <avalonia:Icon Value="fa-solid fa-download" Width="13" Height="13" VerticalAlignment="Center" />
                             <TextBlock Classes="TabLabel" Text="Downloads" VerticalAlignment="Center" />
-                            <Border Background="{DynamicResource DividerBrush}" CornerRadius="10" Padding="7,1" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource DividerBrush}" CornerRadius="10" Padding="7,1" VerticalAlignment="Center"
+                                    IsVisible="{Binding ShowDownloadsCount}">
                                 <TextBlock Text="{Binding DownloadsCount, FallbackValue=0}" FontSize="12"
                                            FontWeight="Normal" />
                             </Border>

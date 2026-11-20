@@ -408,7 +408,10 @@ namespace TwitchLeecher.Gui.ViewModels
                             {
                                 // #96: skip the dialog and queue with the default settings
                                 string notQueued = _quickDownloadService.TryEnqueue(downloadParams);
-                                _notificationService.ShowNotification(notQueued ?? "Download added");
+                                if (notQueued != null)
+                                {
+                                    _notificationService.ShowNotification(notQueued);
+                                }
                             }
                             else
                             {

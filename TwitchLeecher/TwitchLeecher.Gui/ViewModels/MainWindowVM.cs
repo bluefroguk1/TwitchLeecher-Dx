@@ -125,10 +125,17 @@ namespace TwitchLeecher.Gui.ViewModels
             private set { SetProperty(ref _videosCount, value, nameof(VideosCount)); }
         }
 
+        // the count pill on the Downloads tab is hidden while the queue is empty
+        public bool ShowDownloadsCount => _downloadsCount > 0;
+
         public int DownloadsCount
         {
             get { return _downloadsCount; }
-            private set { SetProperty(ref _downloadsCount, value, nameof(DownloadsCount)); }
+            private set
+            {
+                SetProperty(ref _downloadsCount, value, nameof(DownloadsCount));
+                FirePropertyChanged(nameof(ShowDownloadsCount));
+            }
         }
 
         public string Title { get; }
