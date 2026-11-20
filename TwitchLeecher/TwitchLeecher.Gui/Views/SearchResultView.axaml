@@ -106,12 +106,22 @@
             <Setter Property="Opacity" Value="1" />
         </Style>
         <!-- narrow toolbar: the controls move to their own line under the title -->
+        <Style Selector="Grid.toolbar > WrapPanel#ToolbarControls">
+            <Setter Property="Grid.Row" Value="0" />
+            <Setter Property="Grid.Column" Value="1" />
+            <Setter Property="Grid.ColumnSpan" Value="1" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
         <Style Selector="Grid.toolbar.compact > WrapPanel#ToolbarControls">
             <Setter Property="Grid.Row" Value="1" />
             <Setter Property="Grid.Column" Value="0" />
             <Setter Property="Grid.ColumnSpan" Value="2" />
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="Margin" Value="0,8,0,0" />
+        </Style>
+        <!-- very narrow: "Watch this search" and "Hide downloaded" keep only their icon and switch (the tooltips still name them) -->
+        <Style Selector="Grid.toolbar.tight .collapsible">
+            <Setter Property="IsVisible" Value="False" />
         </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
@@ -171,8 +181,7 @@
                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                 </Grid>
 
-                <WrapPanel x:Name="ToolbarControls" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                           VerticalAlignment="Center">
+                <WrapPanel x:Name="ToolbarControls" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Classes="outline" Height="30" Padding="10,0" Margin="0,2,14,2"
                             VerticalAlignment="Center" IsVisible="{Binding IsChannelSearch}"
                             Command="{Binding WatchSearchCommand}"
@@ -180,12 +189,12 @@
                             AutomationProperties.Name="Watch this search">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <avalonia:Icon Value="fa-solid fa-eye" />
-                            <TextBlock Text="Watch this search" VerticalAlignment="Center" />
+                            <TextBlock Classes="collapsible" Text="Watch this search" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,14,2" VerticalAlignment="Center"
                                 ToolTip.Tip="Hide videos already saved in your download folder">
-                        <TextBlock Text="Hide downloaded" FontSize="13" VerticalAlignment="Center"
+                        <TextBlock Classes="collapsible" Text="Hide downloaded" FontSize="13" VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextPrimaryBrush}" />
                         <ToggleSwitch IsChecked="{Binding HideDownloaded}" VerticalAlignment="Center" Margin="0,0,-4,0"
                                       AutomationProperties.Name="Hide downloaded" />
