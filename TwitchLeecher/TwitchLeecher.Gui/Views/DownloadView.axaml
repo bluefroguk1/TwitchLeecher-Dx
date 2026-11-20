@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="TwitchLeecher.Gui.Views.DownloadView"
+﻿<UserControl xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             x:Class="TwitchLeecher.Gui.Views.DownloadView"
              x:Name="control"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -114,7 +115,12 @@
                 <Border DockPanel.Dock="Bottom" Padding="20,14" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                         <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
-                        <Button Classes="primary" Content="⤓ Download" Command="{Binding DownloadCommand}" />
+                        <Button Classes="primary" Command="{Binding DownloadCommand}" AutomationProperties.Name="Download">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:Icon Value="fa-solid fa-download" />
+                                <TextBlock Text="Download" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
 
