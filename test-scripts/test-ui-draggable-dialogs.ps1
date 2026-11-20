@@ -60,6 +60,11 @@ Ask 'Logout box drags' 'Click Log out (or the logout menu item). Drag the "Do yo
 Ask 'Linux title bar' 'Linux only (answer s on Windows): the message box shows the normal system title bar and can be dragged by it, and also by its caption as above.'
 
 # --- Summary ---------------------------------------------------------------
+Ask 'Opens centred over the window' @'
+Move the main window to a screen corner (or a second monitor) and trigger a message box again
+(e.g. search a channel name that does not exist). The box opens centred over the main window, on the same screen.
+'@
+
 if (-not $p.HasExited) {
     Write-Host 'Close Twitch Leecher to continue...' -ForegroundColor Yellow
     $p.WaitForExit()

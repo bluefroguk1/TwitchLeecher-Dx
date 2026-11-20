@@ -12,6 +12,7 @@
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         CanResize="False"
+        WindowStartupLocation="CenterOwner"
         Width="450"
         Height="180">
     <Design.DataContext>
