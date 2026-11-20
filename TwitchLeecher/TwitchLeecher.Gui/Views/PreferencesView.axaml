@@ -324,12 +324,10 @@
                         <TextBlock Classes="h1" Text="Download" />
 
                         <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="OFF-PEAK SCHEDULE" />
+                            <TextBlock Classes="label" Text="DOWNLOAD SCHEDULE" />
                             <CheckBox IsChecked="{Binding CurrentPreferences.ScheduleEnabled}">
-                                <StackPanel>
-                                    <TextBlock Text="Only download watched-search finds during a set time" />
-                                    <TextBlock Classes="sub" Text="For off-peak hours: new finds wait, paused, until the window opens" />
-                                </StackPanel>
+                                <TextBlock Text="Only download watched search results and paused downloads during a set time"
+                                           TextWrapping="Wrap" />
                             </CheckBox>
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0"
                                         IsEnabled="{Binding CurrentPreferences.ScheduleEnabled}">
