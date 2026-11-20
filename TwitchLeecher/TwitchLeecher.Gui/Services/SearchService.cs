@@ -28,6 +28,9 @@ namespace TwitchLeecher.Gui.Services
 
         private SearchParameters lastSearchParams;
 
+        private bool _isSearching;
+        private bool _hasSearched;
+
         #endregion Fields
 
         #region Constructors
@@ -79,6 +82,18 @@ namespace TwitchLeecher.Gui.Services
             }
         }
 
+        public bool IsSearching
+        {
+            get { return _isSearching; }
+            private set { SetProperty(ref _isSearching, value, nameof(IsSearching)); }
+        }
+
+        public bool HasSearched
+        {
+            get { return _hasSearched; }
+            private set { SetProperty(ref _hasSearched, value, nameof(HasSearched)); }
+        }
+
         public SearchParameters LastSearchParams
         {
             get
@@ -118,7 +133,9 @@ namespace TwitchLeecher.Gui.Services
 
             AddRecentSearch(searchParams);
 
-            _navigationService.ShowLoading();
+            // results appear in the right-hand pane of the Search page, so stay there while loading
+            IsSearching = true;
+            _navigationService.ShowSearch();
 
             Task.Run(() => _apiService.Search(searchParams))
                 .ContinueWith(
@@ -126,13 +143,14 @@ namespace TwitchLeecher.Gui.Services
                     {
                         if (task.IsFaulted)
                         {
-                            _navigationService.ShowSearch();
+                            IsSearching = false;
                             _dialogService.ShowAndLogException(task.Exception);
                             return;
                         }
 
                         Videos = task.Result;
-                        _navigationService.ShowSearchResults();
+                        HasSearched = true;
+                        IsSearching = false;
                     },
                     TaskScheduler.FromCurrentSynchronizationContext()
                 );

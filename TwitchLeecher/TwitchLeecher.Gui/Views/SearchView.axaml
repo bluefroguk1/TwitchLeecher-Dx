@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:TwitchLeecher.Gui.Converters"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:views="clr-namespace:TwitchLeecher.Gui.Views"
              xmlns:enums="clr-namespace:TwitchLeecher.Core.Enums;assembly=TwitchLeecher.Core"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime"
@@ -85,6 +86,17 @@
             <Setter Property="Padding" Value="8,3" />
             <Setter Property="Margin" Value="0,0,6,6" />
             <Setter Property="FontSize" Value="12" />
+        </Style>
+        <!-- loading placeholders: a soft pulse instead of a spinner -->
+        <Style Selector="Border.skeleton">
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Style.Animations>
+                <Animation Duration="0:0:1.3" IterationCount="Infinite" Easing="SineEaseInOut">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.35" /></KeyFrame>
+                    <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.35" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
         </Style>
         <Style Selector="Button.recent">
             <Setter Property="Cursor" Value="Hand" />
@@ -174,7 +186,15 @@
 
                     <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
                         <TextBlock Classes="label" Text="TYPE" />
-                        <WrapPanel>
+                        <!-- two even columns: the pills line up and sit centred instead of wrapping ragged -->
+                        <UniformGrid Columns="2">
+                            <UniformGrid.Styles>
+                                <Style Selector="RadioButton.chip">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    <Setter Property="Margin" Value="3" />
+                                </Style>
+                            </UniformGrid.Styles>
                             <RadioButton Classes="chip" GroupName="SearchVideoType" Content="Broadcasts"
                                          IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Broadcast}}" />
                             <RadioButton Classes="chip" GroupName="SearchVideoType" Content="Highlights"
@@ -183,7 +203,7 @@
                                          IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Upload}}" />
                             <RadioButton Classes="chip" GroupName="SearchVideoType" Content="Clips"
                                          IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Clip}}" />
-                        </WrapPanel>
+                        </UniformGrid>
                     </StackPanel>
 
                     <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
@@ -234,47 +254,96 @@
                             </StackPanel>
                         </Button>
                         <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
-                                   Text="Press Enter to search" IsVisible="{Binding !IsLinksMode}" />
-                        <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
                                    Text="One link or video ID per line" IsVisible="{Binding IsLinksMode}" />
-                        <Button HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"
-                                IsVisible="{Binding HasResults}"
-                                Command="{Binding BackToResultsCommand}"
-                                Content="{Binding BackToResultsText}" />
+                    </StackPanel>
+
+                    <!-- Recent searches sit right under the Search button -->
+                    <StackPanel Spacing="6" IsVisible="{Binding HasRecentSearches}">
+                        <TextBlock Classes="label" Text="RECENT SEARCHES" />
+                        <ItemsControl ItemsSource="{Binding RecentSearches}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="viewModels:RecentSearchItem">
+                                    <Button Classes="recent"
+                                            ToolTip.Tip="Run this search again"
+                                            Command="{Binding $parent[UserControl].((viewModels:SearchViewModel)DataContext).RunRecentSearchCommand}"
+                                            CommandParameter="{Binding Params}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Grid.Column="0" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="1" Text="&#x2192;" Foreground="{DynamicResource TextMutedBrush}" Margin="8,0,0,0" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>
 
-        <!-- Empty state -->
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="32" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Image Source="/Assets/TL_Icon.png" Width="96" Height="96" HorizontalAlignment="Center" />
-                <TextBlock Margin="0,4,0,0" FontSize="24" FontWeight="Bold"
-                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
-                           Text="{Binding ProductTitle, Mode=OneTime}" />
-                <TextBlock Text="The Broadcast Downloader" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
+        <!-- Right-hand pane: empty state, loading, no results, or the results -->
+        <Grid Grid.Column="1">
 
-                <StackPanel Width="280" Margin="0,28,0,0" Spacing="6" IsVisible="{Binding HasRecentSearches}">
-                    <TextBlock Classes="label" Text="RECENT SEARCHES" />
-                    <ItemsControl ItemsSource="{Binding RecentSearches}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="viewModels:RecentSearchItem">
-                                <Button Classes="recent"
-                                        ToolTip.Tip="Run this search again"
-                                        Command="{Binding $parent[UserControl].((viewModels:SearchViewModel)DataContext).RunRecentSearchCommand}"
-                                        CommandParameter="{Binding Params}">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Grid.Column="0" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1" Text="&#x2192;" Foreground="{DynamicResource TextMutedBrush}" Margin="8,0,0,0" />
-                                    </Grid>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
+            <Panel IsVisible="{Binding ShowResults}">
+                <views:SearchResultView DataContext="{Binding Results}" />
+            </Panel>
+
+            <!-- Loading: a thin progress bar and pulsing placeholder cards -->
+            <Grid IsVisible="{Binding IsSearching}" RowDefinitions="Auto,*">
+                <ProgressBar Grid.Row="0" IsIndeterminate="True" Height="3" MinHeight="3"
+                             Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource DividerBrush}" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="16" Spacing="14">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Classes="skeleton" Width="28" Height="28" CornerRadius="14" />
+                            <TextBlock Text="Searching Twitch&#x2026;" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding SkeletonCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:Int32">
+                                    <Border Width="236" Margin="0,0,12,12" CornerRadius="8" ClipToBounds="True"
+                                            Background="{DynamicResource CardBackgroundBrush}">
+                                        <StackPanel>
+                                            <Border Classes="skeleton" Height="131" CornerRadius="0" />
+                                            <StackPanel Margin="10" Spacing="8">
+                                                <Border Classes="skeleton" Height="12" CornerRadius="4" />
+                                                <Border Classes="skeleton" Height="12" Width="140" HorizontalAlignment="Left" CornerRadius="4" />
+                                                <Border Classes="skeleton" Height="30" CornerRadius="6" Margin="0,6,0,0" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- A finished search that found nothing -->
+            <StackPanel IsVisible="{Binding ShowNoResults}" Margin="32" Spacing="8"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <avalonia:Icon Value="fa-solid fa-film" Width="36" Height="36" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextMutedBrush}" />
+                <TextBlock Text="No videos found" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="Try a different channel, video type or date range." Foreground="{DynamicResource TextMutedBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
-        </ScrollViewer>
+
+            <!-- Empty state -->
+            <ScrollViewer IsVisible="{Binding ShowEmptyState}" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="32" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image Source="/Assets/TL_Icon.png" Width="96" Height="96" HorizontalAlignment="Center" />
+                    <TextBlock Margin="0,4,0,0" FontSize="24" FontWeight="Bold"
+                               HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                               Text="{Binding ProductTitle, Mode=OneTime}" />
+                    <TextBlock Text="The Broadcast Downloader" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

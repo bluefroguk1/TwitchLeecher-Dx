@@ -47,18 +47,19 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowSearch()
         {
+            // already there (a search started from the form keeps the sidebar): don't build a second form
+            if (_currentView is SearchViewModel)
+            {
+                return;
+            }
+
             Navigate(_kernel.Get<SearchViewModel>());
         }
 
+        // results are shown in the right-hand pane of the Search page
         public void ShowSearchResults()
         {
-            if (!_persistentViews.TryGetValue(typeof(SearchResultViewModel), out ViewModelBase vm))
-            {
-                vm = _kernel.Get<SearchResultViewModel>();
-                _persistentViews.Add(typeof(SearchResultViewModel), vm);
-            }
-
-            Navigate(vm);
+            ShowSearch();
         }
 
         public void ShowDownload(DownloadParameters downloadParams)

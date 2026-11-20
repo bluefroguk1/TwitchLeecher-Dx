@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+﻿using System.ComponentModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
@@ -38,6 +39,8 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly IPreferencesService _preferencesService;
         private readonly IEventAggregator _eventAggregator;
         private readonly INotificationService _notificationService;
+        private readonly IRuntimeDataService _runtimeDataService;
+        private List<RecentSearchItem> _recentSearches;
 
         private readonly object _commandLockObject;
         private bool _isDropdownOpen;
@@ -54,7 +57,8 @@ namespace TwitchLeecher.Gui.ViewModels
             IPreferencesService preferencesService,
             IRuntimeDataService runtimeDataService,
             IEventAggregator eventAggregator,
-            INotificationService notificationService
+            INotificationService notificationService,
+            SearchResultViewModel results
         )
         {
             _apiService = apiService;
@@ -65,15 +69,15 @@ namespace TwitchLeecher.Gui.ViewModels
             _eventAggregator = eventAggregator;
             _eventAggregator.GetEvent<LogEvent>().Subscribe(LogEvent);
             _notificationService = notificationService;
+            _runtimeDataService = runtimeDataService;
+            Results = results;
 
             _commandLockObject = new object();
 
             AssemblyUtil au = AssemblyUtil.Get;
             ProductTitle = au.GetProductName() + " " + au.GetAssemblyVersion().Trim();
 
-            RecentSearches = runtimeDataService.RuntimeData.RecentSearches
-                .Select(s => new RecentSearchItem(Describe(s), s))
-                .ToList();
+            LoadRecentSearches();
 
             _searchParams = _searchService.LastSearchParams.Clone();
             LoadForm();
@@ -96,9 +100,23 @@ namespace TwitchLeecher.Gui.ViewModels
 
         public string ProductTitle { get; }
 
-        public List<RecentSearchItem> RecentSearches { get; }
+        public List<RecentSearchItem> RecentSearches => _recentSearches;
 
-        public bool HasRecentSearches => RecentSearches.Count > 0;
+        public bool HasRecentSearches => _recentSearches.Count > 0;
+
+        // The results are shown in the right-hand pane next to the sidebar, so a search never leaves this page.
+        public SearchResultViewModel Results { get; }
+
+        public bool IsSearching => _searchService.IsSearching;
+
+        public bool ShowResults => !IsSearching && _searchService.HasSearched && (_searchService.Videos?.Count ?? 0) > 0;
+
+        public bool ShowNoResults => !IsSearching && _searchService.HasSearched && (_searchService.Videos?.Count ?? 0) == 0;
+
+        public bool ShowEmptyState => !IsSearching && !_searchService.HasSearched;
+
+        // placeholder cards while a search is loading
+        public int[] SkeletonCards { get; } = new int[8];
 
         public RangeObservableCollection<string> FavChannels
         {
@@ -106,11 +124,6 @@ namespace TwitchLeecher.Gui.ViewModels
         }
 
         public bool HasFavChannels => FavChannels.Count > 0;
-
-        // The VM is created on each visit to Search, so the count is read once (no change tracking needed)
-        public bool HasResults => _searchService.Videos?.Count > 0;
-
-        public string BackToResultsText => "\u2190 Back to results (" + (_searchService.Videos?.Count ?? 0) + ")";
 
         public bool IsLinksMode
         {
@@ -277,12 +290,6 @@ namespace TwitchLeecher.Gui.ViewModels
         }
 
         [RelayCommand]
-        private void BackToResults()
-        {
-            _navigationService.ShowSearchResults();
-        }
-
-        [RelayCommand]
         private void SearchFavourites()
         {
             SearchParams.SearchType = SearchType.Favorites;
@@ -314,6 +321,53 @@ namespace TwitchLeecher.Gui.ViewModels
             SearchParams = recent.Clone();
             LoadForm();
             RunSearch();
+        }
+
+        private void LoadRecentSearches()
+        {
+            _recentSearches = _runtimeDataService.RuntimeData.RecentSearches
+                .Select(s => new RecentSearchItem(Describe(s), s))
+                .ToList();
+        }
+
+        // Subscribed only while this page is shown: the navigation service may build a form it then discards.
+        public override void OnBeforeShown()
+        {
+            base.OnBeforeShown();
+            _searchService.PropertyChanged += SearchService_PropertyChanged;
+            Results.OnBeforeShown();
+            RefreshPane();
+        }
+
+        public override void OnBeforeHidden()
+        {
+            _searchService.PropertyChanged -= SearchService_PropertyChanged;
+            base.OnBeforeHidden();
+        }
+
+        private void SearchService_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(ISearchService.IsSearching) or nameof(ISearchService.HasSearched)
+                or nameof(ISearchService.Videos))
+            {
+                if (e.PropertyName == nameof(ISearchService.IsSearching) && !_searchService.IsSearching)
+                {
+                    // the finished search was added to the recent list
+                    LoadRecentSearches();
+                    FirePropertyChanged(nameof(RecentSearches));
+                    FirePropertyChanged(nameof(HasRecentSearches));
+                }
+
+                RefreshPane();
+            }
+        }
+
+        private void RefreshPane()
+        {
+            FirePropertyChanged(nameof(IsSearching));
+            FirePropertyChanged(nameof(ShowResults));
+            FirePropertyChanged(nameof(ShowNoResults));
+            FirePropertyChanged(nameof(ShowEmptyState));
         }
 
         private void RunSearch()
