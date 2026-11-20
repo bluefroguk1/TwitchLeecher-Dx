@@ -157,6 +157,24 @@
                     <StackPanel Classes="section">
                         <TextBlock Classes="h1" Text="General" />
 
+                        <!-- logging out lives here (not in the top bar) -->
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="TWITCH ACCOUNT" />
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock VerticalAlignment="Center"
+                                           Text="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).UserName, StringFormat='Signed in as {0}', FallbackValue='Signed in'}" />
+                                <Button Classes="outline" Content="Log out"
+                                        Command="{Binding $parent[Window].((viewModels:MainWindowVM)DataContext).RevokeCommand}"
+                                        AutomationProperties.Name="Log out of Twitch" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="THEME" />
+                            <ComboBox Width="220" ItemsSource="{Binding AvailableThemes}"
+                                      SelectedValue="{Binding CurrentPreferences.Theme}" />
+                        </StackPanel>
+
                         <CheckBox IsChecked="{Binding CurrentPreferences.AppCheckForUpdates}">
                             <StackPanel>
                                 <TextBlock Text="Check for updates" />
@@ -177,7 +195,7 @@
                         </CheckBox>
                         <CheckBox IsChecked="{Binding CurrentPreferences.AppStartWithOs}">
                             <StackPanel>
-                                <TextBlock Text="Start Twitch Leecher when I sign in" />
+                                <TextBlock Text="Start Twitch Leecher when Windows starts" />
                                 <TextBlock Classes="sub" Text="So watched searches keep running without opening the app" />
                             </StackPanel>
                         </CheckBox>
@@ -573,28 +591,24 @@
                             </CheckBox>
                         </StackPanel>
 
-                        <Expander Header="Advanced: temporary folder and connections" HorizontalAlignment="Stretch">
-                            <StackPanel Spacing="18" Margin="0,8,0,0">
-                                <StackPanel Classes="field">
-                                    <TextBlock Classes="label" Text="TEMPORARY FOLDER" />
-                                    <Grid ColumnDefinitions="*,6,Auto">
-                                        <TextBox Grid.Column="0" IsReadOnly="True"
-                                                 Text="{Binding CurrentPreferences.DownloadTempFolder, Mode=OneWay}" />
-                                        <Button Grid.Column="2" Classes="outline" Content="Browse"
-                                                Command="{Binding ChooseDownloadTempFolderCommand}" />
-                                    </Grid>
-                                    <TextBlock Classes="sub"
-                                               Text="Holds the video parts while they download. Needs write access." />
-                                </StackPanel>
-                                <StackPanel Classes="field">
-                                    <TextBlock Classes="label" Text="MAX CONNECTIONS (EXPERIMENTAL)" />
-                                    <NumericUpDown Minimum="1" Maximum="25" Width="110" HorizontalAlignment="Left"
-                                                   Value="{Binding CurrentPreferences.MaxConnectionCount}" />
-                                    <TextBlock Classes="sub"
-                                               Text="More can be faster but may crash on some networks. Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
-                                </StackPanel>
-                            </StackPanel>
-                        </Expander>
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="TEMPORARY FOLDER" />
+                            <Grid ColumnDefinitions="*,6,Auto">
+                                <TextBox Grid.Column="0" IsReadOnly="True"
+                                         Text="{Binding CurrentPreferences.DownloadTempFolder, Mode=OneWay}" />
+                                <Button Grid.Column="2" Classes="outline" Content="Browse"
+                                        Command="{Binding ChooseDownloadTempFolderCommand}" />
+                            </Grid>
+                            <TextBlock Classes="sub"
+                                       Text="Holds the video parts while they download. Needs write access." />
+                        </StackPanel>
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="MAX CONNECTIONS (EXPERIMENTAL)" />
+                            <NumericUpDown Minimum="1" Maximum="25" Width="110" HorizontalAlignment="Left"
+                                           Value="{Binding CurrentPreferences.MaxConnectionCount}" />
+                            <TextBlock Classes="sub"
+                                       Text="More can be faster but may crash on some networks. Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -605,18 +619,6 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Appearance">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Classes="section">
-                        <TextBlock Classes="h1" Text="Appearance" />
-                        <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="THEME" />
-                            <ComboBox Width="220" ItemsSource="{Binding AvailableThemes}"
-                                      SelectedValue="{Binding CurrentPreferences.Theme}" />
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
         </TabControl>
 
         <!-- save bar: only while there are unsaved changes -->

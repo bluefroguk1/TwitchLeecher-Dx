@@ -195,6 +195,8 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
+        public string SignedInLogin { get; private set; }
+
         public bool ValidateAuthentication(string accessToken, bool subOnly)
         {
             if (string.IsNullOrWhiteSpace(accessToken))
@@ -237,6 +239,11 @@ namespace TwitchLeecher.Services.Services
                             && clientId.Equals(checkClientId, StringComparison.OrdinalIgnoreCase)
                         )
                         {
+                            if (!subOnly)
+                            {
+                                SignedInLogin = login;
+                            }
+
                             return true;
                         }
                     }

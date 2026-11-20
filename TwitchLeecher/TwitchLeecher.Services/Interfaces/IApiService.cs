@@ -9,6 +9,9 @@ namespace TwitchLeecher.Services.Interfaces
     {
         bool ValidateAuthentication(string accessToken, bool subOnly);
 
+        // Twitch login of the last main token that validated, for "Signed in as"
+        string SignedInLogin { get; }
+
         // true = Twitch accepts the token, false = Twitch rejected it (expired, revoked, password changed),
         // null = could not tell (offline, Twitch down). Unlike ValidateAuthentication it changes nothing.
         bool? CheckToken(string accessToken, bool subOnly);

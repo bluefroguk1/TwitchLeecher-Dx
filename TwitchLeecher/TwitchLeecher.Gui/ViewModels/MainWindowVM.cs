@@ -142,8 +142,15 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             get { return _isAuthenticated; }
 
-            private set { SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated)); }
+            private set
+            {
+                SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated));
+                FirePropertyChanged(nameof(UserName));
+            }
         }
+
+        // shown in Settings next to Log out
+        public string UserName => _authService.UserName;
 
         public bool IsAuthenticatedSubOnly
         {
