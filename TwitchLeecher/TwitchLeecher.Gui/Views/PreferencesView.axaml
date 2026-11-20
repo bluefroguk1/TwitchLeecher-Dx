@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:TwitchLeecher.Gui.Converters"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:views="clr-namespace:TwitchLeecher.Gui.Views"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:enums="clr-namespace:TwitchLeecher.Core.Enums;assembly=TwitchLeecher.Core"
              x:DataType="viewModels:PreferencesViewModel">
@@ -480,6 +481,12 @@
                                        Text="More can be faster but may crash on some networks. Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
                         </StackPanel>
                     </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Watched searches">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <views:WatchedSearchesView DataContext="{Binding WatchedSearches}" />
                 </ScrollViewer>
             </TabItem>
         </TabControl>

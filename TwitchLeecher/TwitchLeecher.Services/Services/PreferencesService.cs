@@ -51,6 +51,13 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
         private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
 
+        private const string AUTODOWNLOAD_EL = "AutoDownload";
+        private const string AUTODOWNLOAD_ENABLED_EL = "Enabled";
+        private const string AUTODOWNLOAD_INTERVAL_EL = "Interval";
+        private const string AUTODOWNLOAD_CHANNELS_EL = "Channels";
+        private const string AUTODOWNLOAD_CLIPS_EL = "Clips";
+        private const string AUTODOWNLOAD_CLIPMINVIEWS_EL = "ClipMinViews";
+
         private const string MISC_EL = "Misc";
         private const string MISC_USEEXTERNALPLAYER_EL = "UseExternalPlayer";
         private const string MISC_EXTERNALPLAYER_EL = "ExternalPlayer";
@@ -154,6 +161,9 @@ namespace TwitchLeecher.Services.Services
                 XElement miscEl = new XElement(MISC_EL);
                 preferencesEl.Add(miscEl);
 
+                XElement autoDownloadEl = new XElement(AUTODOWNLOAD_EL);
+                preferencesEl.Add(autoDownloadEl);
+
                 // Application
                 XElement appCheckForUpdatesEl = new XElement(APP_CHECKFORUPDATES_EL);
                 appCheckForUpdatesEl.SetValue(preferences.AppCheckForUpdates);
@@ -249,6 +259,13 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadQuickDownloadEl = new XElement(DOWNLOAD_QUICKDOWNLOAD_EL);
                 downloadQuickDownloadEl.SetValue(preferences.DownloadQuickDownload);
                 downloadEl.Add(downloadQuickDownloadEl);
+
+                // Auto download
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_ENABLED_EL, preferences.AutoDownloadEnabled));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_INTERVAL_EL, preferences.AutoDownloadInterval));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CHANNELS_EL, preferences.AutoDownloadChannels ?? string.Empty));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CLIPS_EL, preferences.AutoDownloadClips));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CLIPMINVIEWS_EL, preferences.AutoDownloadClipMinViews));
 
                 // Miscellanious
                 XElement miscUseExternalPlayerEl = new XElement(MISC_USEEXTERNALPLAYER_EL);
@@ -618,6 +635,18 @@ namespace TwitchLeecher.Services.Services
                             }
                         }
 
+                        XElement autoDownloadEl = preferencesEl.Element(AUTODOWNLOAD_EL);
+
+                        if (autoDownloadEl != null)
+                        {
+                            // each value on its own so one bad entry keeps the others; a bad value keeps the default
+                            try { preferences.AutoDownloadEnabled = autoDownloadEl.Element(AUTODOWNLOAD_ENABLED_EL).GetValueAsBool(); } catch { }
+                            try { preferences.AutoDownloadInterval = autoDownloadEl.Element(AUTODOWNLOAD_INTERVAL_EL).GetValueAsInt(); } catch { }
+                            try { preferences.AutoDownloadChannels = autoDownloadEl.Element(AUTODOWNLOAD_CHANNELS_EL).GetValueAsString(); } catch { }
+                            try { preferences.AutoDownloadClips = autoDownloadEl.Element(AUTODOWNLOAD_CLIPS_EL).GetValueAsBool(); } catch { }
+                            try { preferences.AutoDownloadClipMinViews = autoDownloadEl.Element(AUTODOWNLOAD_CLIPMINVIEWS_EL).GetValueAsInt(); } catch { }
+                        }
+
                         XElement miscEl = preferencesEl.Element(MISC_EL);
 
                         if (miscEl != null)
@@ -679,6 +708,11 @@ namespace TwitchLeecher.Services.Services
                 DownloadRemoveCompleted = false,
                 DownloadDisableConversion = false,
                 DownloadQuickDownload = false,
+                AutoDownloadEnabled = false,
+                AutoDownloadInterval = 15,
+                AutoDownloadChannels = null,
+                AutoDownloadClips = false,
+                AutoDownloadClipMinViews = 100,
                 MiscUseExternalPlayer = false,
                 MiscExternalPlayer = null,
                 MaxConnectionCount = 10,
