@@ -273,7 +273,6 @@ namespace TwitchLeecher.Gui.ViewModels
 
                     _downloadService.Enqueue(_downloadParams);
                     _navigationService.NavigateBack();
-                    _notificationService.ShowNotification("Download added");
                 }
             }
             catch (Exception ex)

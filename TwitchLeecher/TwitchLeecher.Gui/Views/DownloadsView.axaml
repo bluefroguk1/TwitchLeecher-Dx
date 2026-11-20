@@ -118,7 +118,7 @@
                                Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis" />
                     <Button Grid.Column="2" Classes="dl bar" Command="{Binding PauseAllCommand}"
-                            IsEnabled="{Binding HasDownloads}">
+                            IsEnabled="{Binding CanPauseOrResume}">
                         <StackPanel Orientation="Horizontal">
                             <avalonia:Icon Value="fa-solid fa-pause" IsVisible="{Binding CanPauseAll}" />
                             <avalonia:Icon Value="fa-solid fa-play" IsVisible="{Binding !CanPauseAll}" />
