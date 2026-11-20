@@ -32,7 +32,7 @@ namespace TwitchLeecher.Gui.Views
 
         public static void SetIsHandle(Control control, bool value) => control.SetValue(IsHandleProperty, value);
 
-        private static void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        private static void OnPointerPressed(object sender, PointerPressedEventArgs e)
         {
             if (sender is not Control handle || !e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed)
             {
@@ -40,7 +40,7 @@ namespace TwitchLeecher.Gui.Views
             }
 
             // Presses on controls inside the handle keep their normal behaviour.
-            for (Visual? v = e.Source as Visual; v != null && v != handle; v = v.GetVisualParent())
+            for (Visual v = e.Source as Visual; v != null && v != handle; v = v.GetVisualParent())
             {
                 if (v is Button or TextBox or ScrollBar)
                 {
