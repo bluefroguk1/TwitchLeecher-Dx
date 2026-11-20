@@ -168,9 +168,11 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="THEME" />
-                            <ComboBox Width="220" ItemsSource="{Binding AvailableThemes}"
+                        <!-- label and drop-down on one line -->
+                        <StackPanel Classes="field" Orientation="Horizontal" Spacing="16">
+                            <TextBlock Classes="label" Text="THEME" VerticalAlignment="Center" />
+                            <ComboBox Width="220" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                      ItemsSource="{Binding AvailableThemes}"
                                       SelectedValue="{Binding CurrentPreferences.Theme}" />
                         </StackPanel>
 
