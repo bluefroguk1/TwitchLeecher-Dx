@@ -47,6 +47,8 @@
         <SolidColorBrush x:Key="MainWindowBackground" Color="{DynamicResource WindowBackgroundColor}" />
         <SolidColorBrush x:Key="MainWindowBorder" Color="{DynamicResource GlobalThemeBorderColor}" />
         <ResourceDictionary x:Key="New">
+            <!-- tab header text: dark on the light tabs of New/Original, cream on Coyote's dark tabs -->
+            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <Color x:Key="GlobalThemeColor">#ad4fff</Color>
             <Color x:Key="GlobalThemeBorderColor">#FF787878</Color>
 
@@ -125,8 +127,12 @@
             <SolidColorBrush x:Key="SuccessBrush" Color="#FF3FB950" />
             <SolidColorBrush x:Key="WarningBrush" Color="#FFFFC14D" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF8A80" />
+            <SolidColorBrush x:Key="TlProgressBarForeground" Color="#FF06B025" />
+            <SolidColorBrush x:Key="TlProgressBarBackground" Color="#FFE6E6E6" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Original">
+            <!-- tab header text: dark on the light tabs of New/Original, cream on Coyote's dark tabs -->
+            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <Color x:Key="GlobalThemeColor">#FFFFC864</Color>
             <Color x:Key="GlobalThemeBorderColor">#FF787878</Color>
 
@@ -205,12 +211,122 @@
             <SolidColorBrush x:Key="SuccessBrush" Color="#FF3FB950" />
             <SolidColorBrush x:Key="WarningBrush" Color="#FFFFC14D" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF8A80" />
+            <SolidColorBrush x:Key="TlProgressBarForeground" Color="#FF06B025" />
+            <SolidColorBrush x:Key="TlProgressBarBackground" Color="#FFE6E6E6" />
+        </ResourceDictionary>
+        <!-- Coyote: chocolate eye-patch base, varsity-red accent, turquoise eye stripe for progress/focus -->
+        <ResourceDictionary x:Key="Coyote">
+            <!-- tab header text: dark on the light tabs of New/Original, cream on Coyote's dark tabs -->
+            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="#FFF5ECDC" />
+            <Color x:Key="GlobalThemeColor">#FFC42A31</Color>
+            <Color x:Key="GlobalThemeBorderColor">#FF6E4A34</Color>
+
+            <Color x:Key="WindowBackgroundColor">#FF24150E</Color>
+            <Color x:Key="WindowBackgroundGradientTopColor">#FF1A0F0A</Color>
+            <Color x:Key="WindowBackgroundGradientBottomColor">#FF3A2216</Color>
+
+            <Color x:Key="TextForegroundLightColor">#FFF5ECDC</Color>
+            <Color x:Key="TextForegroundLightDisabledColor">#FF8A7565</Color>
+            <Color x:Key="TextForegroundDarkColor">#FF1A0F0A</Color>
+            <Color x:Key="TextForegroundDarkDisabledColor">#FF8A7565</Color>
+            <Color x:Key="TextForegroundWatermarkColor">#FFB9A893</Color>
+            <Color x:Key="TextForegroundErrorColor">#FFFF6B5E</Color>
+
+            <Color x:Key="HyperlinkForegroundColor">#FF5FD6E8</Color>
+
+            <Color x:Key="TextControlBackgroundColor">#FF170D08</Color>
+            <Color x:Key="TextControlBackgroundDisabledColor">#FF2E1E15</Color>
+            <Color x:Key="TextControlBackgroundMouseOverColor">#FF1F130C</Color>
+            <Color x:Key="TextControlBackgroundPressedColor">#FF2A1A11</Color>
+            <Color x:Key="TextControlBackgroundFocusColor">#FF1F130C</Color>
+            <Color x:Key="TextControlBackgroundErrorColor">#FF5A1F1C</Color>
+            <Color x:Key="TextControlBorderColor">#FF8A644A</Color>
+            <Color x:Key="TextControlBorderDisabledColor">#FF4A3426</Color>
+            <Color x:Key="TextControlBorderMouseOverColor">#FFB08A6C</Color>
+            <Color x:Key="TextControlBorderPressedColor">#FF45C7D9</Color>
+            <Color x:Key="TextControlBorderFocusColor">#FF45C7D9</Color>
+
+            <Color x:Key="ButtonBackgroundDisabledColor">#FF3A2418</Color>
+            <Color x:Key="ButtonBackgroundMouseOverColor">#FF5E3B28</Color>
+            <Color x:Key="ButtonBackgroundPressedColor">#FF6E4733</Color>
+            <Color x:Key="ButtonFocusVisualBorderColor">#FF45C7D9</Color>
+
+            <Color x:Key="TextBoxBackgroundInactiveSelectedColor">#FF3A2216</Color>
+
+            <Color x:Key="ScrollbarBackgroundMouseOverColor">#FF6E4733</Color>
+            <Color x:Key="ScrollbarBackgroundPressedColor">#FFEFE4CF</Color>
+
+            <Color x:Key="ToolTipBorderColor">#FF8A644A</Color>
+
+            <!-- the % text on the bar is always black, so fill and track stay light -->
+            <Color x:Key="ProgressBarProgressColor">#FF45C7D9</Color>
+            <Color x:Key="ProgressBarBackgroundColor">#FFEFE4CF</Color>
+
+            <!-- Avalonia SimpleTheme brushes: buttons, inputs, combo boxes, scrollbars and checkboxes read these, not the keys above.
+                 App resources win over the theme's own, and the other themes leave them out so they keep SimpleTheme's defaults. -->
+            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#FF170D08" />
+            <SolidColorBrush x:Key="ThemeBorderLowBrush" Color="#FF5A3825" />
+            <SolidColorBrush x:Key="ThemeBorderMidBrush" Color="#FF8A644A" />
+            <SolidColorBrush x:Key="ThemeBorderHighBrush" Color="#FFB08A6C" />
+            <SolidColorBrush x:Key="ThemeControlLowBrush" Color="#FF24150E" />
+            <SolidColorBrush x:Key="ThemeControlMidBrush" Color="#FF4A2E1F" />
+            <SolidColorBrush x:Key="ThemeControlMidHighBrush" Color="#FF5E3B28" />
+            <SolidColorBrush x:Key="ThemeControlHighBrush" Color="#FF6E4733" />
+            <SolidColorBrush x:Key="ThemeControlVeryHighBrush" Color="#FFEFE4CF" />
+            <SolidColorBrush x:Key="ThemeControlHighlightMidBrush" Color="#FF5E3B28" />
+            <SolidColorBrush x:Key="ThemeForegroundBrush" Color="#FFF5ECDC" />
+            <SolidColorBrush x:Key="ThemeForegroundLowBrush" Color="#FFB08A6C" />
+            <SolidColorBrush x:Key="HighlightBrush" Color="#FF0F7488" />
+            <SolidColorBrush x:Key="HighlightForegroundBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="ThemeAccentBrush" Color="#FF45C7D9" />
+            <SolidColorBrush x:Key="ThemeAccentBrush2" Color="#FF0F7488" />
+            <SolidColorBrush x:Key="ThemeAccentBrush3" Color="#FF0C5F70" />
+            <SolidColorBrush x:Key="ThemeAccentBrush4" Color="#FF0A4C5A" />
+            <!-- ErrorBrush comes from Shared (built from ErrorColor below); defining it here too would make SetTheme's Resources.Add throw on a duplicate key -->
+
+            <!-- Redesign colour keys: every theme must define all of these -->
+            <Color x:Key="AppBackgroundColor">#FF24150E</Color>
+            <Color x:Key="HeaderBackgroundColor">#FF1A0F0A</Color>
+            <Color x:Key="PanelBackgroundColor">#FF2D1A11</Color>
+            <Color x:Key="CardBackgroundColor">#FF3A2216</Color>
+            <Color x:Key="DividerColor">#FF4A2E1F</Color>
+            <Color x:Key="ControlBorderColor">#FF6E4A34</Color>
+            <Color x:Key="InputBackgroundColor">#FF170D08</Color>
+            <Color x:Key="InputBorderColor">#FF8A644A</Color>
+            <Color x:Key="InputBorderActiveColor">#FF45C7D9</Color>
+            <Color x:Key="InputForegroundColor">#FFF5ECDC</Color>
+            <Color x:Key="TextPrimaryColor">#FFF5ECDC</Color>
+            <Color x:Key="TextMutedColor">#FFC9B49C</Color>
+            <Color x:Key="AccentColor">#FFC42A31</Color>
+            <Color x:Key="AccentForegroundColor">#FFF5ECDC</Color>
+            <Color x:Key="SuccessColor">#FF5CC97A</Color>
+            <Color x:Key="WarningColor">#FFF0C02E</Color>
+            <Color x:Key="ErrorColor">#FFFF6B5E</Color>
+                    <!-- Redesign brushes: literal colours here, because a brush whose Color is a DynamicResource does not resolve after SetTheme. A theme must define each key as a Color AND as a Brush. -->
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FF24150E" />
+            <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FF1A0F0A" />
+            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF2D1A11" />
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FF3A2216" />
+            <SolidColorBrush x:Key="DividerBrush" Color="#FF4A2E1F" />
+            <SolidColorBrush x:Key="ControlBorderBrush" Color="#FF6E4A34" />
+            <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FF170D08" />
+            <SolidColorBrush x:Key="InputBorderBrush" Color="#FF8A644A" />
+            <SolidColorBrush x:Key="InputBorderActiveBrush" Color="#FF45C7D9" />
+            <SolidColorBrush x:Key="InputForegroundBrush" Color="#FFF5ECDC" />
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFF5ECDC" />
+            <SolidColorBrush x:Key="TextMutedBrush" Color="#FFC9B49C" />
+            <SolidColorBrush x:Key="AccentBrush" Color="#FFC42A31" />
+            <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFF5ECDC" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#FF5CC97A" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#FFF0C02E" />
+            <SolidColorBrush x:Key="ErrorBrush" Color="#FFFF6B5E" />
+            <SolidColorBrush x:Key="TlProgressBarForeground" Color="#FF45C7D9" />
+            <SolidColorBrush x:Key="TlProgressBarBackground" Color="#FFEFE4CF" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Shared">
             <system:Double x:Key="GlobalFontSize">14</system:Double>
             <system:Double x:Key="GlobalFontEmphasizeSize">18</system:Double>
             <!-- Colors -->
-            <SolidColorBrush x:Key="TlTabItemTextForeground" Color="Black" />
             <SolidColorBrush x:Key="MultilineTextBoxMouseOverBorder"
                              Color="{DynamicResource TextControlBorderMouseOverColor}" />
             <SolidColorBrush x:Key="MultilineTextBoxFocusBorder"
@@ -284,7 +400,7 @@
 
 
             <Style Selector="TextBlock.TlTabItemText">
-                <Setter Property="Foreground" Value="{StaticResource TlTabItemTextForeground}" />
+                <Setter Property="Foreground" Value="{DynamicResource TlTabItemTextForeground}" />
             </Style>
             <!-- /TextBlock -->
 
@@ -359,6 +475,12 @@
                 <Setter Property="Background" Value="Transparent" />
             </Style>
             <!-- /Popup -->
+
+            <!-- the download % text is black, so use the theme's light progress colours instead of SimpleTheme's dark accent -->
+            <Style Selector="ProgressBar">
+                <Setter Property="Foreground" Value="{DynamicResource TlProgressBarForeground}" />
+                <Setter Property="Background" Value="{DynamicResource TlProgressBarBackground}" />
+            </Style>
 
             <Style Selector="Window.TlWindow">
                 <Setter Property="BorderThickness" Value="1" />
