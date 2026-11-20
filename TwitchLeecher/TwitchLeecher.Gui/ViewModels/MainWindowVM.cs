@@ -192,14 +192,8 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 lock (_commandLockObject)
                 {
-                    if (_videosCount > 0)
-                    {
-                        _navigationService.ShowSearchResults();
-                    }
-                    else
-                    {
-                        _navigationService.ShowSearch();
-                    }
+                    // Always the form; it links back to the results when there are any
+                    _navigationService.ShowSearch();
                 }
             }
             catch (Exception ex)
@@ -358,7 +352,7 @@ namespace TwitchLeecher.Gui.ViewModels
                 }
                 else
                 {
-                    ShowWelcomeOrSearch();
+                    ShowSearchOnStart();
                 }
             }
             catch (Exception ex)
@@ -421,7 +415,7 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             if (success)
             {
-                ShowWelcomeOrSearch();
+                ShowSearchOnStart();
             }
             else
             {
@@ -434,12 +428,10 @@ namespace TwitchLeecher.Gui.ViewModels
             this.IsAuthenticatedSubOnly = isAuthenticatedSubOnly;
         }
 
-        private void ShowWelcomeOrSearch()
+        private void ShowSearchOnStart()
         {
-            if (!SearchOnStartup())
-            {
-                _navigationService.ShowWelcome();
-            }
+            _navigationService.ShowSearch();
+            SearchOnStartup();
         }
 
         private bool SearchOnStartup()
