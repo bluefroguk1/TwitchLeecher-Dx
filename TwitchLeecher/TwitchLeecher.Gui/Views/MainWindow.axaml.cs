@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
@@ -37,7 +38,7 @@ namespace TwitchLeecher.Gui.Views
             _runtimeDataService = runtimeDataService;
             _preferencesService = preferencesService;
 
-            _namedPipeManager = new NamedPipeManager("TwitchLeecher-DX");
+            _namedPipeManager = new NamedPipeManager(Constants.PipeName);
             _namedPipeManager.OnMessage += OnPipeMessage;
             _namedPipeManager.StartServer();
 
