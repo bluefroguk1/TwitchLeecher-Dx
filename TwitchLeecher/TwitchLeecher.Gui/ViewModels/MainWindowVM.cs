@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+﻿using System.Threading.Tasks;
+using System.Windows.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using TwitchLeecher.Core.Enums;
@@ -35,6 +36,9 @@ namespace TwitchLeecher.Gui.ViewModels
 
         private readonly IEventAggregator _eventAggregator;
         private readonly IAuthService _authService;
+        private readonly IApiService _apiService;
+        private DispatcherTimer _tokenCheckTimer;
+        private bool _tokenPromptShown;
         private readonly IDownloadService _downloadService;
         private readonly IDialogService _dialogService;
         private readonly IDonationService _donationService;
@@ -71,7 +75,8 @@ namespace TwitchLeecher.Gui.ViewModels
             IRuntimeDataService runtimeDataService,
             ISearchService searchService,
             IPreferencesService preferencesService,
-            IUpdateService updateService)
+            IUpdateService updateService,
+            IApiService apiService)
         {
             AssemblyUtil au = AssemblyUtil.Get;
 
@@ -79,6 +84,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
             _eventAggregator = eventAggregator;
             _authService = authService;
+            _apiService = apiService;
             _downloadService = downloadService;
             _dialogService = dialogService;
             _donationService = donationService;
@@ -278,7 +284,13 @@ namespace TwitchLeecher.Gui.ViewModels
         }
 
 
-        private async void RevokeAuthentication()
+        private void RevokeAuthentication()
+        {
+            LogOut(null, null);
+        }
+
+        // question/caption: null = the normal "Do you really want to logout?"
+        private async void LogOut(string question, string caption)
         {
             try
             {
@@ -288,7 +300,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
                 if (_downloadService.CanShutdown())
                 {
-                    result = await _dialogService.ShowMessageBox("Do you really want to logout?", "Logout",
+                    result = await _dialogService.ShowMessageBox(question ?? "Do you really want to logout?", caption ?? "Logout",
                         MessageBoxButton.YesNo, MessageBoxImage.Question);
                 }
                 else
@@ -367,6 +379,53 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
+        // Twitch asks apps to re-check saved tokens about once an hour; a token stops working when the user
+        // changes their password, signs out everywhere, or removes the app's access on twitch.tv
+        private void StartTokenChecks()
+        {
+            if (_tokenCheckTimer != null)
+            {
+                return;
+            }
+
+            _tokenCheckTimer = new DispatcherTimer(TimeSpan.FromHours(1), DispatcherPriority.Background,
+                async (_, _) => await CheckTokens());
+            _tokenCheckTimer.Start();
+        }
+
+        private async Task CheckTokens()
+        {
+            AuthInfo authInfo = _runtimeDataService.RuntimeData.AuthInfo;
+
+            if (_tokenPromptShown || authInfo == null || string.IsNullOrWhiteSpace(authInfo.AccessToken))
+            {
+                return;
+            }
+
+            (bool? main, bool? subOnly) = await Task.Run(() => (
+                _apiService.CheckToken(authInfo.AccessToken, false),
+                string.IsNullOrWhiteSpace(authInfo.AccessTokenSubOnly)
+                    ? (bool?)true
+                    : _apiService.CheckToken(authInfo.AccessTokenSubOnly, true)));
+
+            if (main == false)
+            {
+                PromptSignInAgain("Your Twitch sign-in has stopped working. Log out now and sign in again?");
+            }
+            else if (subOnly == false)
+            {
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again " +
+                                  "(tick \"Also enable sub-only downloads\") to turn them back on?");
+            }
+        }
+
+        // asked once per run, so a "No" is not repeated every hour
+        private void PromptSignInAgain(string question)
+        {
+            _tokenPromptShown = true;
+            LogOut(question, "Twitch sign-in");
+        }
+
         public void Shown()
         {
             ShowUpdateDialog();
@@ -380,10 +439,11 @@ namespace TwitchLeecher.Gui.ViewModels
 
             if (_showAuthSubOnlyError)
             {
-                _dialogService.ShowMessageBox(
-                    "Twitch could not validate the saved access token for sub-only support. Please try to enable sub-only support again!",
-                    "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again " +
+                                  "(tick \"Also enable sub-only downloads\") to turn them back on?");
             }
+
+            StartTokenChecks();
         }
 
         private bool CheckAuthentication()

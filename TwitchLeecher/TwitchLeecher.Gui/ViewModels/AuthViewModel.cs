@@ -82,7 +82,7 @@ namespace TwitchLeecher.Gui.ViewModels
                 if (EnableSubOnly && (result.SubOnlyToken == null || !_authService.ValidateAuthentication(result.SubOnlyToken, true)))
                 {
                     await _dialogService.ShowMessageBox(
-                        "You are signed in, but sub-only downloads could not be enabled. You can try again from the sub-only button at the top.",
+                        "You are signed in, but sub-only downloads could not be enabled. To try again, log out and sign in with \"Also enable sub-only downloads\" ticked.",
                         "Sub-only", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 

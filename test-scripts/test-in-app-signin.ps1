@@ -120,6 +120,17 @@ try {
 Write-Host "Listener check: $($results['Listener rejects missing code'])"
 
 # --- 8. Optional: download a subscriber-only VOD -------------------------
+Ask 'Subscriber-only message' @'
+Without sub-only enabled (or for a channel you don't subscribe to), try to download a subscriber-only VOD.
+The message says exactly: "This video is for subscribers only."
+'@
+
+Ask 'Stopped token is detected (optional)' @'
+While signed in, go to twitch.tv > Settings > Connections and disconnect Twitch Leecher (or change your Twitch password).
+Restart the app (or wait up to an hour): it asks "Your Twitch sign-in has stopped working. Log out now and sign in again?".
+Yes logs out and shows the sign-in screen; No keeps the app open and does not ask again until the next start. Answer s to skip.
+'@
+
 Ask 'Sub-only VOD downloads (optional)' @'
 Go back, search a channel you are subscribed to and download a subscriber-only VOD (crop it to 2 minutes).
 Expected: the download reaches Done and the log shows "Sub-Only: Yes". Answer s if you have no such VOD.

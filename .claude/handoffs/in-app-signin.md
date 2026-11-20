@@ -55,3 +55,9 @@ Run: `powershell -ExecutionPolicy Bypass -File test-scripts\test-in-app-signin.p
   - The bring-to-front still makes sense: it listens to `AuthResultEvent`, which this branch still publishes.
 - `AuthView.axaml` / `SubOnlyView.axaml`: may conflict with the UI redesign branches if they touch these views.
 - `ui-theme-keys` commit f001555 is cherry-picked here, for `AppBackgroundBrush`, `TextMutedBrush` and `DividerBrush`. If `ui-theme-keys` merges first, git sees the same change and it is a no-op.
+
+## Added after the second test round
+
+- **Subscriber-only message** is now just "This video is for subscribers only." (the user asked for no link).
+- **Token health check:** new `IApiService.CheckToken(token, subOnly)` calls Twitch's `oauth2/validate`: true = accepted, false = **401 rejected**, null = could not tell (offline). `MainWindowVM` runs it **every hour** (Twitch asks apps to re-validate hourly) and at start-up. If the main token is rejected: "Your Twitch sign-in has stopped working. Log out now and sign in again?"; if only the sub-only token is: "Sub-only downloads have stopped working. Log out now and sign in again (tick \"Also enable sub-only downloads\")...". Yes logs out (the normal logout path, `LogOut(question, caption)`); the prompt is shown once per run. Network errors never trigger it.
+- Sub-only is turned on only at sign-in now; the separate settings switch is going away in `combined-all`.

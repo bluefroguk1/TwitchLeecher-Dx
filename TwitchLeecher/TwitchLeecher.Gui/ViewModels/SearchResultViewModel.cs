@@ -192,18 +192,8 @@ namespace TwitchLeecher.Gui.ViewModels
 
                             if (!vodAuthInfo.Privileged && vodAuthInfo.SubOnly)
                             {
-                                if (_isAuthenticatedSubOnly)
-                                {
-                                    _dialogService.ShowMessageBox(
-                                        "This video is sub-only but you are not subscribed to the channel!", "Download",
-                                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                                }
-                                else
-                                {
-                                    _dialogService.ShowMessageBox(
-                                        "This video is sub-only! You need to enable sub-only video download support first!",
-                                        "Download", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                                }
+                                _dialogService.ShowMessageBox("This video is for subscribers only.", "Download",
+                                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
 
                                 return;
                             }
