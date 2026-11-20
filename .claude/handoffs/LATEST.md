@@ -79,6 +79,30 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate / Log out are icon-only so the header still fits at the 780px minimum width.
 
+## PR preparation and optimisation review (2026-11-21), READ THIS BEFORE SUBMITTING ANYTHING
+
+**PRs:** 22 clean, single-commit `pr/*` branches are prepared and pushed to the fork. **None are submitted.**
+- **Clean:** no test scripts, no `.claude/` notes, no AI references.
+- **Compiled:** each one built on GitHub Actions.
+- **Where to look:** `.claude/pr-drafts/README.md` has the waves, dependencies, test status, how to submit and the "no Claude references" check. Descriptions are in `.claude/pr-drafts/bodies/`, and the overview for the developer is in `.claude/pr-drafts/overview-issue.md`.
+- **Not prepared:** slow-downloads (no measured gain) and login-page-and-icon (superseded by the in-app sign-in).
+
+**Optimisations 1-3 are now BUILT** (2026-11-21), each on its own working branch with a test script, and as clean `pr/perf-*` branches. They're merged into `combined-all` (build run 44721562021 passed) but not run yet:
+- `perf-downloads-idle` (`test-perf-downloads-idle.ps1`, needs one short download). The Downloads page tick runs only while something downloads; idle CPU is measured automatically. In `combined-all` the watched-searches count refreshes on its own event.
+- `perf-result-badges` (`test-perf-result-badges.ps1`, needs one short download). Cheaper badge refresh, and **DOWNLOADED now appears when a download finishes** (a bug fix).
+- `perf-parallel-chat` (`test-perf-parallel-chat.ps1`, needs a 1-hour chat download). Chat is fetched in 10-minute segments, 4 at once.
+
+**Optimisation opportunities found in `combined-all`, biggest first (1-3 built, 4-6 not):**
+1. **Downloads page timer:** it ticks every second for ever, even with nothing downloading and the page closed. That's a small but constant idle wake-up, which is what the original "resource heavy" complaint was about. Run it only while a download is active (and the page is open).
+2. **Results badges:**
+   - **Cost:** every time the download queue gains or loses an item, the results page rebuilds every result's default file path and checks the disk (`File.Exists`) and the queue (linear) for each one, on the UI thread. That's O(results × downloads) per change.
+   - **Bug:** the DOWNLOADED badge doesn't update when a download *finishes*, because only add/remove triggers it.
+   - **Fix:** compute off the UI thread, cache paths, and react to download state changes.
+3. **Chat download is one request at a time:** a long VOD's chat takes thousands of sequential GQL pages. Splitting the time range into 4–8 segments fetched in parallel (then merged and de-duplicated) would make it several times faster.
+4. **Image loading shares one 4-slot queue:** the download dialog's preview sprite sheets wait behind search-result thumbnails, and all sheets load at once. Give previews their own priority and load sheets as the filmstrip needs them.
+5. **Watched searches:** each check makes one Helix `/streams` call per Broadcast search. `/streams` accepts up to 100 `user_login`s, so one call per check would do.
+6. **Old network code:** `WebClient` (27 uses, obsolete, blocks a thread per request) and `Thread.Sleep` in retries. Moving to async `HttpClient` is the bigger rewrite (issue #31).
+
 ## Second test round: fixes and additions (2026-11-20), START HERE
 
 Everything below is on the branch it belongs to (for its PR) **and** merged into `combined-all`. **`combined-all` compiles on GitHub Actions** (Windows + Linux, run 44657053198, commit 194a3bc). None of it has been run yet. Get the latest Windows zip from that run's Artifacts, or `git pull` on `combined-all` and build.
