@@ -67,17 +67,7 @@ namespace TwitchLeecher.Services.Services
 
             TwitchVideoQuality selectedQuality = GetSelectedQuality(qualities, quality ?? currentPrefs.DownloadDefaultQuality);
 
-            string folder = currentPrefs.DownloadSubfoldersForFav &&
-                            _preferencesService.IsChannelInFavourites(video.Channel)
-                ? Path.Combine(currentPrefs.DownloadFolder, video.Channel)
-                : currentPrefs.DownloadFolder;
-
-            // clips are always a ready-made mp4
-            bool disableConversion = currentPrefs.DownloadDisableConversion && !video.IsClip;
-
-            string filename = _filenameService.SubstituteWildcards(currentPrefs.DownloadFileName, video,
-                selectedQuality);
-            filename = _filenameService.EnsureExtension(filename, disableConversion);
+            (string folder, string filename, bool disableConversion) = GetDefaultTarget(video, currentPrefs, selectedQuality);
 
             DownloadParameters downloadParams = new DownloadParameters(video, qualities,
                 selectedQuality, folder, filename, disableConversion);
@@ -112,6 +102,29 @@ namespace TwitchLeecher.Services.Services
 
             _downloadService.Enqueue(downloadParams, startPaused);
             return null;
+        }
+
+        public string GetDefaultPath(TwitchVideo video, TwitchVideoQuality quality)
+        {
+            (string folder, string filename, _) = GetDefaultTarget(video, _preferencesService.CurrentPreferences, quality);
+            return Path.Combine(folder, filename);
+        }
+
+        private (string folder, string filename, bool disableConversion) GetDefaultTarget(TwitchVideo video,
+            Preferences prefs, TwitchVideoQuality quality)
+        {
+            string folder = prefs.DownloadSubfoldersForFav &&
+                            _preferencesService.IsChannelInFavourites(video.Channel)
+                ? Path.Combine(prefs.DownloadFolder, video.Channel)
+                : prefs.DownloadFolder;
+
+            // clips are always a ready-made mp4
+            bool disableConversion = prefs.DownloadDisableConversion && !video.IsClip;
+
+            string filename = _filenameService.SubstituteWildcards(prefs.DownloadFileName, video, quality);
+            filename = _filenameService.EnsureExtension(filename, disableConversion);
+
+            return (folder, filename, disableConversion);
         }
 
         private TwitchVideoQuality GetSelectedQuality(List<TwitchVideoQuality> qualities, DefaultQuality defaultQuality)

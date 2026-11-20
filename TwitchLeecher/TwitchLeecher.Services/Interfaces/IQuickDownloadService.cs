@@ -14,5 +14,8 @@ namespace TwitchLeecher.Services.Interfaces
         // Changes the download queue, so call it on the UI thread.
         // startPaused: the item waits in Downloads until the user presses Resume.
         string TryEnqueue(DownloadParameters downloadParams, bool startPaused = false);
+
+        // Where quick download would save this video with the current settings (folder + filename).
+        string GetDefaultPath(TwitchVideo video, TwitchVideoQuality quality);
     }
 }
