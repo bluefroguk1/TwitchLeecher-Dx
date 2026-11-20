@@ -92,9 +92,18 @@
                           Margin="-1,0,0,0" FontSize="12" />
                 <!-- clips have no chat replay -->
                 <CheckBox IsChecked="{Binding DownloadParams.DownloadChat}" IsVisible="{Binding !DownloadParams.Video.IsClip}"
-                          Content="Save chat (.chat.txt)" HorizontalAlignment="Left" VerticalAlignment="Center"
+                          Content="Save chat" HorizontalAlignment="Left" VerticalAlignment="Center"
                           Margin="15,0,0,0" FontSize="12"
-                          ToolTip.Tip="Saves the chat next to the video as timestamped text, matching the crop range." />
+                          ToolTip.Tip="Saves the chat next to the video, matching the crop range." />
+                <ComboBox SelectedIndex="{Binding ChatFormatIndex}" IsVisible="{Binding !DownloadParams.Video.IsClip}"
+                          IsEnabled="{Binding DownloadParams.DownloadChat}"
+                          Margin="5,0,0,0" FontSize="12" VerticalAlignment="Center"
+                          ToolTip.Tip="Text: timestamped lines. HTML: names in chat colours with emotes. Offline HTML also embeds the emote images. JSON: raw messages for other tools.">
+                    <ComboBoxItem Content="Text" />
+                    <ComboBoxItem Content="HTML" />
+                    <ComboBoxItem Content="HTML (offline)" />
+                    <ComboBoxItem Content="JSON" />
+                </ComboBox>
                 <CheckBox IsChecked="{Binding DownloadParams.SaveVodInfo}"
                           Content="Save VOD info (.info.json)" HorizontalAlignment="Left" VerticalAlignment="Center"
                           Margin="15,0,0,0" FontSize="12"
