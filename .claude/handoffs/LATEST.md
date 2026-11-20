@@ -131,6 +131,16 @@ Before testing, kill any running copy: `Get-Process TwitchLeecher | Stop-Process
 |---|---|---|
 | **Watched search downloaded a stream still in progress** (kibblethegoat) | `claude/ui-watched-searches-in-settings` (3397903) | Twitch now gives a recording VOD a normal thumbnail, so the old live check missed it. Broadcast searches now ask Helix `/streams` whether the channel is live, and hold back VODs from the current stream (WAITING … still live). If that check fails, the newest VOD is held back. Test: a watched Broadcasts search for a live channel. Check now must show WAITING and start nothing; after the stream ends, the next check starts it |
 
+### Off-peak download schedule (added 2026-11-20, in combined-all, build run 44709201140 passed)
+
+Branch `feature-download-schedule` (0a030e9). It starts from `claude/ui-watched-searches-in-settings`, because it needs watched searches, per-download pause and the redesigned Settings. Its own handoff: `.claude/handoffs/feature-download-schedule.md`.
+- **Settings › Download › OFF-PEAK SCHEDULE:** From/To hours (may cross midnight), "Also start downloads I paused", "Pause them again when the time is up".
+- **Outside the window:** a watched-search find is queued paused as **SCHEDULED · WATCHED**, with "Waits for the download schedule".
+- **When the window opens:** scheduled items start, plus paused ones if that option is ticked.
+- **When it closes:** only what the schedule started pauses again, if that option is ticked.
+- **Manual Resume** always starts a download straight away.
+- **Test needs:** waiting for a whole hour. Set From to the next hour. Script: `test-feature-download-schedule.ps1`. **Test it last**, after the instant and short-download tests.
+
 ### Answers to the user's questions this round
 
 - **.NET:** stay on .NET 10 (LTS, supported to Nov 2028). .NET 11 is out but adds nothing needed. The safe package updates and removals are the two `deps-*` branches. Avalonia 12 and replacing Ninject come later.
