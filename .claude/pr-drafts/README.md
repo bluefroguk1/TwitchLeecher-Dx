@@ -6,7 +6,7 @@
 
 **Rule kept:** one change = one PR, so the developer can pick and choose. Pacing does the work, not bundling. Offer bundling only if the developer asks for it.
 
-1. **DONE 2026-11-20:** overview posted on #104 (https://github.com/schneidermanuel/TwitchLeecher-Dx/pull/104#issuecomment-7049853680; text in `overview-issue.md`; its build link expires 2026-12-04). Originally: **one message, no new PRs.** Post `overview-issue.md` as a comment on #104, or as an issue, with a link to a downloadable build of `final` (Actions artifact). This lets the developer try everything before reading any code. Ask whether they'd prefer the UI refresh as one PR or in steps.
+1. **DONE 2026-11-20:** overview posted on #104 (https://github.com/schneidermanuel/TwitchLeecher-Dx/pull/104#issuecomment-7049853680; text in `overview-issue.md`; it links the `preview` branch and that branch's build, run 44813082025, which expires 2026-12-04). Originally: **one message, no new PRs.** Post `overview-issue.md` as a comment on #104, or as an issue, with a link to a downloadable build of `final` (Actions artifact). This lets the developer try everything before reading any code. Ask whether they'd prefer the UI refresh as one PR or in steps.
 2. **When the developer first responds, or after about 2 weeks of silence: Wave 1 (6 small, independent PRs on `master`, ready now).** `pr/fix-single-instance-pipe`, `pr/ui-draggable-dialogs`, `pr/deps-patch-updates`, `pr/deps-remove-unused`, `pr/ci-build`, `pr/deps-security-pin` (cut 2026-11-20, CI green, body in `bodies/deps-security-pin.md`). None is affected by the latest testing tweaks.
 3. **When at least half of #104–#119 are merged or closed: Wave 2 (UI refresh foundation).** `ui-theme-keys` → `ui-dark-inputs`, `ui-header-nav`, `ui-search-sidebar`, `ui-downloads-queue`, `in-app-signin`. Send at most about 5 open at a time.
 4. **After the rest of #104–#119 are dealt with: Wave 3 (stacked features), a few at a time.** Results toolbar, download dialog, Settings, Coyote, chat export, compress, tray → start with Windows, watched searches → schedule, the perf follow-ups.
@@ -17,6 +17,8 @@
 - Rebuild each branch from its synced `claude/*` working branch with `make_pr.sh`.
 - Then diff its files against `final`. The Settings avatar/Twitch logo, the "Download schedule" wording and the tray tooltip exist only in `combined-all`/`final`.
 - Rebase onto upstream `master` as it stands at that moment, and update the Testing section of each body.
+
+**`preview` branch (public face):** one clean commit on `master` with `final`'s code, minus `.claude/` and `test-scripts/`, with no AI lines. The #104 comment links it. When `final` changes, rebuild it: start a worktree on `origin/master`, run `git read-tree -u --reset origin/final`, `git rm -r --cached` the notes and scripts, commit, then `git push --force-with-lease origin preview`.
 
 **`final` branch:** `combined-all` plus this guide (from `combined`), the tested version to use while waiting. `combined` and `combined-all` are kept, but `final` supersedes both.
 
