@@ -1,4 +1,28 @@
-# PR submission guide (prepared 2026-11-21, nothing submitted)
+# PR submission guide
+
+## Submission plan (2026-11-20, after the combined-all test round)
+
+**Upstream reality:** the maintainer's last commit was 2026-08-07. Merges are months apart, and another contributor's PRs (#76, #101) have waited since 2025 and August. Our 16 PRs (#104–#119, opened 2026-11-18) have no reviews or comments. Adding 33 more now would bury them.
+
+**Rule kept:** one change = one PR, so the developer can pick and choose. Pacing does the work, not bundling. Offer bundling only if the developer asks for it.
+
+1. **Now: one message, no new PRs.** Post `overview-issue.md` as a comment on #104, or as an issue, with a link to a downloadable build of `final` (Actions artifact). This lets the developer try everything before reading any code. Ask whether they'd prefer the UI refresh as one PR or in steps.
+2. **When the developer first responds, or after about 2 weeks of silence: Wave 1 (6 small, independent PRs on `master`, ready now).** `pr/fix-single-instance-pipe`, `pr/ui-draggable-dialogs`, `pr/deps-patch-updates`, `pr/deps-remove-unused`, `pr/ci-build`, plus the security pins from `deps-security-fixes` (needs a `pr/` branch cut). None is affected by the latest testing tweaks.
+3. **When at least half of #104–#119 are merged or closed: Wave 2 (UI refresh foundation).** `ui-theme-keys` → `ui-dark-inputs`, `ui-header-nav`, `ui-search-sidebar`, `ui-downloads-queue`, `in-app-signin`. Send at most about 5 open at a time.
+4. **After the rest of #104–#119 are dealt with: Wave 3 (stacked features), a few at a time.** Results toolbar, download dialog, Settings, Coyote, chat export, compress, tray → start with Windows, watched searches → schedule, the perf follow-ups.
+5. **Last: code quality, after a Windows test round.** `improve-error-logging`, `replace-webclient` (#31), `add-unit-tests`, `refactor-results-viewmodel`, `refactor-shared-styles`, `tray-tooltip-events`. These are **not in `final`** and have not been run on Windows.
+6. **Hold:** `desktop-notifications` (toasts never confirmed on Windows), `fix-slow-downloads` (no measured gain), `login-page-and-icon` (superseded).
+
+**Refresh each wave just before sending.** The `pr/*` branches were cut before the last PC session. Waves 2–3 are missing up to 35 tested tweaks from `combined-all`, for example the results pane, toolbar staging, date picker, watched-search rows and header order. Waves 1 and 5 are unaffected.
+- Rebuild each branch from its synced `claude/*` working branch with `make_pr.sh`.
+- Then diff its files against `final`. The Settings avatar/Twitch logo, the "Download schedule" wording and the tray tooltip exist only in `combined-all`/`final`.
+- Rebase onto upstream `master` as it stands at that moment, and update the Testing section of each body.
+
+**`final` branch:** `combined-all` plus this guide (from `combined`), the tested version to use while waiting. `combined` and `combined-all` are kept, but `final` supersedes both.
+
+---
+
+## Earlier detail (prepared before the last test round, nothing submitted)
 
 All 25 changes not yet sent upstream are now **clean PR branches** named `pr/*` (pushed to the fork). Each one is:
 - **one squashed commit** with a plain message, on the right base;
