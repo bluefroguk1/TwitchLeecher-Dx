@@ -105,6 +105,14 @@
         <Style Selector="Button.thumb:pointerover Border.playOverlay">
             <Setter Property="Opacity" Value="1" />
         </Style>
+        <!-- narrow toolbar: the controls move to their own line under the title -->
+        <Style Selector="Grid.toolbar.compact > WrapPanel#ToolbarControls">
+            <Setter Property="Grid.Row" Value="1" />
+            <Setter Property="Grid.Column" Value="0" />
+            <Setter Property="Grid.ColumnSpan" Value="2" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="0,8,0,0" />
+        </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
             <Setter Property="CornerRadius" Value="8" />
@@ -135,71 +143,77 @@
         <!-- search summary bar -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
                 Padding="16,12">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Border Width="28" Height="28" CornerRadius="14" ClipToBounds="True"
-                            Background="{DynamicResource ControlBorderBrush}"
-                            IsVisible="{Binding IsChannelSearch}">
-                        <Image Source="{Binding ChannelAvatar}" Stretch="UniformToFill" />
-                    </Border>
-                    <TextBlock Text="{Binding SearchTitle}" FontSize="16" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                    <Button Classes="star" Classes.fav="{Binding IsFavourite}"
-                            IsVisible="{Binding IsChannelSearch}"
-                            Command="{Binding ToggleFavouriteCommand}"
-                            ToolTip.Tip="Favourite channel"
-                            AutomationProperties.Name="Favourite channel">
-                        <Panel>
-                            <avalonia:Icon Value="fa-regular fa-star" IsVisible="{Binding !IsFavourite}" />
-                            <avalonia:Icon Value="fa-solid fa-star" IsVisible="{Binding IsFavourite}" />
-                        </Panel>
+            <!-- Wide: one line (title and summary left, controls right). Narrow ("compact", set from SizeChanged in
+                 the code-behind): the controls drop to a second line and wrap, so none is ever cropped. -->
+            <Grid x:Name="ToolbarGrid" Classes="toolbar" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                <Grid Grid.Column="0" ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Border Width="28" Height="28" CornerRadius="14" ClipToBounds="True"
+                                Background="{DynamicResource ControlBorderBrush}"
+                                IsVisible="{Binding IsChannelSearch}">
+                            <Image Source="{Binding ChannelAvatar}" Stretch="UniformToFill" />
+                        </Border>
+                        <TextBlock Text="{Binding SearchTitle}" FontSize="16" FontWeight="SemiBold" MaxWidth="260"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                        <Button Classes="star" Classes.fav="{Binding IsFavourite}"
+                                IsVisible="{Binding IsChannelSearch}"
+                                Command="{Binding ToggleFavouriteCommand}"
+                                ToolTip.Tip="Favourite channel"
+                                AutomationProperties.Name="Favourite channel">
+                            <Panel>
+                                <avalonia:Icon Value="fa-regular fa-star" IsVisible="{Binding !IsFavourite}" />
+                                <avalonia:Icon Value="fa-solid fa-star" IsVisible="{Binding IsFavourite}" />
+                            </Panel>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Classes="muted" FontSize="13" Text="{Binding SearchSummary}" Margin="10,0"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                </Grid>
+
+                <WrapPanel x:Name="ToolbarControls" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                           VerticalAlignment="Center">
+                    <Button Classes="outline" Height="30" Padding="10,0" Margin="0,2,14,2"
+                            VerticalAlignment="Center" IsVisible="{Binding IsChannelSearch}"
+                            Command="{Binding WatchSearchCommand}"
+                            ToolTip.Tip="Check this search for new videos and download them automatically"
+                            AutomationProperties.Name="Watch this search">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <avalonia:Icon Value="fa-solid fa-eye" />
+                            <TextBlock Text="Watch this search" VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="10,0"
-                            VerticalAlignment="Center" ClipToBounds="True">
-                    <TextBlock Classes="muted" FontSize="13" Text="{Binding SearchSummary}"
-                               VerticalAlignment="Center" />
-                </StackPanel>
-                <Button Grid.Column="2" Classes="outline" Height="30" Padding="10,0" Margin="0,0,14,0"
-                        VerticalAlignment="Center" IsVisible="{Binding IsChannelSearch}"
-                        Command="{Binding WatchSearchCommand}"
-                        ToolTip.Tip="Check this search for new videos and download them automatically"
-                        AutomationProperties.Name="Watch this search">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <avalonia:Icon Value="fa-solid fa-eye" />
-                        <TextBlock Text="Watch this search" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,14,2" VerticalAlignment="Center"
+                                ToolTip.Tip="Hide videos already saved in your download folder">
+                        <TextBlock Text="Hide downloaded" FontSize="13" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <ToggleSwitch IsChecked="{Binding HideDownloaded}" VerticalAlignment="Center" Margin="0,0,-4,0"
+                                      AutomationProperties.Name="Hide downloaded" />
                     </StackPanel>
-                </Button>
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" Margin="0,0,0,0" VerticalAlignment="Center"
-                            ToolTip.Tip="Hide videos already saved in your download folder">
-                    <TextBlock Text="Hide downloaded" FontSize="13" VerticalAlignment="Center"
-                               Foreground="{DynamicResource TextPrimaryBrush}" />
-                    <ToggleSwitch IsChecked="{Binding HideDownloaded}" VerticalAlignment="Center" Margin="0,0,-4,0"
-                                  AutomationProperties.Name="Hide downloaded" />
-                </StackPanel>
-                <ComboBox Grid.Column="4" Height="30" MinWidth="130" FontSize="13" Margin="0,0,10,0"
-                          VerticalAlignment="Center" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource InputBorderBrush}" CornerRadius="6"
-                          SelectedIndex="{Binding SortIndex}" AutomationProperties.Name="Sort">
-                    <ComboBoxItem Content="Newest first" />
-                    <ComboBoxItem Content="Oldest first" />
-                    <ComboBoxItem Content="Longest" />
-                    <ComboBoxItem Content="Most viewed" />
-                </ComboBox>
-                <Border Grid.Column="5" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6"
-                        ClipToBounds="True" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Classes="toggle" Classes.active="{Binding !IsListView}"
-                                Command="{Binding ShowGridCommand}" ToolTip.Tip="Grid view"
-                                AutomationProperties.Name="Grid view">
-                            <avalonia:Icon Value="fa-solid fa-table-cells-large" />
-                        </Button>
-                        <Button Classes="toggle" Classes.active="{Binding IsListView}"
-                                Command="{Binding ShowListCommand}" ToolTip.Tip="List view"
-                                AutomationProperties.Name="List view">
-                            <avalonia:Icon Value="fa-solid fa-bars" />
-                        </Button>
-                    </StackPanel>
-                </Border>
+                    <ComboBox Height="30" MinWidth="130" FontSize="13" Margin="0,2,10,2"
+                              VerticalAlignment="Center" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource InputBorderBrush}" CornerRadius="6"
+                              SelectedIndex="{Binding SortIndex}" AutomationProperties.Name="Sort">
+                        <ComboBoxItem Content="Newest first" />
+                        <ComboBoxItem Content="Oldest first" />
+                        <ComboBoxItem Content="Longest" />
+                        <ComboBoxItem Content="Most viewed" />
+                    </ComboBox>
+                    <Border Margin="0,2,0,2" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6"
+                            ClipToBounds="True" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Classes="toggle" Classes.active="{Binding !IsListView}"
+                                    Command="{Binding ShowGridCommand}" ToolTip.Tip="Grid view"
+                                    AutomationProperties.Name="Grid view">
+                                <avalonia:Icon Value="fa-solid fa-table-cells-large" />
+                            </Button>
+                            <Button Classes="toggle" Classes.active="{Binding IsListView}"
+                                    Command="{Binding ShowListCommand}" ToolTip.Tip="List view"
+                                    AutomationProperties.Name="List view">
+                                <avalonia:Icon Value="fa-solid fa-bars" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </WrapPanel>
             </Grid>
         </Border>
 

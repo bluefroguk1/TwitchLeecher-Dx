@@ -181,16 +181,16 @@
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
                             IsVisible="{Binding IsAuthenticated}">
-                    <Button Classes="TlHeaderButton" Command="{Binding ShowPreferencesCommand}"
-                            ToolTip.Tip="Settings"
-                            AutomationProperties.Name="Settings">
-                        <avalonia:Icon Value="fa-solid fa-gear" Width="14" Height="14" />
-                    </Button>
                     <Button Classes="TlHeaderButton" Command="{Binding DonateCommand}"
                             IsVisible="{Binding ShowDonationButton}"
                             ToolTip.Tip="Donate"
                             AutomationProperties.Name="Donate">
                         <avalonia:Icon Value="fa-solid fa-dollar-sign" Width="14" Height="14" />
+                    </Button>
+                    <Button Classes="TlHeaderButton" Command="{Binding ShowPreferencesCommand}"
+                            ToolTip.Tip="Settings"
+                            AutomationProperties.Name="Settings">
+                        <avalonia:Icon Value="fa-solid fa-gear" Width="14" Height="14" />
                     </Button>
                     <Button Classes="TlHeaderButton" Command="{Binding ShowInfoCommand}"
                             ToolTip.Tip="Info"
