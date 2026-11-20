@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Services.Interfaces;
@@ -19,6 +20,8 @@ namespace TwitchLeecher.Services.Services
         private const string RUNTIMEDATA_VERSION_ATTR = "Version";
 
         private const string APP_EL = "Application";
+
+        private const string RECENTSEARCHES_EL = "RecentSearches";
 
         #endregion Constants
 
@@ -97,6 +100,11 @@ namespace TwitchLeecher.Services.Services
                     }
                 }
 
+                if (runtimeData.RecentSearches.Count > 0)
+                {
+                    runtimeDataEl.Add(new XElement(RECENTSEARCHES_EL, runtimeData.RecentSearches.Select(s => s.GetXml())));
+                }
+
                 string appDataFolder = _folderService.GetAppDataFolder();
 
                 FileSystem.CreateDirectory(appDataFolder);
@@ -104,6 +112,12 @@ namespace TwitchLeecher.Services.Services
                 string configFile = Path.Combine(appDataFolder, RUNTIMEDATA_FILE);
 
                 doc.Save(configFile);
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    // Holds the Twitch tokens; on Windows they are DPAPI-encrypted instead.
+                    File.SetUnixFileMode(configFile, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
 
                 _runtimeData = runtimeData;
             }
@@ -148,6 +162,21 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     runtimeData.AuthInfo = AuthInfo.GetFromXml(authenticationEl);
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement recentSearchesEl = runtimeDataEl.Element(RECENTSEARCHES_EL);
+
+                            if (recentSearchesEl != null)
+                            {
+                                try
+                                {
+                                    runtimeData.RecentSearches = recentSearchesEl.Elements(SearchParameters.SEARCH_EL)
+                                        .Select(SearchParameters.GetFromXml).ToList();
                                 }
                                 catch
                                 {

@@ -40,12 +40,6 @@ namespace TwitchLeecher.Gui.Services
             Navigate(_kernel.Get<AuthViewModel>());
         }
 
-
-        public void ShowWelcome()
-        {
-            Navigate(_kernel.Get<WelcomeViewModel>());
-        }
-
         public void ShowLoading()
         {
             Navigate(_kernel.Get<LoadingViewModel>());
@@ -53,18 +47,19 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowSearch()
         {
+            // already there (a search started from the form keeps the sidebar): don't build a second form
+            if (_currentView is SearchViewModel)
+            {
+                return;
+            }
+
             Navigate(_kernel.Get<SearchViewModel>());
         }
 
+        // results are shown in the right-hand pane of the Search page
         public void ShowSearchResults()
         {
-            if (!_persistentViews.TryGetValue(typeof(SearchResultViewModel), out ViewModelBase vm))
-            {
-                vm = _kernel.Get<SearchResultViewModel>();
-                _persistentViews.Add(typeof(SearchResultViewModel), vm);
-            }
-
-            Navigate(vm);
+            ShowSearch();
         }
 
         public void ShowDownload(DownloadParameters downloadParams)
@@ -88,13 +83,25 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowPreferences()
         {
+            Navigate(GetPreferences());
+        }
+
+        public void ShowWatchedSearches()
+        {
+            PreferencesViewModel vm = GetPreferences();
+            vm.ScrollToWatchedSearches = true;
+            Navigate(vm);
+        }
+
+        private PreferencesViewModel GetPreferences()
+        {
             if (!_persistentViews.TryGetValue(typeof(PreferencesViewModel), out ViewModelBase vm))
             {
                 vm = _kernel.Get<PreferencesViewModel>();
                 _persistentViews.Add(typeof(PreferencesViewModel), vm);
             }
-            
-            Navigate(vm);
+
+            return (PreferencesViewModel)vm;
         }
 
         public void ShowInfo()

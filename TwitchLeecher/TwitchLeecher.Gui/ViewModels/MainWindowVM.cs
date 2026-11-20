@@ -1,6 +1,9 @@
-﻿using System.Windows.Input;
+﻿using System.Threading.Tasks;
+using System.Windows.Input;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using TwitchLeecher.Core;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
@@ -35,6 +38,11 @@ namespace TwitchLeecher.Gui.ViewModels
 
         private readonly IEventAggregator _eventAggregator;
         private readonly IAuthService _authService;
+        private readonly IAutoDownloadService _autoDownloadService;
+        private readonly IApiService _apiService;
+        private DispatcherTimer _tokenCheckTimer;
+        private bool _tokenPromptShown;
+        private readonly IScheduleService _scheduleService;
         private readonly IDownloadService _downloadService;
         private readonly IDialogService _dialogService;
         private readonly IDonationService _donationService;
@@ -55,7 +63,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly object _commandLockObject;
         private bool _showNotification;
         private string _notification;
-        private IBrush _subOnlyButtonColor;
+        private int _notificationVersion;
 
         #endregion Fields
 
@@ -64,6 +72,8 @@ namespace TwitchLeecher.Gui.ViewModels
         public MainWindowVM(
             IEventAggregator eventAggregator,
             IAuthService authService,
+            IAutoDownloadService autoDownloadService,
+            IScheduleService scheduleService,
             IDownloadService downloadService,
             IDialogService dialogService,
             IDonationService donationService,
@@ -71,7 +81,8 @@ namespace TwitchLeecher.Gui.ViewModels
             IRuntimeDataService runtimeDataService,
             ISearchService searchService,
             IPreferencesService preferencesService,
-            IUpdateService updateService)
+            IUpdateService updateService,
+            IApiService apiService)
         {
             AssemblyUtil au = AssemblyUtil.Get;
 
@@ -79,6 +90,9 @@ namespace TwitchLeecher.Gui.ViewModels
 
             _eventAggregator = eventAggregator;
             _authService = authService;
+            _autoDownloadService = autoDownloadService;
+            _apiService = apiService;
+            _scheduleService = scheduleService;
             _downloadService = downloadService;
             _dialogService = dialogService;
             _donationService = donationService;
@@ -111,10 +125,17 @@ namespace TwitchLeecher.Gui.ViewModels
             private set { SetProperty(ref _videosCount, value, nameof(VideosCount)); }
         }
 
+        // the count pill on the Downloads tab is hidden while the queue is empty
+        public bool ShowDownloadsCount => _downloadsCount > 0;
+
         public int DownloadsCount
         {
             get { return _downloadsCount; }
-            private set { SetProperty(ref _downloadsCount, value, nameof(DownloadsCount)); }
+            private set
+            {
+                SetProperty(ref _downloadsCount, value, nameof(DownloadsCount));
+                FirePropertyChanged(nameof(ShowDownloadsCount));
+            }
         }
 
         public string Title { get; }
@@ -130,8 +151,61 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             get { return _isAuthenticated; }
 
-            private set { SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated)); }
+            private set
+            {
+                SetProperty(ref _isAuthenticated, value, nameof(IsAuthenticated));
+                FirePropertyChanged(nameof(UserName));
+
+                if (value)
+                {
+                    LoadUserAvatar();
+                }
+            }
         }
+
+        private Bitmap _userAvatar;
+
+        // the signed-in user's Twitch profile picture, shown next to "Signed in as" in Settings
+        public Bitmap UserAvatar
+        {
+            get => _userAvatar;
+            private set => SetProperty(ref _userAvatar, value);
+        }
+
+        private async void LoadUserAvatar()
+        {
+            string login = UserName;
+
+            if (string.IsNullOrWhiteSpace(login))
+            {
+                // the sign-in name arrives with the token check, which can finish just after sign-in
+                await Task.Delay(2500);
+                login = UserName;
+            }
+
+            if (string.IsNullOrWhiteSpace(login) || _userAvatar != null)
+            {
+                return;
+            }
+
+            try
+            {
+                var info = await Task.Run(() => _apiService.GetChannelInfo(login));
+
+                if (info != null && Uri.TryCreate(info.Value.ProfileImageUrl, UriKind.Absolute, out Uri url))
+                {
+                    UserAvatar = await ImageHelper.LoadFromWeb(url);
+                }
+            }
+            catch (Exception ex)
+            {
+                // cosmetic: the row works without the picture
+                Console.WriteLine("Could not load the profile picture: " + ex.Message);
+            }
+        }
+
+        // shown in Settings next to Log out
+        public string UserName => _authService.UserName;
 
         public bool IsAuthenticatedSubOnly
         {
@@ -139,22 +213,27 @@ namespace TwitchLeecher.Gui.ViewModels
 
             private set
             {
-                SubOnlyButtonColor = value ? Brushes.GreenYellow : Brushes.DarkGray;
                 SetProperty(ref _isAuthenticatedSubOnly, value, nameof(IsAuthenticatedSubOnly));
+                FirePropertyChanged(nameof(SubOnlyLabel));
             }
         }
 
-        public IBrush SubOnlyButtonColor
-        {
-            get => _subOnlyButtonColor;
-            set => SetProperty(ref _subOnlyButtonColor, value);
-        }
+        public string SubOnlyLabel => IsAuthenticatedSubOnly ? "Sub-only: on" : "Sub-only: off";
 
         public ViewModelBase MainView
         {
             get { return _mainView; }
-            set { SetProperty(ref _mainView, value, nameof(MainView)); }
+            set
+            {
+                SetProperty(ref _mainView, value, nameof(MainView));
+                FirePropertyChanged(nameof(IsSearchActive));
+                FirePropertyChanged(nameof(IsDownloadsActive));
+            }
         }
+
+        public bool IsSearchActive => _mainView is SearchViewModel or SearchResultViewModel;
+
+        public bool IsDownloadsActive => _mainView is DownloadsViewModel;
 
         public ICommand ShowSearchCommand => _showSearchCommand ??= new DelegateCommand(ShowSearch);
 
@@ -192,14 +271,8 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 lock (_commandLockObject)
                 {
-                    if (_videosCount > 0)
-                    {
-                        _navigationService.ShowSearchResults();
-                    }
-                    else
-                    {
-                        _navigationService.ShowSearch();
-                    }
+                    // Always the form; it links back to the results when there are any
+                    _navigationService.ShowSearch();
                 }
             }
             catch (Exception ex)
@@ -278,7 +351,13 @@ namespace TwitchLeecher.Gui.ViewModels
         }
 
 
-        private async void RevokeAuthentication()
+        private void RevokeAuthentication()
+        {
+            LogOut(null, null);
+        }
+
+        // question/caption: null = the normal "Do you really want to logout?"
+        private async void LogOut(string question, string caption)
         {
             try
             {
@@ -288,7 +367,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
                 if (_downloadService.CanShutdown())
                 {
-                    result = await _dialogService.ShowMessageBox("Do you really want to logout?", "Logout",
+                    result = await _dialogService.ShowMessageBox(question ?? "Do you really want to logout?", caption ?? "Logout",
                         MessageBoxButton.YesNo, MessageBoxImage.Question);
                 }
                 else
@@ -358,13 +437,59 @@ namespace TwitchLeecher.Gui.ViewModels
                 }
                 else
                 {
-                    ShowWelcomeOrSearch();
+                    ShowSearchOnStart();
                 }
             }
             catch (Exception ex)
             {
                 _dialogService.ShowAndLogException(ex);
             }
+        }
+
+        // Twitch asks apps to re-check saved tokens about once an hour; a token stops working when the user
+        // changes their password, signs out everywhere, or removes the app's access on twitch.tv
+        private void StartTokenChecks()
+        {
+            if (_tokenCheckTimer != null)
+            {
+                return;
+            }
+
+            _tokenCheckTimer = new DispatcherTimer(TimeSpan.FromHours(1), DispatcherPriority.Background,
+                async (_, _) => await CheckTokens());
+            _tokenCheckTimer.Start();
+        }
+
+        private async Task CheckTokens()
+        {
+            AuthInfo authInfo = _runtimeDataService.RuntimeData.AuthInfo;
+
+            if (_tokenPromptShown || authInfo == null || string.IsNullOrWhiteSpace(authInfo.AccessToken))
+            {
+                return;
+            }
+
+            (bool? main, bool? subOnly) = await Task.Run(() => (
+                _apiService.CheckToken(authInfo.AccessToken, false),
+                string.IsNullOrWhiteSpace(authInfo.AccessTokenSubOnly)
+                    ? (bool?)true
+                    : _apiService.CheckToken(authInfo.AccessTokenSubOnly, true)));
+
+            if (main == false)
+            {
+                PromptSignInAgain("Your Twitch sign-in has stopped working. Log out now and sign in again?");
+            }
+            else if (subOnly == false)
+            {
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again to turn them back on?");
+            }
+        }
+
+        // asked once per run, so a "No" is not repeated every hour
+        private void PromptSignInAgain(string question)
+        {
+            _tokenPromptShown = true;
+            LogOut(question, "Twitch sign-in");
         }
 
         public void Shown()
@@ -380,10 +505,10 @@ namespace TwitchLeecher.Gui.ViewModels
 
             if (_showAuthSubOnlyError)
             {
-                _dialogService.ShowMessageBox(
-                    "Twitch could not validate the saved access token for sub-only support. Please try to enable sub-only support again!",
-                    "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                PromptSignInAgain("Sub-only downloads have stopped working. Log out now and sign in again to turn them back on?");
             }
+
+            StartTokenChecks();
         }
 
         private bool CheckAuthentication()
@@ -421,7 +546,7 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             if (success)
             {
-                ShowWelcomeOrSearch();
+                ShowSearchOnStart();
             }
             else
             {
@@ -434,12 +559,14 @@ namespace TwitchLeecher.Gui.ViewModels
             this.IsAuthenticatedSubOnly = isAuthenticatedSubOnly;
         }
 
-        private void ShowWelcomeOrSearch()
+        private void ShowSearchOnStart()
         {
-            if (!SearchOnStartup())
-            {
-                _navigationService.ShowWelcome();
-            }
+            // signed in now, so the Twitch API works; the loop itself waits for the setting to be on
+            _autoDownloadService.Start();
+            _scheduleService.Start();
+
+            _navigationService.ShowSearch();
+            SearchOnStartup();
         }
 
         private bool SearchOnStartup()
@@ -452,7 +579,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
                 if (!currentPrefs.HasErrors)
                 {
-                    SearchParameters searchParams = new SearchParameters(SearchType.Channel)
+                    SearchParameters searchParams = new SearchParameters(currentPrefs.SearchDefaultFavourites ? SearchType.Favorites : SearchType.Channel)
                     {
                         Channel = currentPrefs.SearchChannelName,
                         VideoType = currentPrefs.SearchVideoType,
@@ -495,10 +622,15 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             Notification = text;
             ShowNotification = true;
+            int version = ++_notificationVersion;
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 await Task.Delay(5000);
-                ShowNotification = false;
+                // a newer toast restarts the 5 s timer instead of being hidden early by this one
+                if (version == _notificationVersion)
+                {
+                    ShowNotification = false;
+                }
             });
         }
     }

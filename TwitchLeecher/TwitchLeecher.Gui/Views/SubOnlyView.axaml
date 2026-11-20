@@ -1,24 +1,39 @@
-﻿<UserControl x:Class="TwitchLeecher.Gui.Views.SubOnlyView"
+<UserControl x:Class="TwitchLeecher.Gui.Views.SubOnlyView"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              x:DataType="viewModels:SubOnlyViewModel">
     <Design.DataContext>
         <viewModels:SubOnlyViewModel />
     </Design.DataContext>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <TextBlock TextAlignment="Center"
-                   Text="To enable sub-only download support, authenticate to TwitchLeecher-DX using the following steps:&#x0a;&#x0a;Open a Webbrowser of your choice&#x0a;Navigate to twitch.tv&#x0a;Open the browser-console (Most browser do this by Ctrl + Shift + J)&#x0a;Copy and paste the following Javascript in the console:"
-                   TextWrapping="Wrap" VerticalAlignment="Center" />
-        <TextBox Grid.Row="1" IsReadOnly="True"
-                 Text="let token = document.cookie.match('(^|;)\\s*auth-token\\s*=\\s*([^;]+)')?.pop() || ''; window.location.href = 'http://localhost:9342?sub_token=' + token;" />
-    </Grid>
+    <StackPanel Width="450" Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border Padding="0,0,0,5" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource DividerBrush}">
+            <TextBlock Text="Sub-only downloads" FontSize="20" FontWeight="Bold" />
+        </Border>
+
+        <TextBlock TextWrapping="Wrap"
+                   Text="To download subscriber-only videos, sign in to Twitch once more in the window that opens." />
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"
+                   Text="This stores a token that gives full access to your Twitch account on this computer." />
+
+        <Button Command="{Binding ConnectCommand}" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal">
+                <avalonia:Icon Value="fa-solid fa-right-to-bracket" Margin="0,4,0,2" Width="16" Height="16" />
+                <TextBlock Text="Connect sub-only" VerticalAlignment="Center" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+
+        <Expander Header="Manual method" IsExpanded="{Binding IsManualExpanded}" HorizontalAlignment="Stretch">
+            <StackPanel Spacing="8">
+                <TextBlock TextWrapping="Wrap"
+                           Text="Only if the button above does not work: open twitch.tv in your browser while signed in, open the browser console (usually Ctrl + Shift + J) and paste this script:" />
+                <TextBox IsReadOnly="True" TextWrapping="Wrap" Text="{Binding ManualScript}" />
+            </StackPanel>
+        </Expander>
+    </StackPanel>
 </UserControl>

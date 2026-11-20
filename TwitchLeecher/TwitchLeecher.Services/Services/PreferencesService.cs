@@ -30,6 +30,11 @@ namespace TwitchLeecher.Services.Services
         private const string APP_THEME = "Theme";
         private const string APP_CHECKFORUPDATES_EL = "CheckForUpdates";
         private const string APP_SHOWDONATIONBUTTON_EL = "ShowDonationButton";
+        private const string APP_MINIMISETOTRAY_EL = "MinimiseToTray";
+        private const string APP_TRAYPROMPTSHOWN_EL = "TrayPromptShown";
+        private const string APP_STARTWITHOS_EL = "StartWithOs";
+        private const string APP_STARTMINIMISED_EL = "StartMinimised";
+        private const string APP_SHOWNOTIFICATIONS_EL = "ShowNotifications";
 
         private const string SEARCH_EL = "Search";
         private const string SEARCH_FAVCHANNELS_EL = "FavChannels";
@@ -39,6 +44,7 @@ namespace TwitchLeecher.Services.Services
         private const string SEARCH_LOADLASTDAYS_EL = "LoadLastDays";
         private const string SEARCH_LOADLASTVODS_EL = "LoadLastVods";
         private const string SEARCH_SEARCHONSTARTUP_EL = "SearchOnStartup";
+        private const string SEARCH_DEFAULTFAVOURITES_EL = "DefaultFavourites";
 
         private const string DOWNLOAD_EL = "Download";
         private const string DOWNLOAD_TEMPFOLDER_EL = "TempFolder";
@@ -48,6 +54,16 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_SUBFOLDERSFORFAV_EL = "SubfoldersForFav";
         private const string DOWNLOAD_REMOVECOMPLETED_EL = "RemoveCompleted";
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
+        private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
+        private const string DOWNLOAD_COMPRESS_EL = "Compress";
+        private const string DOWNLOAD_COMPRESSLEVEL_EL = "CompressLevel";
+
+        private const string AUTODOWNLOAD_EL = "AutoDownload";
+        private const string AUTODOWNLOAD_ENABLED_EL = "Enabled";
+        private const string AUTODOWNLOAD_INTERVAL_EL = "Interval";
+        private const string AUTODOWNLOAD_CHANNELS_EL = "Channels";
+        private const string AUTODOWNLOAD_CLIPS_EL = "Clips";
+        private const string AUTODOWNLOAD_CLIPMINVIEWS_EL = "ClipMinViews";
 
         private const string MISC_EL = "Misc";
         private const string MISC_USEEXTERNALPLAYER_EL = "UseExternalPlayer";
@@ -97,7 +113,7 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
-        public IEnumerable<string> AvailableThemes => new[] { "Original", "New" };
+        public IEnumerable<string> AvailableThemes => new[] { "Original", "New", "Coyote" };
 
         #endregion Properties
 
@@ -152,6 +168,9 @@ namespace TwitchLeecher.Services.Services
                 XElement miscEl = new XElement(MISC_EL);
                 preferencesEl.Add(miscEl);
 
+                XElement autoDownloadEl = new XElement(AUTODOWNLOAD_EL);
+                preferencesEl.Add(autoDownloadEl);
+
                 // Application
                 XElement appCheckForUpdatesEl = new XElement(APP_CHECKFORUPDATES_EL);
                 appCheckForUpdatesEl.SetValue(preferences.AppCheckForUpdates);
@@ -164,6 +183,26 @@ namespace TwitchLeecher.Services.Services
                 XElement appShowDonationButtonEl = new XElement(APP_SHOWDONATIONBUTTON_EL);
                 appShowDonationButtonEl.SetValue(preferences.AppShowDonationButton);
                 appEl.Add(appShowDonationButtonEl);
+
+                XElement appMinimiseToTrayEl = new XElement(APP_MINIMISETOTRAY_EL);
+                appMinimiseToTrayEl.SetValue(preferences.AppMinimiseToTray);
+                appEl.Add(appMinimiseToTrayEl);
+
+                XElement appTrayPromptShownEl = new XElement(APP_TRAYPROMPTSHOWN_EL);
+                appTrayPromptShownEl.SetValue(preferences.AppTrayPromptShown);
+                appEl.Add(appTrayPromptShownEl);
+
+                XElement appStartWithOsEl = new XElement(APP_STARTWITHOS_EL);
+                appStartWithOsEl.SetValue(preferences.AppStartWithOs);
+                appEl.Add(appStartWithOsEl);
+
+                XElement appStartMinimisedEl = new XElement(APP_STARTMINIMISED_EL);
+                appStartMinimisedEl.SetValue(preferences.AppStartMinimised);
+                appEl.Add(appStartMinimisedEl);
+
+                XElement appShowNotificationsEl = new XElement(APP_SHOWNOTIFICATIONS_EL);
+                appShowNotificationsEl.SetValue(preferences.AppShowNotifications);
+                appEl.Add(appShowNotificationsEl);
 
                 // Search
                 RangeObservableCollection<string> favChannels = preferences.SearchFavouriteChannels;
@@ -202,6 +241,10 @@ namespace TwitchLeecher.Services.Services
                 searchOnStartupEl.SetValue(preferences.SearchOnStartup);
                 searchEl.Add(searchOnStartupEl);
 
+                XElement searchDefaultFavouritesEl = new XElement(SEARCH_DEFAULTFAVOURITES_EL);
+                searchDefaultFavouritesEl.SetValue(preferences.SearchDefaultFavourites);
+                searchEl.Add(searchDefaultFavouritesEl);
+
                 // Download
                 if (!string.IsNullOrWhiteSpace(preferences.DownloadTempFolder))
                 {
@@ -239,6 +282,33 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadDisableConversionEl = new XElement(DOWNLOAD_DISABLECONVERSION_EL);
                 downloadDisableConversionEl.SetValue(preferences.DownloadDisableConversion);
                 downloadEl.Add(downloadDisableConversionEl);
+
+                XElement downloadQuickDownloadEl = new XElement(DOWNLOAD_QUICKDOWNLOAD_EL);
+                downloadQuickDownloadEl.SetValue(preferences.DownloadQuickDownload);
+                downloadEl.Add(downloadQuickDownloadEl);
+
+                downloadEl.Add(new XElement("ScheduleEnabled", preferences.ScheduleEnabled));
+                downloadEl.Add(new XElement("ScheduleStartHour", preferences.ScheduleStartHour));
+                downloadEl.Add(new XElement("ScheduleEndHour", preferences.ScheduleEndHour));
+                downloadEl.Add(new XElement("ScheduleIncludePaused", preferences.ScheduleIncludePaused));
+                downloadEl.Add(new XElement("SchedulePauseAtEnd", preferences.SchedulePauseAtEnd));
+
+                // Auto download
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_ENABLED_EL, preferences.AutoDownloadEnabled));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_INTERVAL_EL, preferences.AutoDownloadInterval));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CHANNELS_EL, preferences.AutoDownloadChannels ?? string.Empty));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CLIPS_EL, preferences.AutoDownloadClips));
+                autoDownloadEl.Add(new XElement(AUTODOWNLOAD_CLIPMINVIEWS_EL, preferences.AutoDownloadClipMinViews));
+
+                XElement downloadCompressEl = new XElement(DOWNLOAD_COMPRESS_EL);
+                downloadCompressEl.SetValue(preferences.DownloadCompress);
+                downloadEl.Add(downloadCompressEl);
+
+                XElement downloadCompressLevelEl = new XElement(DOWNLOAD_COMPRESSLEVEL_EL);
+                downloadCompressLevelEl.SetValue(preferences.DownloadCompressLevel);
+                downloadEl.Add(downloadCompressLevelEl);
+
+                downloadEl.Add(new XElement("CompressEncoder", preferences.DownloadCompressEncoder));
 
                 // Miscellanious
                 XElement miscUseExternalPlayerEl = new XElement(MISC_USEEXTERNALPLAYER_EL);
@@ -322,6 +392,76 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     preferences.AppShowDonationButton = appShowDonationButtonEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appMinimiseToTrayEl = appEl.Element(APP_MINIMISETOTRAY_EL);
+
+                            if (appMinimiseToTrayEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppMinimiseToTray = appMinimiseToTrayEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appTrayPromptShownEl = appEl.Element(APP_TRAYPROMPTSHOWN_EL);
+
+                            if (appTrayPromptShownEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppTrayPromptShown = appTrayPromptShownEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appStartWithOsEl = appEl.Element(APP_STARTWITHOS_EL);
+
+                            if (appStartWithOsEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppStartWithOs = appStartWithOsEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appStartMinimisedEl = appEl.Element(APP_STARTMINIMISED_EL);
+
+                            if (appStartMinimisedEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppStartMinimised = appStartMinimisedEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement appShowNotificationsEl = appEl.Element(APP_SHOWNOTIFICATIONS_EL);
+
+                            if (appShowNotificationsEl != null)
+                            {
+                                try
+                                {
+                                    preferences.AppShowNotifications = appShowNotificationsEl.GetValueAsBool();
                                 }
                                 catch
                                 {
@@ -470,6 +610,20 @@ namespace TwitchLeecher.Services.Services
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
+
+                            XElement searchDefaultFavouritesEl = searchEl.Element(SEARCH_DEFAULTFAVOURITES_EL);
+
+                            if (searchDefaultFavouritesEl != null)
+                            {
+                                try
+                                {
+                                    preferences.SearchDefaultFavourites = searchDefaultFavouritesEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
                         }
 
                         XElement downloadEl = preferencesEl.Element(DOWNLOAD_EL);
@@ -578,6 +732,144 @@ namespace TwitchLeecher.Services.Services
                                     // Value from config file could not be loaded, use default value
                                 }
                             }
+
+                            XElement scheduleEnabledEl = downloadEl.Element("ScheduleEnabled");
+
+                            if (scheduleEnabledEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleEnabled = scheduleEnabledEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement scheduleStartHourEl = downloadEl.Element("ScheduleStartHour");
+
+                            if (scheduleStartHourEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleStartHour = scheduleStartHourEl.GetValueAsInt();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement scheduleEndHourEl = downloadEl.Element("ScheduleEndHour");
+
+                            if (scheduleEndHourEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleEndHour = scheduleEndHourEl.GetValueAsInt();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement scheduleIncludePausedEl = downloadEl.Element("ScheduleIncludePaused");
+
+                            if (scheduleIncludePausedEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleIncludePaused = scheduleIncludePausedEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement schedulePauseAtEndEl = downloadEl.Element("SchedulePauseAtEnd");
+
+                            if (schedulePauseAtEndEl != null)
+                            {
+                                try
+                                {
+                                    preferences.SchedulePauseAtEnd = schedulePauseAtEndEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadQuickDownloadEl = downloadEl.Element(DOWNLOAD_QUICKDOWNLOAD_EL);
+
+                            if (downloadQuickDownloadEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadQuickDownload = downloadQuickDownloadEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadCompressEl = downloadEl.Element(DOWNLOAD_COMPRESS_EL);
+
+                            if (downloadCompressEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadCompress = downloadCompressEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadCompressEncoderEl = downloadEl.Element("CompressEncoder");
+
+                            if (downloadCompressEncoderEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadCompressEncoder = downloadCompressEncoderEl.GetValueAsEnum<CompressionEncoder>();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadCompressLevelEl = downloadEl.Element(DOWNLOAD_COMPRESSLEVEL_EL);
+
+                            if (downloadCompressLevelEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadCompressLevel = downloadCompressLevelEl.GetValueAsEnum<CompressionLevel>();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+                        }
+
+                        XElement autoDownloadEl = preferencesEl.Element(AUTODOWNLOAD_EL);
+
+                        if (autoDownloadEl != null)
+                        {
+                            // each value on its own so one bad entry keeps the others; a bad value keeps the default
+                            try { preferences.AutoDownloadEnabled = autoDownloadEl.Element(AUTODOWNLOAD_ENABLED_EL).GetValueAsBool(); } catch { }
+                            try { preferences.AutoDownloadInterval = autoDownloadEl.Element(AUTODOWNLOAD_INTERVAL_EL).GetValueAsInt(); } catch { }
+                            try { preferences.AutoDownloadChannels = autoDownloadEl.Element(AUTODOWNLOAD_CHANNELS_EL).GetValueAsString(); } catch { }
+                            try { preferences.AutoDownloadClips = autoDownloadEl.Element(AUTODOWNLOAD_CLIPS_EL).GetValueAsBool(); } catch { }
+                            try { preferences.AutoDownloadClipMinViews = autoDownloadEl.Element(AUTODOWNLOAD_CLIPMINVIEWS_EL).GetValueAsInt(); } catch { }
                         }
 
                         XElement miscEl = preferencesEl.Element(MISC_EL);
@@ -626,12 +918,18 @@ namespace TwitchLeecher.Services.Services
                 Version = _tlVersion,
                 AppCheckForUpdates = true,
                 AppShowDonationButton = true,
+                AppMinimiseToTray = false,
+                AppTrayPromptShown = false,
+                AppStartWithOs = false,
+                AppStartMinimised = false,
+                AppShowNotifications = true,
                 SearchChannelName = null,
                 SearchVideoType = VideoType.Broadcast,
                 SearchLoadLimitType = LoadLimitType.Timespan,
                 SearchLoadLastDays = 10,
                 SearchLoadLastVods = 10,
                 SearchOnStartup = false,
+                SearchDefaultFavourites = false,
                 DownloadTempFolder = _folderService.GetTempFolder(),
                 DownloadFolder = _folderService.GetDownloadFolder(),
                 DownloadFileName = FilenameWildcards.YEAR + FilenameWildcards.MONTH + FilenameWildcards.DAY + "_" +
@@ -639,6 +937,20 @@ namespace TwitchLeecher.Services.Services
                 DownloadDefaultQuality = Preferences.DefaultQualities.First(),
                 DownloadRemoveCompleted = false,
                 DownloadDisableConversion = false,
+                DownloadQuickDownload = false,
+                ScheduleEnabled = false,
+                ScheduleStartHour = 1,
+                ScheduleEndHour = 7,
+                ScheduleIncludePaused = true,
+                SchedulePauseAtEnd = true,
+                AutoDownloadEnabled = false,
+                AutoDownloadInterval = 15,
+                AutoDownloadChannels = null,
+                AutoDownloadClips = false,
+                AutoDownloadClipMinViews = 100,
+                DownloadCompress = false,
+                DownloadCompressLevel = CompressionLevel.Balanced,
+                DownloadCompressEncoder = CompressionEncoder.Auto,
                 MiscUseExternalPlayer = false,
                 MiscExternalPlayer = null,
                 MaxConnectionCount = 10,

@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using TwitchLeecher.Core.Models;
+using TwitchLeecher.Shared.Extensions;
+
+namespace TwitchLeecher.Services.Services
+{
+    // Renders VOD chat as one self-contained HTML page. Chat is untrusted: every name, text and emote id is encoded.
+    // shortcut: only Twitch emotes are shown; 7TV/BTTV/FFZ need each provider's channel emote set and word matching.
+    internal static class ChatHtmlWriter
+    {
+        private static readonly Regex HexColor = new Regex("^#[0-9A-Fa-f]{6}$");
+
+        // Twitch's default name colours, used when a user never picked one
+        private static readonly string[] Palette =
+        {
+            "#FF0000", "#0000FF", "#008000", "#B22222", "#FF7F50", "#9ACD32", "#FF4500", "#2E8B57",
+            "#DAA520", "#D2691E", "#5F9EA0", "#1E90FF", "#FF69B4", "#8A2BE2", "#00FF7F"
+        };
+
+        public static string EmoteUrl(string emoteId)
+        {
+            return "https://static-cdn.jtvnw.net/emoticons/v2/" + Uri.EscapeDataString(emoteId) + "/default/dark/2.0";
+        }
+
+        // emoteSources maps emote id -> img src. Null links every emote to the CDN;
+        // an id missing from the map (failed download) falls back to the :code: text.
+        public static string Write(string title, IEnumerable<TwitchChatMessage> messages, TimeSpan from,
+            IReadOnlyDictionary<string, string> emoteSources)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>")
+                .Append(WebUtility.HtmlEncode(title)).Append(" - Chat</title><style>\n")
+                .Append("body{background:#18181b;color:#efeff1;font:14px/1.6 \"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;margin:0;padding:16px}\n")
+                .Append("p{margin:0;padding:2px 0;overflow-wrap:anywhere}\n")
+                .Append(".t{color:#adadb8;font-variant-numeric:tabular-nums;margin-right:6px}\n")
+                .Append(".n{font-weight:600}\n")
+                .Append("img{height:28px;vertical-align:middle;margin:-4px 0}\n")
+                .Append("</style></head><body>\n");
+
+            foreach (TwitchChatMessage m in messages)
+            {
+                sb.Append("<p><span class=\"t\">[").Append((m.Offset - from).ToDaylessString()).Append("]</span>")
+                    .Append("<span class=\"n\" style=\"color:").Append(ReadableColor(m.Color, m.Name)).Append("\">")
+                    .Append(WebUtility.HtmlEncode(m.Name)).Append("</span>: ");
+
+                foreach (TwitchChatFragment f in m.Fragments)
+                {
+                    string src = null;
+
+                    if (f.EmoteId == null)
+                    {
+                        sb.Append(WebUtility.HtmlEncode(f.Text));
+                    }
+                    else if (emoteSources == null || emoteSources.TryGetValue(f.EmoteId, out src))
+                    {
+                        string code = WebUtility.HtmlEncode(f.Text);
+                        sb.Append("<img src=\"").Append(WebUtility.HtmlEncode(src ?? EmoteUrl(f.EmoteId)))
+                            .Append("\" alt=\"").Append(code).Append("\" title=\"").Append(code).Append("\">");
+                    }
+                    else
+                    {
+                        sb.Append(WebUtility.HtmlEncode(":" + f.Text + ":"));
+                    }
+                }
+
+                sb.Append("</p>\n");
+            }
+
+            return sb.Append("</body></html>\n").ToString();
+        }
+
+        // Returns "#RRGGBB" readable on the dark background: the user's colour (or a stable palette pick), lightened if too dark
+        internal static string ReadableColor(string color, string name)
+        {
+            if (color == null || !HexColor.IsMatch(color))
+            {
+                int sum = 0;
+
+                foreach (char c in name ?? string.Empty)
+                {
+                    sum += c;
+                }
+
+                color = Palette[sum % Palette.Length];
+            }
+
+            int rgb = int.Parse(color.Substring(1), NumberStyles.HexNumber);
+            double r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
+            double luma = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            const double minLuma = 0.5;
+
+            if (luma < minLuma)
+            {
+                // blending toward white raises luma linearly, so this lands exactly on minLuma
+                double t = (minLuma - luma) / (1 - luma);
+                r += (255 - r) * t;
+                g += (255 - g) * t;
+                b += (255 - b) * t;
+            }
+
+            return "#" + ((int)Math.Round(r)).ToString("X2") + ((int)Math.Round(g)).ToString("X2") +
+                   ((int)Math.Round(b)).ToString("X2");
+        }
+    }
+}

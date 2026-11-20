@@ -1,11 +1,14 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using TwitchLeecher.Core.Constants;
+using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Services.Interfaces;
 using TwitchLeecher.Shared.Communication;
+using TwitchLeecher.Shared.Events;
 
 namespace TwitchLeecher.Gui.Views
 {
@@ -15,9 +18,12 @@ namespace TwitchLeecher.Gui.Views
 
         private readonly IDialogService _dialogService;
         private readonly IRuntimeDataService _runtimeDataService;
+        private readonly IPreferencesService _preferencesService;
         private readonly NamedPipeManager _namedPipeManager;
 
         private bool _shown;
+
+        private bool _trayPromptOpen;
 
         #endregion Fields
 
@@ -26,14 +32,21 @@ namespace TwitchLeecher.Gui.Views
         public MainWindow(
             MainWindowVM viewModel,
             IDialogService dialogService,
-            IRuntimeDataService runtimeDataService)
+            IRuntimeDataService runtimeDataService,
+            IEventAggregator eventAggregator,
+            IPreferencesService preferencesService)
         {
             _dialogService = dialogService;
             _runtimeDataService = runtimeDataService;
+            _preferencesService = preferencesService;
 
-            _namedPipeManager = new NamedPipeManager("TwitchLeecher-DX");
+            _namedPipeManager = new NamedPipeManager(Constants.PipeName);
             _namedPipeManager.OnMessage += OnPipeMessage;
             _namedPipeManager.StartServer();
+
+            // the login callback arrives in the browser, so pull the app back in front afterwards
+            eventAggregator.GetEvent<AuthResultEvent>().Subscribe(OnSignedIn);
+            eventAggregator.GetEvent<SubOnlyAuthChangedEvent>().Subscribe(OnSignedIn);
 
             InitializeComponent();
 
@@ -43,6 +56,15 @@ namespace TwitchLeecher.Gui.Views
                 {
                     WidthNormal = Width;
                     HeightNormal = Height;
+                }
+            };
+
+            PositionChanged += (s, e) =>
+            {
+                if (WindowState == WindowState.Normal)
+                {
+                    TopNormal = Position.Y;
+                    LeftNormal = Position.X;
                 }
             };
 
@@ -56,6 +78,27 @@ namespace TwitchLeecher.Gui.Views
                 }
 
                 LoadWindowState();
+            };
+
+            PropertyChanged += (s, e) =>
+            {
+                if (e.Property != WindowStateProperty || WindowState != WindowState.Minimized)
+                {
+                    return;
+                }
+
+                Preferences preferences = _preferencesService.CurrentPreferences;
+
+                // the tray icon in App.axaml brings the window back
+                if (preferences.AppMinimiseToTray)
+                {
+                    Hide();
+                }
+                else if (!preferences.AppTrayPromptShown && !_trayPromptOpen)
+                {
+                    // let the minimise finish first
+                    Dispatcher.UIThread.Post(AskAboutTray);
+                }
             };
 
             Activated += (s, e) =>
@@ -95,20 +138,74 @@ namespace TwitchLeecher.Gui.Views
         {
             if (message == "Activate")
             {
-                Dispatcher.UIThread.Invoke(() =>
-                {
-                    if (WindowState == WindowState.Minimized)
-                    {
-                        WindowState = WindowState.Normal;
-                    }
-
-                    this.Topmost = true;
-
-                    this.Activate();
-
-                    Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
-                });
+                BringToFront();
             }
+        }
+
+        private void OnSignedIn(bool signedIn)
+        {
+            if (signedIn)
+            {
+                BringToFront();
+            }
+        }
+
+        // safe to call from any thread; also used by the tray icon
+        public void BringToFront()
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                // the window may be hidden in the tray
+                Show();
+
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+
+                this.Topmost = true;
+
+                this.Activate();
+
+                Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
+            });
+        }
+
+        private void AskAboutTray()
+        {
+            _trayPromptOpen = true;
+
+            // no owner: an owned dialog would be minimised along with this window
+            TrayPromptWindow prompt = new TrayPromptWindow();
+
+            prompt.Closed += (s, e) =>
+            {
+                _trayPromptOpen = false;
+
+                if (prompt.UseTray is not bool useTray)
+                {
+                    return;
+                }
+
+                try
+                {
+                    Preferences preferences = _preferencesService.CurrentPreferences.Clone();
+                    preferences.AppMinimiseToTray = useTray;
+                    preferences.AppTrayPromptShown = prompt.DontAskAgainChecked;
+                    _preferencesService.Save(preferences);
+                }
+                catch (Exception ex)
+                {
+                    _dialogService.ShowAndLogException(ex);
+                }
+
+                if (useTray && WindowState == WindowState.Minimized)
+                {
+                    Hide();
+                }
+            };
+
+            prompt.Show();
         }
 
         public void LoadWindowState()
@@ -121,7 +218,13 @@ namespace TwitchLeecher.Gui.Views
                 {
                     Width = Math.Max(MinWidth, mainWindowInfo.Width);
                     Height = Math.Max(MinHeight, mainWindowInfo.Height);
-                    Margin = new Thickness(mainWindowInfo.Left, mainWindowInfo.Top, 0, 0);
+                    PixelPoint position = new PixelPoint((int)mainWindowInfo.Left, (int)mainWindowInfo.Top);
+
+                    // skip if the saved spot is no longer on any monitor (e.g. a display was unplugged)
+                    if (Screens.ScreenFromPoint(position) != null)
+                    {
+                        Position = position;
+                    }
                     WindowState = mainWindowInfo.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 }
             }
