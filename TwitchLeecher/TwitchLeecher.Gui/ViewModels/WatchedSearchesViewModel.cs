@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Avalonia.Threading;
 using TwitchLeecher.Core.Enums;
@@ -222,8 +222,8 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             switch (kind)
             {
-                case "STARTED": return "Downloading";
-                case "PAUSED": return "Waiting in Downloads";
+                case "STARTED": return "Last started";
+                case "PAUSED": return "Last queued, paused";
                 case "WAITING": return "Still live";
                 case "SKIPPED": return "Skipped";
                 case "FIRST RUN": return "First check";
