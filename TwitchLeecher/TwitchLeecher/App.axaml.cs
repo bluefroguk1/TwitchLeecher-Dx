@@ -82,6 +82,7 @@ public partial class App : Application
         _sharedResources = (ResourceDictionary)Resources["Shared"];
         _themes.Add("New", (ResourceDictionary)Resources["New"]);
         _themes.Add("Original", (ResourceDictionary)Resources["Original"]);
+        _themes.Add("Coyote", (ResourceDictionary)Resources["Coyote"]);
         var themeService = _kernel.Get<IThemeService>();
         themeService.StyleChanged += (sender, args) => { SetTheme(themeService.GetTheme()); };
         var preferencesService = _kernel.Get<IPreferencesService>();
