@@ -10,12 +10,11 @@ namespace TwitchLeecher.Gui.Views
             InitializeComponent();
             ScrollPositionRestorer.Attach(this, Scroller);
 
-            // below this width the title and the controls no longer fit on one line
+            // The toolbar stays on one row and shrinks in stages as the pane narrows.
             SizeChanged += (_, e) =>
             {
-                ToolbarGrid.Classes.Set("compact", e.NewSize.Width < 860);
-                // and below this one even the second line is too short for the labels
-                ToolbarGrid.Classes.Set("tight", e.NewSize.Width < 640);
+                ToolbarGrid.Classes.Set("tight", e.NewSize.Width < 820);
+                ToolbarGrid.Classes.Set("tiny", e.NewSize.Width < 620);
             };
         }
 
