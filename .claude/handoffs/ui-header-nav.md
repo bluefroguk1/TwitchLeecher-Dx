@@ -24,3 +24,8 @@
 
 ## Merge notes
 `MainWindow.axaml` is shared with the other redesign branches. This branch rewrites the header `Border` and the bottom notification `Grid`, and adds `Window.Styles`. The `DataTemplates` and the `MenuCommands` bar are kept as-is, apart from one less indent level. Expect a conflict only if another branch edits the header.
+
+## Added after second test round
+
+- Removed the "Sub-only" button from the header (the user decided it is not needed there).
+- Sub-only stays reachable: Settings shows "Sub-only: on/off" and a "Set up" button next to the Application heading. It binds to `MainWindowVM.SubOnlyLabel`/`ShowSubOnlyCommand` through `$parent[Window]`, so the Settings view model is unchanged. In `combined-all` the redesigned Settings page has the same row under General.
