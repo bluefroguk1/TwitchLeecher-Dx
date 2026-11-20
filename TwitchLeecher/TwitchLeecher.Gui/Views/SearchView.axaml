@@ -28,7 +28,7 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-            <TextBlock Text="Search" FontSize="21.333" FontWeight="Bold" />
+            <TextBlock Text="Search" FontSize="20" FontWeight="Bold" />
         </Border>
 
         <TabControl Grid.Row="1">
@@ -169,7 +169,7 @@
                         <StackPanel Orientation="Horizontal">
                             <avalonia:Icon Value="fa-solid fa-eraser" Margin="0,4,0,2" Width="16" Height="16"
                                            RenderTransformOrigin="0.5,0.5" />
-                            <TextBlock Text="Clear" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="14.667"
+                            <TextBlock Text="Clear" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="14"
                                        RenderTransformOrigin="0.5,0.5" />
                         </StackPanel>
                     </Button>
@@ -204,7 +204,7 @@
                         <StackPanel Orientation="Horizontal">
                             <avalonia:Icon Value="fa-solid fa-eraser" Margin="0,4,0,2" Width="16" Height="16"
                                            RenderTransformOrigin="0.5,0.5" />
-                            <TextBlock Text="Clear" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="14.667"
+                            <TextBlock Text="Clear" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="14"
                                        RenderTransformOrigin="0.5,0.5" />
                         </StackPanel>
                     </Button>
