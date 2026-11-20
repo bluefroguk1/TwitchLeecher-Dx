@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Services.Interfaces;
 using TwitchLeecher.Shared.Helpers;
@@ -50,13 +51,7 @@ namespace TwitchLeecher.Services.Services
                     {
                         using (FileStream initStream = new FileStream(initSegment.LocalFile, FileMode.Open, FileAccess.Read))
                         {
-                            int maxBytes;
-                            byte[] buffer = new byte[4096];
-
-                            while ((maxBytes = initStream.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                outputStream.Write(buffer, 0, maxBytes);
-                            }
+                            initStream.CopyTo(outputStream);
                         }
 
                         FileSystem.DeleteFile(initSegment.LocalFile);
@@ -80,13 +75,7 @@ namespace TwitchLeecher.Services.Services
 
                     using (FileStream partStream = new FileStream(part.LocalFile, FileMode.Open, FileAccess.Read))
                     {
-                        int maxBytes;
-                        byte[] buffer = new byte[4096];
-
-                        while ((maxBytes = partStream.Read(buffer, 0, buffer.Length)) > 0)
-                        {
-                            outputStream.Write(buffer, 0, maxBytes);
-                        }
+                        partStream.CopyTo(outputStream);
                     }
 
                     FileSystem.DeleteFile(part.LocalFile);
@@ -103,21 +92,117 @@ namespace TwitchLeecher.Services.Services
         public void ConvertVideo(Action<string> log, Action<string> setStatus, Action<double> setProgress,
             Action<bool> setIsIndeterminate, string sourceFile, string outputFile, CropInfo cropInfo)
         {
+            RunFfmpeg(log, setStatus, setProgress, setIsIndeterminate, sourceFile, outputFile, cropInfo, null);
+        }
+
+        public IEnumerable<string> ConvertParts(Action<string> log, Action<string> setStatus,
+            Action<double> setProgress, Action<bool> setIsIndeterminate, TwitchPlaylist vodPlaylist,
+            string outputFile, CropInfo cropInfo, CancellationToken cancellationToken)
+        {
+            // Streams init segment + chunks (the exact bytes ConcatParts would write) into ffmpeg's stdin, so no
+            // merged intermediate file is needed. stdin is not seekable, so the input-side -ss used for CropStart
+            // cannot work here; callers must use ConcatParts + ConvertVideo when CropStart is set.
+            if (cropInfo.CropStart)
+            {
+                throw new InvalidOperationException("Streaming conversion does not support CropStart.");
+            }
+
+            var warnings = new List<string>();
+
+            RunFfmpeg(log, setStatus, setProgress, setIsIndeterminate, null, outputFile, cropInfo, stdin =>
+            {
+                TwitchPlaylistPart initSegment = vodPlaylist.InitSegment;
+
+                if (initSegment != null)
+                {
+                    if (File.Exists(initSegment.LocalFile))
+                    {
+                        if (!PipeFile(initSegment.LocalFile, stdin))
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        warnings.Add($"Warning: missing VOD init segment: {initSegment.LocalFile}");
+                    }
+                }
+
+                int partsCount = vodPlaylist.Count;
+
+                for (int i = 0; i < partsCount; i++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    TwitchPlaylistPart part = vodPlaylist[i];
+
+                    if (!File.Exists(part.LocalFile))
+                    {
+                        warnings.Add($"Warning: missing VOD segment: {part.LocalFile}");
+                        continue;
+                    }
+
+                    if (!PipeFile(part.LocalFile, stdin))
+                    {
+                        // ffmpeg stopped reading (e.g. reached the -t limit); remaining chunks are not needed
+                        return;
+                    }
+                }
+            }, cancellationToken);
+
+            return warnings;
+        }
+
+        // Copies a chunk into ffmpeg's stdin and deletes it. Returns false if ffmpeg closed its input early.
+        private static bool PipeFile(string file, Stream stdin)
+        {
+            using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+            {
+                byte[] buffer = new byte[81920];
+                int read;
+
+                while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    try
+                    {
+                        stdin.Write(buffer, 0, read);
+                    }
+                    catch (IOException)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            FileSystem.DeleteFile(file);
+            return true;
+        }
+
+        private void RunFfmpeg(Action<string> log, Action<string> setStatus, Action<double> setProgress,
+            Action<bool> setIsIndeterminate, string sourceFile, string outputFile, CropInfo cropInfo,
+            Action<Stream> feedStdin, CancellationToken cancellationToken = default)
+        {
+            bool piped = feedStdin != null;
+
             setStatus("Converting Video");
             setIsIndeterminate(true);
 
-            log(Environment.NewLine + Environment.NewLine + "Executing '" + FFMPEGExe + "' on '" + sourceFile + "'...");
+            log(Environment.NewLine + Environment.NewLine + "Executing '" + FFMPEGExe + "' on '" +
+                (piped ? "VOD parts (streamed)" : sourceFile) + "'...");
 
             ProcessStartInfo psi = new ProcessStartInfo(FFMPEGExe)
             {
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
+                RedirectStandardInput = true,
                 StandardErrorEncoding = Encoding.UTF8,
                 StandardOutputEncoding = Encoding.UTF8,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
+            // ffmpeg reads stdin for interactive commands; inherited garbage there corrupted conversions (#92)
+            psi.ArgumentList.Add("-nostdin");
             psi.ArgumentList.Add("-y");
 
             if (cropInfo.CropStart)
@@ -127,7 +212,7 @@ namespace TwitchLeecher.Services.Services
             }
 
             psi.ArgumentList.Add("-i");
-            psi.ArgumentList.Add(sourceFile);
+            psi.ArgumentList.Add(piped ? "pipe:0" : sourceFile);
             psi.ArgumentList.Add("-analyzeduration");
             psi.ArgumentList.Add(int.MaxValue.ToString(CultureInfo.InvariantCulture));
             psi.ArgumentList.Add("-probesize");
@@ -195,6 +280,24 @@ namespace TwitchLeecher.Services.Services
                 p.Start();
                 p.BeginErrorReadLine();
                 p.BeginOutputReadLine();
+
+                if (piped)
+                {
+                    try
+                    {
+                        feedStdin(p.StandardInput.BaseStream);
+                        p.StandardInput.BaseStream.Close();
+                    }
+                    catch
+                    {
+                        // canceled or failed while feeding: stop ffmpeg and drop the partial output
+                        try { if (!p.HasExited) p.Kill(true); } catch { }
+                        p.WaitForExit();
+                        try { if (File.Exists(outputFile)) File.Delete(outputFile); } catch { }
+                        throw;
+                    }
+                }
+
                 p.WaitForExit();
 
                 if (p.ExitCode == 0)

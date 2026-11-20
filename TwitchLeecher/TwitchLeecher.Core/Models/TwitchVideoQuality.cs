@@ -13,7 +13,7 @@ namespace TwitchLeecher.Core.Models
 
         #region Constructors
 
-        public TwitchVideoQuality(string id, string name, string resolution = null)
+        public TwitchVideoQuality(string id, string name, string resolution = null, string codecs = null, long bandwidth = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -25,7 +25,9 @@ namespace TwitchLeecher.Core.Models
                 throw new ArgumentNullException(nameof(name));
             }
 
-            Initialize(id, name, resolution);
+            Bandwidth = bandwidth;
+
+            Initialize(id, name, resolution, codecs);
         }
 
         #endregion Constructors
@@ -33,6 +35,9 @@ namespace TwitchLeecher.Core.Models
         #region Properties
 
         public string Id { get; private set; }
+
+        // bits per second as advertised in the master playlist (BANDWIDTH), 0 if unknown
+        public long Bandwidth { get; private set; }
 
         public string Name { get; private set; }
 
@@ -50,7 +55,7 @@ namespace TwitchLeecher.Core.Models
 
         #region Methods
 
-        private void Initialize(string id, string name, string resolution)
+        private void Initialize(string id, string name, string resolution, string codecs)
         {
             Id = id;
             Name = name;
@@ -61,6 +66,16 @@ namespace TwitchLeecher.Core.Models
             if (!string.IsNullOrWhiteSpace(resolution))
             {
                 displayString += $" ({resolution})";
+            }
+
+            // H.264 is the default and stays unlabelled; HEVC/AV1 need a capable player, so say so
+            if (codecs != null && (codecs.Contains("hev1") || codecs.Contains("hvc1")))
+            {
+                displayString += " HEVC";
+            }
+            else if (codecs != null && codecs.Contains("av01"))
+            {
+                displayString += " AV1";
             }
 
             DisplayString = displayString;

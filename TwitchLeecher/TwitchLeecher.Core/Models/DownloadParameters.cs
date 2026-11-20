@@ -25,6 +25,8 @@ namespace TwitchLeecher.Core.Models
         private bool _cropStart;
         private bool _cropEnd;
         private bool _disableConversion;
+        private bool _downloadChat;
+        private bool _saveVodInfo;
 
         private TimeSpan _cropStartTime;
         private TimeSpan _cropEndTime;
@@ -85,6 +87,7 @@ namespace TwitchLeecher.Core.Models
             set
             {
                 SetProperty(ref _selectedQuality, value, nameof(SelectedQuality));
+                FirePropertyChanged(nameof(EstimatedSizeStr));
             }
         }
 
@@ -131,7 +134,25 @@ namespace TwitchLeecher.Core.Models
             set
             {
                 SetProperty(ref _disableConversion, value, nameof(DisableConversion));
+                FirePropertyChanged(nameof(CanCrop));
             }
+        }
+
+        // cropping needs the ffmpeg conversion step, which clips don't use
+        public bool CanCrop => !_disableConversion && !_video.IsClip;
+
+        // also save the chat as <video>.chat.txt (#71)
+        public bool DownloadChat
+        {
+            get { return _downloadChat; }
+            set { SetProperty(ref _downloadChat, value, nameof(DownloadChat)); }
+        }
+
+        // also save the VOD details as <video>.info.json (#50)
+        public bool SaveVodInfo
+        {
+            get { return _saveVodInfo; }
+            set { SetProperty(ref _saveVodInfo, value, nameof(SaveVodInfo)); }
         }
 
         public bool CropStart
@@ -144,6 +165,7 @@ namespace TwitchLeecher.Core.Models
             {
                 SetProperty(ref _cropStart, value, nameof(CropStart));
                 FirePropertyChanged(nameof(CroppedLength));
+                FirePropertyChanged(nameof(EstimatedSizeStr));
             }
         }
 
@@ -157,6 +179,7 @@ namespace TwitchLeecher.Core.Models
             {
                 SetProperty(ref _cropStartTime, value, nameof(CropStartTime));
                 FirePropertyChanged(nameof(CroppedLength));
+                FirePropertyChanged(nameof(EstimatedSizeStr));
             }
         }
 
@@ -170,6 +193,7 @@ namespace TwitchLeecher.Core.Models
             {
                 SetProperty(ref _cropEnd, value, nameof(CropEnd));
                 FirePropertyChanged(nameof(CroppedLength));
+                FirePropertyChanged(nameof(EstimatedSizeStr));
             }
         }
 
@@ -183,6 +207,7 @@ namespace TwitchLeecher.Core.Models
             {
                 SetProperty(ref _cropEndTime, value, nameof(CropEndTime));
                 FirePropertyChanged(nameof(CroppedLength));
+                FirePropertyChanged(nameof(EstimatedSizeStr));
             }
         }
 
@@ -206,6 +231,32 @@ namespace TwitchLeecher.Core.Models
                 {
                     return _cropEndTime - _cropStartTime;
                 }
+            }
+        }
+
+        // shortcut: BANDWIDTH is the playlist's advertised (peak) bitrate, so real files are usually somewhat smaller, and container overhead is ignored; upgrade by summing real segment sizes (HEAD requests) if accuracy matters
+        public string EstimatedSizeStr
+        {
+            get
+            {
+                long bandwidth = _selectedQuality?.Bandwidth ?? 0;
+
+                if (bandwidth <= 0)
+                {
+                    return "unknown";
+                }
+
+                double bytes = bandwidth / 8.0 * CroppedLength.TotalSeconds;
+                string[] units = { "B", "KB", "MB", "GB", "TB" };
+                int unit = 0;
+
+                while (bytes >= 1024 && unit < units.Length - 1)
+                {
+                    bytes /= 1024;
+                    unit++;
+                }
+
+                return "~" + bytes.ToString(unit >= 3 ? "0.00" : "0.#", System.Globalization.CultureInfo.CurrentCulture) + " " + units[unit];
             }
         }
 
