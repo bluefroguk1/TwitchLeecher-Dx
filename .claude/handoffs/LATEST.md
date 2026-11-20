@@ -1,4 +1,4 @@
-# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
+﻿# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
 
 Updated 2026-11-19 (late night), on the Windows PC. **Every branch below has now been built and tested by the user on Windows.** The next job is to turn the tested branches into clean upstream PRs, one PR per change.
 
@@ -78,6 +78,23 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 - **Notifications removed from the tray branch.** On Windows the toast backend (`DesktopNotifications.Windows`) initialised and `ShowNotification` returned without error, yet no toast ever appeared (Do Not Disturb checked). Removed: the notification service/interface, the "Show notifications" setting, the download hooks, the `DesktopNotifications*` packages and the Windows-specific target framework (back to plain `net10.0`). To revisit: register the app's toast identity (AppUserModelID + Start Menu shortcut) for an unpackaged exe, or ship packaged. The auto-download and watched-searches branches may call `IDesktopNotificationService.Notify` in their handoffs; that interface no longer exists on the tray branch.
 - **Slow downloads:** see row 12. Network, not the download loop, is the bottleneck on this line (timing: 1 connection ≈ 36 Mbit/s, 9–12 connections ≈ 53–62 Mbit/s).
 - **Header buttons:** Info / Donate are icon-only so the header still fits at the 780px minimum width. Log out moved to Settings › General (round 3).
+
+## PC session 2026-11-20 (late): what changed in combined-all since round 3, and branch sync status
+
+**New in `combined-all` (all user-tested on Windows):**
+- Search results show in the **right-hand pane** of the Search page (skeleton loading, "No videos found", empty state).
+- Own date picker and calendar themes (`TlDatePickerTheme`, `TlCalendarItemTheme`, calendar styles in `TwitchLeecher/App.axaml`); future days are dimmed (blackout dates added in `TemplateApplied`), Show pills in one row.
+- Watched searches rows rebuilt (capped text widths, controls line: When found / Active / Edit / bin).
+- Results toolbar: **always one row**, shrinks in stages from `SizeChanged` (`tight` below 820 = Watch and Hide downloaded lose their labels, `tiny` below 620 = summary hides, title and sort box shrink), animated with `DoubleTransition`. Window `MinWidth` is 880. Sizes and padding must come from styles, not attributes on the element (a local value beats a style and blocks the animation).
+- Header order Donate, Settings (icon only), Info. Downloads tab count pill hidden when the queue is empty, Pause all greyed out when nothing can be paused, no "Download added" pop-up, Download schedule wording, Twitch logo and the user's avatar in Settings (avatar needs `GetChannelInfo`, so it only works with `in-app-signin` and the API branch together).
+- Tray tooltip: implemented event-driven on `tray-tooltip-events`; the polling version in `d78f09e` is superseded, do not apply it.
+
+**Branch sync (local only, nothing pushed):** the fixes above were applied as new commits on top of each branch, each built with 0 errors:
+`ui-header-nav` (6274e6a), `ui-downloads-queue` (0d513df), `ui-download-dialog` (ab1973f), `ui-settings-sections-v2` (eafb37b, Theme on one line only), `ui-watched-searches-in-settings` (5c2f36d), `ui-results-toolbar` (9719b13), `ui-search-sidebar` (8af47dd), `ui-dark-inputs` (df2d788, calendar styles), `in-app-signin` (1256a81). All branches are named `claude/<name>`.
+
+**Not applied to individual branches (live only in `combined-all`):** the Settings Twitch logo and avatar (`b0ec29e`, `b96a4d1`, needs `GetChannelInfo`), the Download schedule wording `1da71bc` (belongs on `feature-download-schedule`; no local copy of that branch), the tray tooltip.
+
+**Before pushing:** origin copies of several of these branches differ from local, so check `git log origin/<branch>..<branch>` and use `--force-with-lease` only for rebased ones. Squash stray `.claude/handoff-nudge-state.json` commits in `improve-error-logging` and `tray-tooltip-events` when cutting PR branches. Expect conflicts between `refactor-shared-styles` and `refactor-results-viewmodel`. `fix-slow-downloads` showed no measured gain, do not claim a speed-up. Windows toast notifications are still unverified.
 
 ## TEST PLAN FOR combined-all: START HERE (updated 2026-11-20, round 3 UI tweaks)
 
