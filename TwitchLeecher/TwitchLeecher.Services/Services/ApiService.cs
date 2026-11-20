@@ -796,9 +796,15 @@ namespace TwitchLeecher.Services.Services
                             ? commenter.Value<string>("displayName")
                             : "(deleted user)";
 
-                        string text = string.Concat(node["message"]["fragments"].Select(f => f.Value<string>("text")));
+                        List<TwitchChatFragment> fragments = node["message"]["fragments"]
+                            .Select(f => new TwitchChatFragment(f.Value<string>("text"),
+                                f["emote"] is JObject emote ? emote.Value<string>("emoteID") : null))
+                            .ToList();
 
-                        messages.Add(new TwitchChatMessage(offset, name, text));
+                        string text = string.Concat(fragments.Select(f => f.Text));
+                        string color = node["message"].Value<string>("userColor");
+
+                        messages.Add(new TwitchChatMessage(offset, name, text, color, fragments));
                         added++;
                     }
 

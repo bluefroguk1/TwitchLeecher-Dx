@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using ReactiveUI;
+using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.Types;
@@ -89,6 +90,23 @@ namespace TwitchLeecher.Gui.ViewModels
         public bool ShowMutedPartsWarning
         {
             get { return _downloadParams.Video.Muted && !_downloadParams.DisableConversion; }
+        }
+
+        // the dialog lists the formats in ChatFormat order
+        public int ChatFormatIndex
+        {
+            get { return (int)_downloadParams.ChatFormat; }
+            set
+            {
+                // -1 means the ComboBox lost its selection; keep the current format
+                if (value < 0)
+                {
+                    return;
+                }
+
+                _downloadParams.ChatFormat = (ChatFormat)value;
+                FirePropertyChanged(nameof(ChatFormatIndex));
+            }
         }
 
         public int CropStartHours

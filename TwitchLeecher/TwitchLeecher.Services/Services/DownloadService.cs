@@ -635,7 +635,8 @@ namespace TwitchLeecher.Services.Services
             // same window as the video, so chat timestamps line up with the downloaded file
             TimeSpan from = downloadParams.CropStart ? downloadParams.CropStartTime : TimeSpan.Zero;
             TimeSpan to = downloadParams.CropEnd ? downloadParams.CropEndTime : downloadParams.Video.Length;
-            string chatFile = Path.ChangeExtension(outputFile, ".chat.txt");
+            bool html = downloadParams.ChatFormat != ChatFormat.Text;
+            string chatFile = Path.ChangeExtension(outputFile, html ? ".chat.html" : ".chat.txt");
 
             setStatus("Saving Chat");
             setIsIndeterminate(false);
@@ -655,8 +656,20 @@ namespace TwitchLeecher.Services.Services
                         }
                     });
 
-                File.WriteAllLines(chatFile, messages.Select(m =>
-                    "[" + (m.Offset - from).ToDaylessString() + "] " + m.Name + ": " + m.Text));
+                if (html)
+                {
+                    Dictionary<string, string> emoteSources = downloadParams.ChatFormat == ChatFormat.HtmlEmbedded
+                        ? DownloadEmotes(messages, log, cancellationToken)
+                        : null;
+
+                    File.WriteAllText(chatFile,
+                        ChatHtmlWriter.Write(downloadParams.Video.Title, messages, from, emoteSources));
+                }
+                else
+                {
+                    File.WriteAllLines(chatFile, messages.Select(m =>
+                        "[" + (m.Offset - from).ToDaylessString() + "] " + m.Name + ": " + m.Text));
+                }
 
                 log(" done! (" + messages.Count + " messages)");
             }
@@ -672,6 +685,39 @@ namespace TwitchLeecher.Services.Services
             }
 
             setProgress(100);
+        }
+
+        // Downloads each distinct emote once as a data: URI so the HTML works offline; failed emotes are left out
+        private static Dictionary<string, string> DownloadEmotes(List<TwitchChatMessage> messages, Action<string> log,
+            CancellationToken cancellationToken)
+        {
+            Dictionary<string, string> sources = new Dictionary<string, string>();
+            HashSet<string> ids = new HashSet<string>(messages.SelectMany(m => m.Fragments)
+                .Where(f => f.EmoteId != null).Select(f => f.EmoteId));
+
+            log(Environment.NewLine + "Embedding " + ids.Count + " emotes...");
+
+            using (WebClient webClient = new WebClient())
+            {
+                foreach (string id in ids)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        string base64 = Convert.ToBase64String(webClient.DownloadData(ChatHtmlWriter.EmoteUrl(id)));
+                        // animated emotes come back as GIF, so keep the server's type
+                        string type = webClient.ResponseHeaders?[HttpResponseHeader.ContentType] ?? "image/png";
+                        sources[id] = "data:" + type + ";base64," + base64;
+                    }
+                    catch (WebException ex)
+                    {
+                        log(Environment.NewLine + "Emote " + id + " could not be downloaded: " + ex.Message);
+                    }
+                }
+            }
+
+            return sources;
         }
 
         private void CleanUp(string directory, Action<string> log)
