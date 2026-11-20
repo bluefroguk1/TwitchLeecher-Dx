@@ -55,20 +55,27 @@ $proc = Get-Process -Id $p.Id -ErrorAction SilentlyContinue
 $results['Task Manager name is TwitchLeecher (not .NET Host)'] = $(if ($proc.ProcessName -eq 'TwitchLeecher') { 'PASS' } else { "FAIL ($($proc.ProcessName))" })
 
 Ask 'Sign in inside the app' @'
-If you are signed in, log out first (Log out icon, top right). The sign-in screen has "Also enable sub-only downloads".
+If you are signed in, log out first (Settings > General > Log out). The sign-in screen has "Also enable sub-only downloads".
 Tick it and sign in: Twitch's login opens in a window INSIDE the app (no browser, no console step), and after
 signing in you land on the Search page.
 '@
 Ask 'Opens on Search, logo + version' 'The Search page shows the app logo, "Twitch Leecher DX <version>" and "The Broadcast Downloader", plus a RECENT SEARCHES list. There is no Welcome page.'
 Ask 'Header' @'
 Top bar: "Twitch Leecher", Search and Downloads tabs (Downloads has a count badge, the active tab is underlined),
-a Settings button and Info / Donate / Log out icon buttons, each with a tooltip. There is NO Sub-only button.
+a Settings button and Info / Donate icon buttons, each with a tooltip. There is NO Sub-only button and NO Log out
+button. Click the logo or "Twitch Leecher" from Settings or Downloads: it goes to Search.
 '@
 Ask 'Search sidebar' @'
 Left sidebar: Channel | Links / IDs switch; a channel box with your favourites as chips under it (no star button
 next to the box); type chips Broadcasts / Highlights / Uploads / Clips; a "Show" dropdown; the Search button right
 under the form. There are NO Search / Cancel buttons at the bottom of the window. Enter in the channel box searches.
 '@
+Ask 'Date picker' @'
+Show > Custom range: From and To sit level with their labels, the date text is vertically centred, the pop-up
+calendar uses the theme colours (accent for the chosen day, outlined accent for today), future dates can't be
+picked, and To can't be before From. Check in New and Coyote.
+'@
+Ask 'Text centred in boxes' 'In the sidebar and Settings, typed text sits in the vertical middle of every text box, number box and drop-down, level with labels beside them.'
 Ask 'Links / IDs box' 'Switch to Links / IDs and paste or type 3 video links, pressing Enter between them: each goes on its own line, long links wrap, and Enter does NOT start a search.'
 Ask 'Search tab opens the form' 'Search a channel, then click the Search tab: it opens the search form with "Back to results (N)", which takes you back.'
 Ask 'Results toolbar' @'
@@ -78,15 +85,17 @@ Edit search, Hide downloaded, Sort (newest, oldest, longest, most viewed), grid/
 '@
 Ask 'Clips search' 'Search a channel with type Clips: clips appear with a CLIP badge and the clip creator.'
 Ask 'Settings side menu' @'
-Settings has a side menu: General, Search, Download, Watched searches, Appearance.
-General: Check for updates, donation button, Minimise to the system tray, Start Twitch Leecher when I sign in,
+Settings has a side menu: General, Search, Download, Watched searches (NO Appearance section).
+General: TWITCH ACCOUNT "Signed in as <your Twitch name>" with a Log out button (click it later: back to sign-in),
+THEME, Check for updates, donation button, Minimise to the system tray, Start Twitch Leecher when Windows starts,
 Start minimised to the tray, Show desktop notifications. NO sub-only switch anywhere.
 Search: DEFAULT CHANNEL box, NO favourite channels list. Download: folder, OFF-PEAK SCHEDULE, file name with
 clickable chips and a live preview, quality, Quick download, Compress videos after download (Compression level +
-Encoder), Keep the original stream file, Advanced. Changing anything shows a save bar; Undo hides it again.
+Encoder), Keep the original stream file, then TEMPORARY FOLDER and MAX CONNECTIONS shown directly (NO Advanced
+expander). Changing anything shows a save bar; Undo hides it again.
 '@
 Ask 'Themes' @'
-Settings > Appearance: switch New -> Original -> Coyote -> New, visiting Search, results, Downloads and every Settings
+Settings > General > Theme: switch New -> Original -> Coyote -> New, visiting Search, results, Downloads and every Settings
 section each time. Nothing goes transparent or unreadable (input text, tabs, progress bars, badges, buttons).
 '@
 Ask 'Dialogs: centred and draggable' 'Move the window to a corner (or second monitor) and search a channel name that does not exist: the message box opens centred over the window, and can be dragged by its header.'
@@ -104,7 +113,8 @@ Answer Yes: the window hides to the tray; clicking the tray icon brings it back,
 '@
 
 Ask 'Watched searches page' @'
-Settings > Watched searches: add two searches. Each row is ONE line: title, "When found", dropdown, Edit, Active and
+Settings > Watched searches: "Check watched searches for new videos" is an On/Off switch on the right. Off: everything
+below it is greyed out and can't be clicked; On: it all works again. Leave it On, then add two searches. Each row is ONE line: title, "When found", dropdown, Edit, Active and
 a red bin, lined up with the row above, nothing cut off (also at the smallest window width). The bin asks
 "Stop watching ...?". Press Check now with a channel that has VODs: RECENT ACTIVITY shows FIRST RUN, nothing downloads.
 '@
@@ -183,7 +193,7 @@ Settings > Download > OFF-PEAK SCHEDULE: tick it, From = the next whole hour. Ma
 From hour it starts by itself.
 '@
 Ask 'Live stream is held back' 'Watch a Broadcasts search for a channel that is live now: Check now shows WAITING (still live) and nothing downloads; after the stream ends, the next check starts that VOD.'
-Ask 'Start with Windows' 'Tick "Start Twitch Leecher when I sign in" and "Start minimised to the tray", sign out of Windows and back in: the app is running in the tray.'
+Ask 'Start with Windows' 'Tick "Start Twitch Leecher when Windows starts" and "Start minimised to the tray", sign out of Windows and back in: the app is running in the tray.'
 Ask 'Sign-in stopped working' 'At twitch.tv > Settings > Connections, disconnect Twitch Leecher, then restart the app: it offers "Your Twitch sign-in has stopped working. Log out now and sign in again?"'
 }
 
