@@ -68,7 +68,6 @@ namespace TwitchLeecher.Gui.ViewModels
             _navigationService = navigationService;
             _preferencesService = preferencesService;
             _eventAggregator = eventAggregator;
-            _eventAggregator.GetEvent<LogEvent>().Subscribe(LogEvent);
             _notificationService = notificationService;
             _runtimeDataService = runtimeDataService;
             Results = results;
@@ -87,11 +86,6 @@ namespace TwitchLeecher.Gui.ViewModels
         #endregion Constructors
 
         #region Properties
-
-        public void LogEvent(string message)
-        {
-            _notificationService.ShowNotification(message);
-        }
 
         public SearchParameters SearchParams
         {
