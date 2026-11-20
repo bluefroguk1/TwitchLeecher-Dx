@@ -40,12 +40,6 @@ namespace TwitchLeecher.Gui.Services
             Navigate(_kernel.Get<AuthViewModel>());
         }
 
-
-        public void ShowWelcome()
-        {
-            Navigate(_kernel.Get<WelcomeViewModel>());
-        }
-
         public void ShowLoading()
         {
             Navigate(_kernel.Get<LoadingViewModel>());

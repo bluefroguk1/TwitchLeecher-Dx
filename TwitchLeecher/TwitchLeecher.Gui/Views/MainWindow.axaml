@@ -19,9 +19,6 @@
         <DataTemplate DataType="{x:Type vm:AuthViewModel}">
             <view:AuthView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:WelcomeViewModel}">
-            <view:WelcomeView />
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:LoadingViewModel}">
             <view:LoadingView />
         </DataTemplate>

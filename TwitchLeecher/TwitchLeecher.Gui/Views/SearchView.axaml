@@ -5,274 +5,270 @@
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
              xmlns:enums="clr-namespace:TwitchLeecher.Core.Enums;assembly=TwitchLeecher.Core"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             x:DataType="viewModels:SearchViewModel">
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             x:DataType="viewModels:SearchViewModel"
+             Background="{DynamicResource AppBackgroundBrush}"
+             Foreground="{DynamicResource TextPrimaryBrush}">
     <Design.DataContext>
         <viewModels:SearchViewModel />
     </Design.DataContext>
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary>
-                    <converters:SearchTypeToBooleanConverter x:Key="SearchTypeToBooleanConverter" />
-                    <converters:VideoTypeToBooleanConverter x:Key="VideoTypeToBooleanConverter" />
-                    <converters:LoadLimitToBooleanConverter x:Key="LoadLimitToBooleanConverter" />
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
+            <converters:VideoTypeToBooleanConverter x:Key="VideoTypeToBooleanConverter" />
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center" Width="450">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
 
-        <Border Grid.Row="0" Margin="0, 0, 0, 10" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-            <TextBlock Text="Search" FontSize="21.333" FontWeight="Bold" />
+        <!-- Segmented switch and filter chips: radio buttons drawn as pills -->
+        <Style Selector="RadioButton.seg, RadioButton.chip">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <ControlTemplate TargetType="RadioButton">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="RadioButton.seg">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="RadioButton.seg:checked">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="RadioButton.chip">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="RadioButton.chip:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="RadioButton.chip:checked">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style Selector="Button.favchip">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Button.recent">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="300,*">
+
+        <!-- Sidebar: the search form -->
+        <Border Grid.Column="0" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="20" Spacing="16">
+
+                    <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="8" Padding="3">
+                        <Grid ColumnDefinitions="*,*">
+                            <RadioButton Grid.Column="0" Classes="seg" GroupName="SearchSource" Content="Channel"
+                                         AutomationProperties.Name="Search a channel"
+                                         IsChecked="{Binding IsLinksMode, Converter={StaticResource InverseBooleanConverter}}" />
+                            <RadioButton Grid.Column="1" Classes="seg" GroupName="SearchSource" Content="Links / IDs"
+                                         AutomationProperties.Name="Search links or video IDs"
+                                         IsChecked="{Binding IsLinksMode}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Channel source -->
+                    <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
+                        <!-- Enter searches from the channel field only: on the whole page it also swallowed
+                             Enter in the Links box, which then could not take more than one line -->
+                        <StackPanel.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                        </StackPanel.KeyBindings>
+                        <TextBlock Classes="label" Text="CHANNEL" />
+                        <Grid ColumnDefinitions="*">
+                            <AutoCompleteBox Grid.Column="0" Height="36"
+                                             Watermark="Channel name"
+                                             AutomationProperties.Name="Channel name"
+                                             ItemsSource="{Binding FavChannels, Mode=OneWay}"
+                                             MinimumPrefixLength="0"
+                                             IsDropDownOpen="{Binding IsDropdownOpen, Mode=TwoWay}"
+                                             Text="{Binding SearchParams.Channel}"
+                                             IsTextCompletionEnabled="True" />
+                        </Grid>
+                        <StackPanel IsVisible="{Binding HasFavChannels}">
+                            <ItemsControl ItemsSource="{Binding FavChannels}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="sys:String">
+                                        <Button Classes="favchip"
+                                                Content="{Binding StringFormat='&#x2605; {0}'}"
+                                                ToolTip.Tip="Search this channel"
+                                                Command="{Binding $parent[UserControl].((viewModels:SearchViewModel)DataContext).PickFavouriteCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Classes="favchip" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Left"
+                                    Content="&#x2605; All favourites"
+                                    ToolTip.Tip="Search every favourite channel at once"
+                                    Command="{Binding SearchFavouritesCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Links / IDs source -->
+                    <StackPanel Spacing="6" IsVisible="{Binding IsLinksMode}">
+                        <TextBlock Classes="label" Text="LINKS / VIDEO IDS" />
+                        <TextBox Classes="TlMultilineTextBox" Height="160" Padding="10,8"
+                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 AutomationProperties.Name="Links or video IDs, one per line"
+                                 Watermark="https://www.twitch.tv/videos/123456789&#10;123456789"
+                                 Text="{Binding LinksText, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
+                        <TextBlock Classes="label" Text="TYPE" />
+                        <WrapPanel>
+                            <RadioButton Classes="chip" GroupName="SearchVideoType" Content="Broadcasts"
+                                         IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Broadcast}}" />
+                            <RadioButton Classes="chip" GroupName="SearchVideoType" Content="Highlights"
+                                         IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Highlight}}" />
+                            <RadioButton Classes="chip" GroupName="SearchVideoType" Content="Uploads"
+                                         IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Upload}}" />
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6" IsVisible="{Binding !IsLinksMode}">
+                        <TextBlock Classes="label" Text="SHOW" />
+                        <!-- Item order must match the SHOW_* indexes in SearchViewModel -->
+                        <ComboBox Height="36" HorizontalAlignment="Stretch"
+                                  AutomationProperties.Name="Which videos to show"
+                                  SelectedIndex="{Binding ShowIndex}">
+                            <ComboBoxItem Content="Last N videos" />
+                            <ComboBoxItem Content="Today" />
+                            <ComboBoxItem Content="Last 7 days" />
+                            <ComboBoxItem Content="Custom range&#x2026;" />
+                        </ComboBox>
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsLastVods}">
+                            <TextBlock Text="Last" VerticalAlignment="Center" />
+                            <NumericUpDown Minimum="1" Maximum="999" Width="110" FormatString="0"
+                                           AutomationProperties.Name="Number of videos"
+                                           Value="{Binding SearchParams.LoadLastVods}"
+                                           HorizontalContentAlignment="Center" />
+                            <TextBlock Text="videos" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="40,*" RowDefinitions="Auto,6,Auto" IsVisible="{Binding IsCustomRange}">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="From" VerticalAlignment="Center" />
+                            <CalendarDatePicker Grid.Row="0" Grid.Column="1" Classes="TlDatePicker"
+                                                HorizontalAlignment="Stretch"
+                                                AutomationProperties.Name="From date" Watermark="Choose a date"
+                                                DisplayDateEnd="{x:Static sys:DateTime.Today}"
+                                                SelectedDate="{Binding SearchParams.LoadFrom}" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="To" VerticalAlignment="Center" />
+                            <CalendarDatePicker Grid.Row="2" Grid.Column="1" Classes="TlDatePicker"
+                                                HorizontalAlignment="Stretch"
+                                                AutomationProperties.Name="To date" Watermark="Choose a date"
+                                                DisplayDateStart="{Binding SearchParams.LoadFrom}"
+                                                DisplayDateEnd="{x:Static sys:DateTime.Today}"
+                                                SelectedDate="{Binding SearchParams.LoadTo}" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <Button Height="40" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentForegroundBrush}" BorderThickness="0" CornerRadius="6"
+                                FontWeight="SemiBold"
+                                Command="{Binding SearchCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:Icon Value="fa-solid fa-magnifying-glass" />
+                                <TextBlock Text="Search" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
+                                   Text="Press Enter to search" IsVisible="{Binding !IsLinksMode}" />
+                        <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
+                                   Text="One link or video ID per line" IsVisible="{Binding IsLinksMode}" />
+                        <Button HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"
+                                IsVisible="{Binding HasResults}"
+                                Command="{Binding BackToResultsCommand}"
+                                Content="{Binding BackToResultsText}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
-        <TabControl Grid.Row="1">
-            <TabItem
-                IsSelected="{Binding SearchParams.SearchType, Converter={StaticResource SearchTypeToBooleanConverter}, ConverterParameter={x:Static enums:SearchType.Channel}}">
-                <TabItem.Header>
-                    <TextBlock Classes="TlTabItemText" FontWeight="Bold" Text="Channel" />
-                </TabItem.Header>
-                <Grid Margin="0,10,0,0" Grid.IsSharedSizeScope="True" VerticalAlignment="Top">
-                    <Grid.RowDefinitions>
-                        <RowDefinition SharedSizeGroup="g1" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition SharedSizeGroup="g1" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition SharedSizeGroup="g1" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition SharedSizeGroup="g1" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition SharedSizeGroup="g1" />
-                    </Grid.RowDefinitions>
+        <!-- Empty state -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="32" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Image Source="/Assets/TL_Icon.png" Width="96" Height="96" HorizontalAlignment="Center" />
+                <TextBlock Margin="0,4,0,0" FontSize="24" FontWeight="Bold"
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                           Text="{Binding ProductTitle, Mode=OneTime}" />
+                <TextBlock Text="The Broadcast Downloader" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="15" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Channel Name:" VerticalAlignment="Center"
-                               HorizontalAlignment="Right" />
-
-                    <Grid Grid.Column="2" Grid.Row="0" ColumnDefinitions="*, 5, 30">
-                        <AutoCompleteBox Grid.Column="0" Grid.Row="0"
-                                         ItemsSource="{Binding FavChannels, Mode=OneWay}"
-                                         MinimumPrefixLength="0"
-                                         IsDropDownOpen="{Binding IsDropdownOpen, Mode=TwoWay}"
-                                         Text="{Binding SearchParams.Channel}"
-                                         IsTextCompletionEnabled="True" />
-                        <Button Grid.Column="2" Command="{Binding OpenSearchDropDownCommand}">
-                            <avalonia:Icon Value="fa-solid fa-bars" />
-                        </Button>
-                    </Grid>
-                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Video Type:" VerticalAlignment="Center"
-                               Margin="20,0,0,0" HorizontalAlignment="Right" />
-                    <StackPanel Grid.Column="2" Grid.Row="2" Orientation="Horizontal">
-                        <RadioButton GroupName="VideoType" Content="Broadcast"
-                                     IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Broadcast}}"
-                                     VerticalAlignment="Center" HorizontalAlignment="Left" />
-                        <RadioButton GroupName="VideoType" Content="Highlight"
-                                     IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Highlight}}"
-                                     VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
-                        <RadioButton GroupName="VideoType" Content="Upload"
-                                     IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Upload}}"
-                                     VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Load Limit:" VerticalAlignment="Center"
-                               Margin="20,0,0,0" HorizontalAlignment="Right" />
-
-                    <Grid Grid.Column="2" Grid.Row="4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition SharedSizeGroup="g2" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <RadioButton Grid.Column="0" GroupName="LoadLimit" Content="From"
-                                     IsChecked="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                     HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        <Grid Grid.Column="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <CalendarDatePicker Grid.Column="0" Classes="TlDatePicker"
-                                                IsEnabled="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                                SelectedDate="{Binding SearchParams.LoadFrom}"
-                                                Margin="6,0,0,0" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="to" VerticalAlignment="Center" HorizontalAlignment="Left"
-                                       Margin="6,0,0,0" />
-                            <CalendarDatePicker Grid.Column="2" Classes="TlDatePicker"
-                                                IsEnabled="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                                SelectedDate="{Binding SearchParams.LoadTo}"
-                                                VerticalAlignment="Center" />
-                        </Grid>
-                    </Grid>
-
-                    <Grid Grid.Row="6" Grid.Column="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition SharedSizeGroup="g2" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <RadioButton Grid.Column="0" GroupName="LoadLimit" Content="Last"
-                                     IsChecked="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.LastVods}}"
-                                     HorizontalAlignment="Left" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
-                                    Margin="6,0,0,0">
-                            <NumericUpDown Minimum="1" Maximum="999" Width="60"
-                                           IsEnabled="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.LastVods}}"
-                                           Value="{Binding SearchParams.LoadLastVods}"
-                                           HorizontalContentAlignment="Center" HorizontalAlignment="Left"
-                                           VerticalAlignment="Center" />
-                            <TextBlock Text="VODs" VerticalAlignment="Center" HorizontalAlignment="Left"
-                                       Margin="6,0,0,0" />
-                        </StackPanel>
-                    </Grid>
-
-                    <RadioButton Grid.Column="2" Grid.Row="8" GroupName="LoadLimit" Content="Only today"
-                                 IsChecked="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.OnlyToday}}"
-                                 VerticalAlignment="Center" HorizontalAlignment="Left" />
-                </Grid>
-            </TabItem>
-            <TabItem
-                IsSelected="{Binding SearchParams.SearchType, Converter={StaticResource SearchTypeToBooleanConverter}, ConverterParameter={x:Static enums:SearchType.Urls}}">
-                <TabItem.Header>
-                    <TextBlock Classes="TlTabItemText" FontWeight="Bold" Text="Urls" />
-                </TabItem.Header>
-                <Grid Margin="0,10,0,0" VerticalAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0"
-                               Text="Paste one or more Twitch video urls in the textbox below. Make sure every url is placed in a new line."
-                               TextWrapping="Wrap" />
-                    <TextBlock Grid.Row="2" Text="Example: https://www.twitch.tv/videos/123456789" />
-                    <TextBox Grid.Row="4" Classes="TlMultilineTextBox"
-                             Text="{Binding SearchParams.Urls, Mode=TwoWay}"
-                             Height="140" />
-                    <Button Grid.Row="6" Command="{Binding ClearUrlsCommand}" Width="75" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <avalonia:Icon Value="fa-solid fa-eraser" Margin="0,4,0,2" Width="16" Height="16"
-                                           RenderTransformOrigin="0.5,0.5" />
-                            <TextBlock Text="Clear" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="14.667"
-                                       RenderTransformOrigin="0.5,0.5" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-            </TabItem>
-            <TabItem
-                IsSelected="{Binding SearchParams.SearchType, Converter={StaticResource SearchTypeToBooleanConverter}, ConverterParameter={x:Static enums:SearchType.Ids}}">
-                <TabItem.Header>
-                    <TextBlock Classes="TlTabItemText" FontWeight="Bold" Text="IDs" />
-                </TabItem.Header>
-                <Grid Margin="0,10,0,0" VerticalAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
-
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0"
-                               Text="Paste one or more Twitch video IDs in the textbox below. Make sure every ID is placed in a new line."
-                               TextWrapping="Wrap" />
-                    <TextBlock Grid.Row="2" Text="Example: 123456789" />
-                    <TextBox Grid.Row="4" Classes="TlMultilineTextBox"
-                             Text="{Binding SearchParams.Ids, Mode=TwoWay}"
-                             Height="140" />
-                    <Button Grid.Row="6" Command="{Binding ClearIdsCommand}" Width="75" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <avalonia:Icon Value="fa-solid fa-eraser" Margin="0,4,0,2" Width="16" Height="16"
-                                           RenderTransformOrigin="0.5,0.5" />
-                            <TextBlock Text="Clear" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="14.667"
-                                       RenderTransformOrigin="0.5,0.5" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-            </TabItem>
-            <TabItem
-                IsSelected="{Binding SearchParams.SearchType, Converter={StaticResource SearchTypeToBooleanConverter}, ConverterParameter={x:Static enums:SearchType.Favorites}}">
-                <TabItem.Header>
-                    <TextBlock Classes="TlTabItemText" FontWeight="Bold" Text="Favorites" />
-                </TabItem.Header>
-                <Grid Margin="0,10,0,0" Grid.IsSharedSizeScope="True" VerticalAlignment="Top">
-                    <Grid.RowDefinitions>
-                        <RowDefinition SharedSizeGroup="g1" />
-                        <RowDefinition Height="10" />
-                        <RowDefinition SharedSizeGroup="g1" />
-                        <RowDefinition Height="10" />
-                    </Grid.RowDefinitions>
-
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="15" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Video Type:" VerticalAlignment="Center"
-                               Margin="20,0,0,0" HorizontalAlignment="Right" />
-                    <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal">
-                        <RadioButton GroupName="VideoTypeFav" Content="Broadcast"
-                                     IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Broadcast}}"
-                                     VerticalAlignment="Center" HorizontalAlignment="Left" />
-                        <RadioButton GroupName="VideoTypeFav" Content="Highlight"
-                                     IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Highlight}}"
-                                     VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
-                        <RadioButton GroupName="VideoTypeFav" Content="Upload"
-                                     IsChecked="{Binding SearchParams.VideoType, Converter={StaticResource VideoTypeToBooleanConverter}, ConverterParameter={x:Static enums:VideoType.Upload}}"
-                                     VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Load Limit:" VerticalAlignment="Center"
-                               Margin="20,0,0,0" HorizontalAlignment="Right" />
-
-                    <Grid Grid.Column="2" Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition SharedSizeGroup="g2" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Grid.Column="0" Text="From"
-                                   HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        <Grid Grid.Column="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <CalendarDatePicker Grid.Column="0" Classes="TlDatePicker"
-                                                IsEnabled="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                                SelectedDate="{Binding SearchParams.LoadFrom}"
-                                                Margin="6,0,0,0" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="to" VerticalAlignment="Center" HorizontalAlignment="Left"
-                                       Margin="6,0,0,0" />
-                            <CalendarDatePicker Grid.Column="2" Classes="TlDatePicker"
-                                                IsEnabled="{Binding SearchParams.LoadLimitType, Converter={StaticResource LoadLimitToBooleanConverter}, ConverterParameter={x:Static enums:LoadLimitType.Timespan}}"
-                                                SelectedDate="{Binding SearchParams.LoadTo}"
-                                                VerticalAlignment="Center" />
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </TabItem>
-        </TabControl>
+                <StackPanel Width="280" Margin="0,28,0,0" Spacing="6" IsVisible="{Binding HasRecentSearches}">
+                    <TextBlock Classes="label" Text="RECENT SEARCHES" />
+                    <ItemsControl ItemsSource="{Binding RecentSearches}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:RecentSearchItem">
+                                <Button Classes="recent"
+                                        ToolTip.Tip="Run this search again"
+                                        Command="{Binding $parent[UserControl].((viewModels:SearchViewModel)DataContext).RunRecentSearchCommand}"
+                                        CommandParameter="{Binding Params}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Text="&#x2192;" Foreground="{DynamicResource TextMutedBrush}" Margin="8,0,0,0" />
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>
