@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using TwitchLeecher.Shared.Extensions;
+using TwitchLeecher.Shared.Notification;
 
 namespace TwitchLeecher.Core.Models
 {
-    public class TwitchVideo
+    public class TwitchVideo : BindableBase
     {
         #region Constatnts
 
@@ -50,6 +51,15 @@ namespace TwitchLeecher.Core.Models
 
         #region Properties
 
+        private bool _isSelected;
+
+        // ticked in the search results for "Download Selected" (#96)
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set { SetProperty(ref _isSelected, value); }
+        }
+
         public string Channel { get; }
 
         public string Title { get; }
@@ -83,6 +93,9 @@ namespace TwitchLeecher.Core.Models
         public bool Live { get; }
 
         public TimeSpan? StartTime { get; set; }
+
+        // Clips are a single mp4 identified by their slug (Id), not a VOD playlist (#37)
+        public bool IsClip { get; init; }
 
         #endregion Properties
     }

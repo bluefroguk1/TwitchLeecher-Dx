@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TwitchLeecher.Core.Enums;
@@ -24,9 +25,13 @@ namespace TwitchLeecher.Services.Services
     {
         #region Constants
 
-        private const int TIMER_INTERVALL = 2;
+        // milliseconds; was 2ms, which kept a core busy polling the queue even when idle
+        private const int TIMER_INTERVALL = 1000;
         private const int DOWNLOAD_RETRIES = 3;
         private const int DOWNLOAD_RETRY_TIME = 5;
+
+        // one shared client so segment downloads reuse connections instead of a new TLS handshake per chunk
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         #endregion Constants
 
@@ -188,6 +193,20 @@ namespace TwitchLeecher.Services.Services
 
                             cancellationToken.ThrowIfCancellationRequested();
 
+                            if (downloadParams.Video.IsClip)
+                            {
+                                DownloadClip(log, setStatus, setIsIndeterminate, downloadParams, outputFile);
+
+                                List<string> clipWarnings = new List<string>();
+
+                                if (downloadParams.SaveVodInfo)
+                                {
+                                    SaveVodInfo(log, downloadParams, outputFile, clipWarnings);
+                                }
+
+                                return clipWarnings;
+                            }
+
                             log(Environment.NewLine + Environment.NewLine + "Retrieving VOD access information...");
                             TwitchVideoAuthInfo vodAuthInfo = _apiService.GetVodAuthInfo(vodId);
                             log(" done!");
@@ -238,8 +257,19 @@ namespace TwitchLeecher.Services.Services
                             // merged temp file; revisit if ffmpeg gains seekable stdin or crop-start moves to output -ss
                             if (!disableConversion && !cropInfo.CropStart)
                             {
-                                processingWarnings = _processingService.ConvertParts(log, setStatus, setProgress,
-                                    setIsIndeterminate, vodPlaylist, outputFile, cropInfo, cancellationToken);
+                                try
+                                {
+                                    processingWarnings = _processingService.ConvertParts(log, setStatus, setProgress,
+                                        setIsIndeterminate, vodPlaylist, outputFile, cropInfo, cancellationToken);
+                                }
+                                catch (Exception ex) when (ex is not OperationCanceledException)
+                                {
+                                    // the temp folder is wiped afterwards; keep the unconverted video instead of losing the download (#49)
+                                    string fallbackFile = Path.ChangeExtension(outputFile, ".ts");
+                                    _processingService.ConcatParts(log, setStatus, setProgress, vodPlaylist, fallbackFile);
+                                    log(Environment.NewLine + Environment.NewLine + "Conversion failed, kept unconverted video as '" + fallbackFile + "'");
+                                    throw;
+                                }
                             }
                             else
                             {
@@ -249,14 +279,32 @@ namespace TwitchLeecher.Services.Services
                                 if (!disableConversion)
                                 {
                                     cancellationToken.ThrowIfCancellationRequested();
-                                    _processingService.ConvertVideo(log, setStatus, setProgress, setIsIndeterminate,
-                                        concatFile, outputFile, cropInfo);
+                                    try
+                                    {
+                                        _processingService.ConvertVideo(log, setStatus, setProgress, setIsIndeterminate,
+                                            concatFile, outputFile, cropInfo);
+                                    }
+                                    catch (Exception) when (File.Exists(concatFile))
+                                    {
+                                        // the temp folder is wiped afterwards; keep the merged video instead of losing the download (#49)
+                                        string fallbackFile = Path.ChangeExtension(outputFile, ".ts");
+                                        File.Move(concatFile, fallbackFile, true);
+                                        log(Environment.NewLine + Environment.NewLine + "Conversion failed, kept unconverted video as '" + fallbackFile + "'");
+                                        throw;
+                                    }
                                 }
                             }
 
                             List<string> warnings = new List<string>();
                             warnings.AddRange(downloadWarnings);
                             warnings.AddRange(processingWarnings);
+
+                            if (downloadParams.DownloadChat)
+                            {
+                                cancellationToken.ThrowIfCancellationRequested();
+                                SaveChat(log, setStatus, setProgress, setIsIndeterminate, downloadParams, outputFile,
+                                    warnings, cancellationToken);
+                            }
 
                             if (downloadParams.SaveVodInfo)
                             {
@@ -518,7 +566,7 @@ namespace TwitchLeecher.Services.Services
             TwitchPlaylist vodPlaylist,
             CancellationToken cancellationToken)
         {
-            var warnings = new List<string>();
+            var warnings = new ConcurrentBag<string>();
             int partsCount = vodPlaylist.Count;
             int maxConnectionCount = _preferencesService.CurrentPreferences.MaxConnectionCount;
 
@@ -540,7 +588,7 @@ namespace TwitchLeecher.Services.Services
             long completedPartDownloads = 0;
 
             Parallel.ForEach(vodPlaylist,
-                new ParallelOptions() { MaxDegreeOfParallelism = maxConnectionCount - 1 },
+                new ParallelOptions() { MaxDegreeOfParallelism = Math.Max(1, maxConnectionCount - 1) },
                 (part, loopState) =>
                 {
                     int retryCounter = 0;
@@ -551,24 +599,21 @@ namespace TwitchLeecher.Services.Services
                     {
                         try
                         {
-                            using (var downloadClient = new WebClient())
-                            {
-                                byte[] bytes = downloadClient.DownloadData(part.RemoteFile);
+                            byte[] bytes = _httpClient.GetByteArrayAsync(part.RemoteFile).GetAwaiter().GetResult();
 
-                                FileSystem.DeleteFile(part.LocalFile);
+                            FileSystem.DeleteFile(part.LocalFile);
 
-                                File.WriteAllBytes(part.LocalFile, bytes);
+                            File.WriteAllBytes(part.LocalFile, bytes);
 
-                                long completed = Interlocked.Increment(ref completedPartDownloads);
+                            long completed = Interlocked.Increment(ref completedPartDownloads);
 
-                                setProgress((double)completed / partsCount * 100);
+                            setProgress((double)completed / partsCount * 100);
 
-                                success = true;
-                            }
+                            success = true;
                         }
-                        catch (WebException ex)
+                        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
                         {
-                            if (ex.Status == WebExceptionStatus.ProtocolError)
+                            if (ex is HttpRequestException { StatusCode: not null })
                             {
                                 warnings.Add("Video contains missing frames");
                                 log($"{Environment.NewLine}File '{part.RemoteFile}' is not available, skipping");
@@ -588,6 +633,11 @@ namespace TwitchLeecher.Services.Services
                                     "' failed! Trying again in " + DOWNLOAD_RETRY_TIME + "s");
                                 log(Environment.NewLine + ex);
                                 Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
+                            }
+                            else
+                            {
+                                // previously looped forever with no delay, hammering the CDN and a CPU core
+                                throw;
                             }
                         }
                     } while (!success);
@@ -612,18 +662,15 @@ namespace TwitchLeecher.Services.Services
             {
                 try
                 {
-                    using (var downloadClient = new WebClient())
-                    {
-                        byte[] bytes = downloadClient.DownloadData(initSegment.RemoteFile);
+                    byte[] bytes = _httpClient.GetByteArrayAsync(initSegment.RemoteFile).GetAwaiter().GetResult();
 
-                        FileSystem.DeleteFile(initSegment.LocalFile);
+                    FileSystem.DeleteFile(initSegment.LocalFile);
 
-                        File.WriteAllBytes(initSegment.LocalFile, bytes);
-                    }
+                    File.WriteAllBytes(initSegment.LocalFile, bytes);
 
                     return;
                 }
-                catch (WebException ex)
+                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
                 {
                     if (retryCounter >= DOWNLOAD_RETRIES)
                     {
@@ -637,6 +684,94 @@ namespace TwitchLeecher.Services.Services
                     Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
                 }
             }
+        }
+
+        // Clips are one small mp4: no playlist, chunks or ffmpeg step (#37)
+        private void DownloadClip(Action<string> log, Action<string> setStatus, Action<bool> setIsIndeterminate,
+            DownloadParameters downloadParams, string outputFile)
+        {
+            setStatus("Downloading");
+            setIsIndeterminate(true);
+
+            log(Environment.NewLine + Environment.NewLine + "Retrieving clip download URL...");
+            // signed clip URLs expire, so get a fresh one when the download actually starts
+            Dictionary<TwitchVideoQuality, string> qualities = _apiService.GetClipQualities(downloadParams.Video.Id);
+            log(" done!");
+
+            if (!qualities.TryGetValue(downloadParams.SelectedQuality, out string clipUrl))
+            {
+                throw new ApplicationException("Quality '" + downloadParams.SelectedQuality.DisplayString +
+                                               "' is no longer available for this clip!");
+            }
+
+            CheckOutputDirectory(log, Path.GetDirectoryName(outputFile));
+
+            string partFile = outputFile + ".part";
+
+            log(Environment.NewLine + Environment.NewLine + "Downloading clip to '" + outputFile + "'...");
+
+            try
+            {
+                using (WebClient webClient = new WebClient())
+                {
+                    webClient.DownloadFile(clipUrl, partFile);
+                }
+
+                File.Move(partFile, outputFile, true);
+            }
+            catch
+            {
+                FileSystem.DeleteFile(partFile);
+                throw;
+            }
+
+            log(" done!");
+        }
+
+        private void SaveChat(Action<string> log, Action<string> setStatus, Action<double> setProgress,
+            Action<bool> setIsIndeterminate, DownloadParameters downloadParams, string outputFile,
+            List<string> warnings, CancellationToken cancellationToken)
+        {
+            // same window as the video, so chat timestamps line up with the downloaded file
+            TimeSpan from = downloadParams.CropStart ? downloadParams.CropStartTime : TimeSpan.Zero;
+            TimeSpan to = downloadParams.CropEnd ? downloadParams.CropEndTime : downloadParams.Video.Length;
+            string chatFile = Path.ChangeExtension(outputFile, ".chat.txt");
+
+            setStatus("Saving Chat");
+            setIsIndeterminate(false);
+            setProgress(0);
+            log(Environment.NewLine + Environment.NewLine + "Downloading chat to '" + chatFile + "'...");
+
+            try
+            {
+                List<TwitchChatMessage> messages = _apiService.GetChatMessages(downloadParams.Video.Id, from, to,
+                    offset =>
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (to > from)
+                        {
+                            setProgress((offset - from).TotalSeconds / (to - from).TotalSeconds * 100);
+                        }
+                    });
+
+                File.WriteAllLines(chatFile, messages.Select(m =>
+                    "[" + (m.Offset - from).ToDaylessString() + "] " + m.Name + ": " + m.Text));
+
+                log(" done! (" + messages.Count + " messages)");
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // the video is already saved; losing chat should not fail the download
+                warnings.Add("Chat could not be saved");
+                log(Environment.NewLine + "Saving chat failed:" + Environment.NewLine + ex);
+            }
+
+            setProgress(100);
         }
 
         private void SaveVodInfo(Action<string> log, DownloadParameters downloadParams, string outputFile,

@@ -25,6 +25,7 @@ namespace TwitchLeecher.Core.Models
         private bool _cropStart;
         private bool _cropEnd;
         private bool _disableConversion;
+        private bool _downloadChat;
         private bool _saveVodInfo;
 
         private TimeSpan _cropStartTime;
@@ -133,7 +134,18 @@ namespace TwitchLeecher.Core.Models
             set
             {
                 SetProperty(ref _disableConversion, value, nameof(DisableConversion));
+                FirePropertyChanged(nameof(CanCrop));
             }
+        }
+
+        // cropping needs the ffmpeg conversion step, which clips don't use
+        public bool CanCrop => !_disableConversion && !_video.IsClip;
+
+        // also save the chat as <video>.chat.txt (#71)
+        public bool DownloadChat
+        {
+            get { return _downloadChat; }
+            set { SetProperty(ref _downloadChat, value, nameof(DownloadChat)); }
         }
 
         // also save the VOD details as <video>.info.json (#50)
