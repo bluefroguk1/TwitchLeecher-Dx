@@ -52,9 +52,7 @@ namespace TwitchLeecher.Services.Services
 
                 if (!vodAuthInfo.Privileged && vodAuthInfo.SubOnly)
                 {
-                    problem = _authService.IsAuthenticatedSubOnly
-                        ? "This video is sub-only but you are not subscribed to the channel!"
-                        : "This video is sub-only! You need to enable sub-only video download support first!";
+                    problem = "This video is for subscribers only.";
                     return null;
                 }
 
