@@ -287,6 +287,12 @@ namespace TwitchLeecher.Services.Services
                 downloadQuickDownloadEl.SetValue(preferences.DownloadQuickDownload);
                 downloadEl.Add(downloadQuickDownloadEl);
 
+                downloadEl.Add(new XElement("ScheduleEnabled", preferences.ScheduleEnabled));
+                downloadEl.Add(new XElement("ScheduleStartHour", preferences.ScheduleStartHour));
+                downloadEl.Add(new XElement("ScheduleEndHour", preferences.ScheduleEndHour));
+                downloadEl.Add(new XElement("ScheduleIncludePaused", preferences.ScheduleIncludePaused));
+                downloadEl.Add(new XElement("SchedulePauseAtEnd", preferences.SchedulePauseAtEnd));
+
                 // Auto download
                 autoDownloadEl.Add(new XElement(AUTODOWNLOAD_ENABLED_EL, preferences.AutoDownloadEnabled));
                 autoDownloadEl.Add(new XElement(AUTODOWNLOAD_INTERVAL_EL, preferences.AutoDownloadInterval));
@@ -725,6 +731,76 @@ namespace TwitchLeecher.Services.Services
                                 }
                             }
 
+                            XElement scheduleEnabledEl = downloadEl.Element("ScheduleEnabled");
+
+                            if (scheduleEnabledEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleEnabled = scheduleEnabledEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement scheduleStartHourEl = downloadEl.Element("ScheduleStartHour");
+
+                            if (scheduleStartHourEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleStartHour = scheduleStartHourEl.GetValueAsInt();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement scheduleEndHourEl = downloadEl.Element("ScheduleEndHour");
+
+                            if (scheduleEndHourEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleEndHour = scheduleEndHourEl.GetValueAsInt();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement scheduleIncludePausedEl = downloadEl.Element("ScheduleIncludePaused");
+
+                            if (scheduleIncludePausedEl != null)
+                            {
+                                try
+                                {
+                                    preferences.ScheduleIncludePaused = scheduleIncludePausedEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement schedulePauseAtEndEl = downloadEl.Element("SchedulePauseAtEnd");
+
+                            if (schedulePauseAtEndEl != null)
+                            {
+                                try
+                                {
+                                    preferences.SchedulePauseAtEnd = schedulePauseAtEndEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
                             XElement downloadQuickDownloadEl = downloadEl.Element(DOWNLOAD_QUICKDOWNLOAD_EL);
 
                             if (downloadQuickDownloadEl != null)
@@ -846,6 +922,11 @@ namespace TwitchLeecher.Services.Services
                 DownloadRemoveCompleted = false,
                 DownloadDisableConversion = false,
                 DownloadQuickDownload = false,
+                ScheduleEnabled = false,
+                ScheduleStartHour = 1,
+                ScheduleEndHour = 7,
+                ScheduleIncludePaused = true,
+                SchedulePauseAtEnd = true,
                 AutoDownloadEnabled = false,
                 AutoDownloadInterval = 15,
                 AutoDownloadChannels = null,

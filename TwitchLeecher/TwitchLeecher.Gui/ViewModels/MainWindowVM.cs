@@ -40,6 +40,7 @@ namespace TwitchLeecher.Gui.ViewModels
         private readonly IApiService _apiService;
         private DispatcherTimer _tokenCheckTimer;
         private bool _tokenPromptShown;
+        private readonly IScheduleService _scheduleService;
         private readonly IDownloadService _downloadService;
         private readonly IDialogService _dialogService;
         private readonly IDonationService _donationService;
@@ -70,6 +71,7 @@ namespace TwitchLeecher.Gui.ViewModels
             IEventAggregator eventAggregator,
             IAuthService authService,
             IAutoDownloadService autoDownloadService,
+            IScheduleService scheduleService,
             IDownloadService downloadService,
             IDialogService dialogService,
             IDonationService donationService,
@@ -88,6 +90,7 @@ namespace TwitchLeecher.Gui.ViewModels
             _authService = authService;
             _autoDownloadService = autoDownloadService;
             _apiService = apiService;
+            _scheduleService = scheduleService;
             _downloadService = downloadService;
             _dialogService = dialogService;
             _donationService = donationService;
@@ -500,6 +503,7 @@ namespace TwitchLeecher.Gui.ViewModels
         {
             // signed in now, so the Twitch API works; the loop itself waits for the setting to be on
             _autoDownloadService.Start();
+            _scheduleService.Start();
 
             _navigationService.ShowSearch();
             SearchOnStartup();

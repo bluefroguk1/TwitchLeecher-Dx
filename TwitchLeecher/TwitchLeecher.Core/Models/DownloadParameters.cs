@@ -146,6 +146,9 @@ namespace TwitchLeecher.Core.Models
         // set when a watched search queued it; Downloads tags these items WATCHED
         public bool FromWatchedSearch { get; set; }
 
+        // waiting (paused) for the off-peak schedule window; cleared when it starts
+        public bool WaitForSchedule { get; set; }
+
         // cropping needs the ffmpeg conversion step, which clips don't use
         public bool CanCrop => !_disableConversion && !_video.IsClip;
 

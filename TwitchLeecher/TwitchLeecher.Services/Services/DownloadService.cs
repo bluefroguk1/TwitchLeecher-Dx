@@ -1173,6 +1173,7 @@ namespace TwitchLeecher.Services.Services
                 if (download != null && download.DownloadState == DownloadState.Paused &&
                     !_downloadTasks.ContainsKey(id))
                 {
+                    download.DownloadParams.WaitForSchedule = false;
                     download.SetDownloadState(DownloadState.Queued);
                 }
             }

@@ -11,6 +11,7 @@ namespace TwitchLeecher.Gui.Modules
         public override void Load()
         {
             Bind<IAutoDownloadService>().To<AutoDownloadService>().InSingletonScope();
+            Bind<IScheduleService>().To<ScheduleService>().InSingletonScope();
             Bind<IDialogService>().To<DialogService>().InSingletonScope();
             Bind<IDonationService>().To<DonationService>().InSingletonScope();
             Bind<INavigationService>().To<NavigationService>().InSingletonScope();
