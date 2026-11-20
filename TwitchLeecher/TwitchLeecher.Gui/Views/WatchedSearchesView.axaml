@@ -193,6 +193,7 @@
                                     </ItemsControl>
                                     <TextBlock Text="{Binding LatestResult}" Classes="muted" HorizontalAlignment="Left"
                                                MaxWidth="460" TextTrimming="CharacterEllipsis"
+                                               IsVisible="{Binding LatestResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                ToolTip.Tip="{Binding LatestResult}" />
                                     <Grid ColumnDefinitions="Auto,8,170,*,Auto" Margin="0,2,0,0">
                                         <TextBlock Grid.Column="0" Text="When found" Classes="muted" VerticalAlignment="Center" />
@@ -204,17 +205,17 @@
                                             <ComboBoxItem Content="Add to queue, paused" />
                                         </ComboBox>
                                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <CheckBox Content="Active" Width="82" IsChecked="{Binding Active}" VerticalAlignment="Center" />
                                             <Button Classes="ws" Content="Edit" Width="52" HorizontalContentAlignment="Center" Padding="0"
                                                     Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
                                                     CommandParameter="{Binding}" />
-                                            <CheckBox Content="Active" Width="82" IsChecked="{Binding Active}" VerticalAlignment="Center" />
-                                            <Button Classes="ws" Width="32" Padding="0" HorizontalContentAlignment="Center"
+                                            <Button Classes="ws" Width="32" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                                     Foreground="{DynamicResource ErrorBrush}"
                                                     ToolTip.Tip="Remove watched search"
                                                     AutomationProperties.Name="Remove watched search"
                                                     Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).RemoveCommand}"
                                                     CommandParameter="{Binding}">
-                                                <avalonia:Icon Value="fa-solid fa-trash" Width="13" Height="13" />
+                                                <avalonia:Icon Value="fa-solid fa-trash" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
                                         </StackPanel>
                                     </Grid>
