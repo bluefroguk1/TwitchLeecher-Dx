@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
         xmlns:views="clr-namespace:TwitchLeecher.Gui.Views"
@@ -6,7 +6,7 @@
         Title="What's new"
         WindowDecorations="BorderOnly"
         CanResize="False"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="Manual"
         Width="520"
         SizeToContent="Height">
     <Window.Styles>

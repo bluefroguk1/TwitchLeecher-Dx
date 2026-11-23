@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Diagnostics;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -24,6 +25,51 @@ public partial class WhatsNewWindow : Window
         _running = running;
         InitializeComponent();
         Heading.Text = "What's new in " + running.Major + "." + running.Minor;
+        // placed by hand: with SizeToContent the built-in CenterOwner works from the size before layout
+        Opened += (_, _) =>
+        {
+            CenterOnOwner();
+
+            // the main window may still be settling when the card opens (restored from the tray, first layout), and the
+            // user can move or resize it while the card is up: keep the card centred on it
+            if (Owner is Window owner)
+            {
+                owner.SizeChanged += OwnerChanged;
+                owner.PositionChanged += OwnerMoved;
+            }
+        };
+        SizeChanged += (_, _) => CenterOnOwner();
+        Closed += (_, _) =>
+        {
+            if (Owner is Window owner)
+            {
+                owner.SizeChanged -= OwnerChanged;
+                owner.PositionChanged -= OwnerMoved;
+            }
+        };
+    }
+
+    private void OwnerChanged(object sender, SizeChangedEventArgs e) => CenterOnOwner();
+
+    private void OwnerMoved(object sender, PixelPointEventArgs e) => CenterOnOwner();
+
+    // Centre the card on the owner's client area, again whenever its own size changes (SizeToContent settles after opening).
+    private void CenterOnOwner()
+    {
+        if (Owner is not Window owner)
+        {
+            return;
+        }
+
+        PixelPoint ownerTopLeft = owner.PointToScreen(new Point(0, 0));
+        double ownerWidth = owner.ClientSize.Width * owner.RenderScaling;
+        double ownerHeight = owner.ClientSize.Height * owner.RenderScaling;
+        double width = ClientSize.Width * RenderScaling;
+        double height = ClientSize.Height * RenderScaling;
+
+        Position = new PixelPoint(
+            (int)(ownerTopLeft.X + (ownerWidth - width) / 2),
+            (int)(ownerTopLeft.Y + (ownerHeight - height) / 2));
     }
 
     // lastRun is the version that last saved the runtime data. A fresh install has none, so it reads as the
