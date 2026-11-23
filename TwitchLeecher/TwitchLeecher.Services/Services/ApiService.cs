@@ -25,6 +25,10 @@ namespace TwitchLeecher.Services.Services
         #region Constants
 
         private const string GQL_URL = "https://gql.twitch.tv/gql";
+
+        // persisted query the Twitch web player uses to page through VOD chat
+        private const string CHAT_OPERATION = "VideoCommentsByOffsetOrCursor";
+        private const string CHAT_QUERY_HASH = "b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a";
         private const string AUTH_URL = "https://id.twitch.tv/oauth2/validate";
         private const string REVOKE_URL = "https://id.twitch.tv/oauth2/revoke";
         private const string USERS_URL = "https://api.twitch.tv/helix/users";
@@ -1192,9 +1196,23 @@ namespace TwitchLeecher.Services.Services
             {
                 while (true)
                 {
-                    string request = "{\"operationName\":\"VideoCommentsByOffsetOrCursor\",\"variables\":{\"videoID\":\"" +
-                                     vodId + "\",\"contentOffsetSeconds\":" + position +
-                                     "},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a\"}}}";
+                    string request = new JObject
+                    {
+                        ["operationName"] = CHAT_OPERATION,
+                        ["variables"] = new JObject
+                        {
+                            ["videoID"] = vodId,
+                            ["contentOffsetSeconds"] = position
+                        },
+                        ["extensions"] = new JObject
+                        {
+                            ["persistedQuery"] = new JObject
+                            {
+                                ["version"] = 1,
+                                ["sha256Hash"] = CHAT_QUERY_HASH
+                            }
+                        }
+                    }.ToString(Newtonsoft.Json.Formatting.None);
 
                     JToken comments = JObject.Parse(webClient.UploadString(GQL_URL, request))
                         .SelectToken("$.data.video.comments");

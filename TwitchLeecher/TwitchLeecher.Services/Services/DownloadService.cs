@@ -185,6 +185,7 @@ namespace TwitchLeecher.Services.Services
                         string outputFile = downloadParams.FullPath;
 
                         bool disableConversion = downloadParams.DisableConversion;
+                        bool keepTsOnFailure = _preferencesService.CurrentPreferences.DownloadKeepTsOnFailure;
                         bool cropStart = downloadParams.CropStart;
                         bool cropEnd = downloadParams.CropEnd;
 
@@ -296,7 +297,7 @@ namespace TwitchLeecher.Services.Services
                                     processingWarnings = _processingService.ConvertParts(log, setStatus, setProgress,
                                         setIsIndeterminate, vodPlaylist, outputFile, cropInfo, cancellationToken);
                                 }
-                                catch (Exception ex) when (ex is not OperationCanceledException)
+                                catch (Exception ex) when (ex is not OperationCanceledException && keepTsOnFailure)
                                 {
                                     // the temp folder is wiped afterwards; keep the unconverted video instead of losing the download (#49)
                                     string fallbackFile = Path.ChangeExtension(outputFile, ".ts");
@@ -321,7 +322,7 @@ namespace TwitchLeecher.Services.Services
                                         _processingService.ConvertVideo(log, setStatus, setProgress, setIsIndeterminate,
                                             concatFile, outputFile, cropInfo);
                                     }
-                                    catch (Exception) when (File.Exists(concatFile))
+                                    catch (Exception) when (keepTsOnFailure && File.Exists(concatFile))
                                     {
                                         // the temp folder is wiped afterwards; keep the merged video instead of losing the download (#49)
                                         string fallbackFile = Path.ChangeExtension(outputFile, ".ts");

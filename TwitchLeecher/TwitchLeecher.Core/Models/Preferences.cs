@@ -72,6 +72,8 @@ namespace TwitchLeecher.Core.Models
 
         private bool _downloadRemoveCompleted;
 
+        private bool _downloadKeepTsOnFailure;
+
         private bool _downloadDisableConversion;
 
         private bool _downloadQuickDownload;
@@ -268,6 +270,13 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _downloadSubfoldersForFav; }
             set { SetProperty(ref _downloadSubfoldersForFav, value); }
+        }
+
+        // keep the unconverted .ts when the mp4/mkv conversion fails (#49)
+        public bool DownloadKeepTsOnFailure
+        {
+            get { return _downloadKeepTsOnFailure; }
+            set { SetProperty(ref _downloadKeepTsOnFailure, value); }
         }
 
         public bool DownloadRemoveCompleted
@@ -566,6 +575,7 @@ namespace TwitchLeecher.Core.Models
                 DownloadDefaultQuality = _downloadDefaultQuality,
                 DownloadSubfoldersForFav = DownloadSubfoldersForFav,
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
+                DownloadKeepTsOnFailure = DownloadKeepTsOnFailure,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
                 ScheduleEnabled = ScheduleEnabled,

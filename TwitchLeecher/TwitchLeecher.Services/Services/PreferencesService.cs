@@ -53,6 +53,7 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_DEFAULTQUALITY_EL = "DefaultQuality";
         private const string DOWNLOAD_SUBFOLDERSFORFAV_EL = "SubfoldersForFav";
         private const string DOWNLOAD_REMOVECOMPLETED_EL = "RemoveCompleted";
+        private const string DOWNLOAD_KEEPTSONFAILURE_EL = "KeepTsOnFailure";
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
         private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
         private const string DOWNLOAD_COMPRESS_EL = "Compress";
@@ -278,6 +279,10 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadRemoveCompletedEl = new XElement(DOWNLOAD_REMOVECOMPLETED_EL);
                 downloadRemoveCompletedEl.SetValue(preferences.DownloadRemoveCompleted);
                 downloadEl.Add(downloadRemoveCompletedEl);
+
+                XElement downloadKeepTsOnFailureEl = new XElement(DOWNLOAD_KEEPTSONFAILURE_EL);
+                downloadKeepTsOnFailureEl.SetValue(preferences.DownloadKeepTsOnFailure);
+                downloadEl.Add(downloadKeepTsOnFailureEl);
 
                 XElement downloadDisableConversionEl = new XElement(DOWNLOAD_DISABLECONVERSION_EL);
                 downloadDisableConversionEl.SetValue(preferences.DownloadDisableConversion);
@@ -704,6 +709,20 @@ namespace TwitchLeecher.Services.Services
                                 }
                             }
 
+                            XElement downloadKeepTsOnFailureEl = downloadEl.Element(DOWNLOAD_KEEPTSONFAILURE_EL);
+
+                            if (downloadKeepTsOnFailureEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadKeepTsOnFailure = downloadKeepTsOnFailureEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
                             XElement donwloadRemoveCompletedEl = downloadEl.Element(DOWNLOAD_REMOVECOMPLETED_EL);
 
                             if (donwloadRemoveCompletedEl != null)
@@ -936,6 +955,7 @@ namespace TwitchLeecher.Services.Services
                                    FilenameWildcards.CHANNEL + "_" + FilenameWildcards.ID,
                 DownloadDefaultQuality = Preferences.DefaultQualities.First(),
                 DownloadRemoveCompleted = false,
+                DownloadKeepTsOnFailure = true,
                 DownloadDisableConversion = false,
                 DownloadQuickDownload = false,
                 ScheduleEnabled = false,
