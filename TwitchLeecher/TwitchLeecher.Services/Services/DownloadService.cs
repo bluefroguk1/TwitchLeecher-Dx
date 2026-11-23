@@ -282,6 +282,7 @@ namespace TwitchLeecher.Services.Services
 
                             bool pausing = task.IsCanceled && download.PauseRequested;
                             download.PauseRequested = false;
+                            download.CancelRequested = false;
 
                             string failureReason = null;
 
@@ -637,7 +638,11 @@ namespace TwitchLeecher.Services.Services
             download.SetTransferring(true);
 
             Parallel.ForEach(vodPlaylist.Where(p => !File.Exists(p.LocalFile)).ToList(),
-                new ParallelOptions() { MaxDegreeOfParallelism = maxConnectionCount - 1 },
+                new ParallelOptions()
+                {
+                    MaxDegreeOfParallelism = Math.Max(1, maxConnectionCount - 1),
+                    CancellationToken = cancellationToken
+                },
                 (part, loopState) =>
                 {
                     int retryCounter = 0;
@@ -766,6 +771,14 @@ namespace TwitchLeecher.Services.Services
             {
                 if (_downloadTasks.TryGetValue(id, out DownloadTask downloadTask))
                 {
+                    // Shown on the card while in-flight requests stop and the temp folder is cleaned up
+                    TwitchVideoDownload download = _downloads.FirstOrDefault(d => d.Id == id);
+
+                    if (download != null)
+                    {
+                        download.CancelRequested = true;
+                    }
+
                     downloadTask.CancellationTokenSource.Cancel();
                 }
             }
