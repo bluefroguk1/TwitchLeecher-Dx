@@ -14,6 +14,50 @@ git pull
 
 Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifact from the latest Build run on `final`. Your old local `final-next`, `combined` and `combined-all` branches are archived on the fork (see the Branch map), so don't use them.
 
+### 1b. AUTOMATED PC TEST RUN: PC Claude does this (about 45 minutes, unattended after sign-in)
+
+**PC Claude runs every pending check below by itself, then reports.** Nobody needs to watch, except for the sign-in in step R1. Rules:
+- **Drive the app with computer use** (screenshots, clicks, typing), and use `test-scripts\pc-test-helper.ps1` for everything that doesn't need the mouse. Run `powershell -ExecutionPolicy Bypass -File test-scripts\pc-test-helper.ps1` with no arguments to see its help.
+- **Never type a password or a Twitch login.** If a step needs signing in, ask the user to do it in the app window, then carry on.
+- **Don't download anything big.** Use 1–3 minute crops. Pick the channel from the user's favourites in Settings, or ask the user once for a channel they watch. Never write a streamer's name into the repo.
+- **Evidence for every check:** what you saw, plus a screenshot saved as `%TEMP%\tl-test\<step>.png` (only report the path; do not commit screenshots).
+- **On a failure:** note it, collect `pc-test-helper.ps1 Errors` and the download's log text, and **carry on** with the other steps. Fix nothing during the run.
+- **Finish with `Restore`**, even if steps failed, so the user's settings are back as they were.
+
+**Setup**
+```
+git fetch origin; git checkout final; git pull
+Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force
+dotnet build TwitchLeecher\TwitchLeecher.sln -c Release
+powershell -ExecutionPolicy Bypass -File test-scripts\pc-test-helper.ps1 Backup
+```
+
+**The run.** "H" means `powershell -ExecutionPolicy Bypass -File test-scripts\pc-test-helper.ps1`.
+
+| Step | Setup | Do and check | Pass when |
+|---|---|---|---|
+| R1 | `H Start` | Settings › General shows the signed-in account. If not, **ask the user to sign in**, then continue. | Account shown, no "sign-in has stopped working" prompt (#31 token check) |
+| R2 | — | Search a channel (VODs), then switch to clips; paste a VOD URL | Results and thumbnails load both times (#31 API) |
+| R3 | — | Download one VOD cropped to 2 minutes, with chat as **HTML with embedded emotes** and video details on | Shows Done; `.mp4`, `.chat.html` and `.info.json` exist; open the `.chat.html` and the emotes show as pictures (#31 Content-Type) |
+| R4 | — | Download one clip | Shows Done; the file plays (#31 streamed clip) |
+| R5 | — | Start an uncropped VOD download, wait about 10 s, press Cancel | "Cancelling", then "Canceled" within a few seconds, **not** an error |
+| R6 | — | Settings › Download: "Keep the unconverted video if conversion fails" is **ticked**. Untick it, save, `H Stop`, `H Start`, check again | Ticked by default; stays unticked after a restart (#109). Tick it again and save afterwards. |
+| R7 | `H Cli -CliArgs "search <channel> --last 3"` | Read the output | 3 videos listed, `exit code: 0` (#31, CLI) |
+| R8 | `H Cli -CliArgs "--bogus"` | — | `exit code: 2` |
+| R9 | `H SetLastVersion` then `H SetTheme -Theme New` then `H Start` | The What's new card appears over the window | Card shows: "What's new in 4.0", 8 items, **purple** icons |
+| R10 | — | On the card: click **Full release notes** | The browser opens `…/releases/tag/v4.0.0` (a 404 page is expected). Then press **Esc**: the card closes. |
+| R11 | `H Stop` then `H Start` | — | The card does **not** appear again |
+| R12 | `H SetLastVersion` then `H SetTheme -Theme Original` then `H Start` | The card appears | **Gold** icons, readable text. Press **Enter**: it closes. |
+| R13 | `H SetLastVersion` then `H SetTheme -Theme Coyote` then `H Start` | The card appears | **Blue** icons, red "Got it" button, readable text. Click **Got it**. |
+| R14 | `H SetLastVersion` then `H Start -Minimized` | Wait 5 s: no card and no window. Then open the app from the tray icon. | The card appears only once the window opens |
+| R15 | `H Stop` then `H FreshInstall` then `H Start` | Close any first-run prompts | **No** What's new card (fresh install) |
+| R16 | `H Stop` then `H Restore` then `H Show` | — | Your original Version and Theme are back |
+| R17 | Logout test (do last, it needs the user): ask the user to log out and sign in again | — | Both work (#31 revoke request) |
+
+**Report:** add a "Results (date)" table under this section (step, pass/fail, one line of evidence), commit it to `final` as "Handoff: automated PC test results", push, and give the user a short summary. Then:
+- Record what passed in the Testing lines of `.claude/pr-drafts/bodies/replace-webclient.md` (R1–R5, R7, R17) and `feature-requests` (#109: R6).
+- Mark the What's New checks (R9–R15) in section 3 below.
+
 ### 2. What happened since your test round
 
 - **The developer reviewed everything on 2026-11-23.** He merged **#110–#119** (10 PRs). He is happy to merge despite style differences and plans a rewrite later (#119). His comments are short and friendly; match that tone.
@@ -28,6 +72,8 @@ Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifac
 - **The email to the developer was sent** by the user (2026-11-23) with the same update and offer. The draft is in `.claude/pr-drafts/email-developer.md`.
 
 ### 3. NEW: test the "What's new" card (about 10 minutes)
+
+**The automated run in 1b covers this section.** The list below is the detail behind it.
 
 **2026-11-23: the user checked it on the PC, and it "looks great".** If any of checks 2-6 below weren't run, they are still worth a quick go before the PR. On the PC so far: checks 1 and 3 done (shows once, does not return after a relaunch); 2 and 4-6 not run.
 
@@ -50,6 +96,8 @@ Checks:
 
 ### 3c. NEW: test the WebClient -> HttpClient change (#31) (about 15 minutes)
 
+**The automated run in 1b covers this section.** The list below is the detail behind it.
+
 `final` (98b9a4e, CI green) sends every web request through one shared HttpClient: sign-in check, search, video info, playlists, clips, chat, emotes and the update check. **Every one of these needs a quick run**, because a mistake would show as a failed request:
 1. Start the app while signed in: no "sign-in has stopped working" prompt (token check). Settings › General shows your account.
 2. Search a channel (VODs, then clips) and paste a VOD URL: results and thumbnails load.
@@ -64,6 +112,8 @@ Checks:
 If one fails, the log or the error text names the request. The PR branch is `pr/replace-webclient`.
 
 ### 3b. One small PC check (optional, about 5 minutes)
+
+**The automated run in 1b covers this section.** The list below is the detail behind it.
 
 The #109 setting has only been built on CI, not run by a person. In the `final` build:
 1. Settings › Download shows "Keep the unconverted video if conversion fails", ticked by default. Untick it, save, restart the app: it stays unticked.
