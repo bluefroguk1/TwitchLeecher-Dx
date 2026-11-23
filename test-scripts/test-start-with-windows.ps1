@@ -8,7 +8,7 @@ param([switch]$SkipBuild, [switch]$AfterSignIn)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $proj = Join-Path $root (Join-Path 'TwitchLeecher' (Join-Path 'TwitchLeecher' 'TwitchLeecher.csproj'))
-$out = Join-Path (Split-Path -Parent $proj) (Join-Path 'bin' (Join-Path 'Release' 'net10.0'))
+$out = Join-Path (Split-Path -Parent $proj) (Join-Path 'bin' (Join-Path 'Release' 'net11.0'))
 $dll = Join-Path $out 'TwitchLeecher.dll'
 $results = [ordered]@{}
 

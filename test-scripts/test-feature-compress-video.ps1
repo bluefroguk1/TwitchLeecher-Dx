@@ -5,7 +5,7 @@ param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $proj = Join-Path $root 'TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj'
-$out = Join-Path (Split-Path -Parent $proj) 'bin\Release\net10.0'
+$out = Join-Path (Split-Path -Parent $proj) 'bin\Release\net11.0'
 $exe = Join-Path $out 'TwitchLeecher.exe'
 $results = [ordered]@{}
 

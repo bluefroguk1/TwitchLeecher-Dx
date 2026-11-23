@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <Nullable>disable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -23,11 +23,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="12.1.6" />
-        <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
-        <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.6" />
+        <PackageReference Include="Avalonia" Version="12.2.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.2.0" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.2.0" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.2.0" />
+        <PackageReference Include="Avalonia.Themes.Simple" Version="12.2.0" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
     </ItemGroup>
 

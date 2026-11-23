@@ -5,7 +5,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $proj = Join-Path $root 'TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj'
 dotnet build $proj -c Release
 if ($LASTEXITCODE -ne 0) { "BUILD FAILED" | Out-File $out; exit 1 }
-$exe = Join-Path (Split-Path -Parent $proj) 'bin\Release\net10.0\TwitchLeecher.exe'
+$exe = Join-Path (Split-Path -Parent $proj) 'bin\Release\net11.0\TwitchLeecher.exe'
 Start-Process $exe
 $questions = @(
   'Search a channel (Broadcasts, last 10). Summary bar shows "channel · Broadcasts · last 10 · N results" and Edit search goes back?',

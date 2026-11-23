@@ -4,7 +4,7 @@ param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $proj = Join-Path $root 'TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj'
-$exe = Join-Path (Split-Path -Parent $proj) 'bin\Release\net10.0\TwitchLeecher.exe'
+$exe = Join-Path (Split-Path -Parent $proj) 'bin\Release\net11.0\TwitchLeecher.exe'
 if (-not $SkipBuild) { dotnet build $proj -c Release; if ($LASTEXITCODE -ne 0) { throw 'Build failed' } }
 Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force
 $p = Start-Process $exe -PassThru
