@@ -2,6 +2,13 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## MAC, 2026-11-24: branches reviewed, submission plan
+
+- **The submission plan and a readiness table for every PR are at the top of `.claude/pr-drafts/README.md`.** Order: all PRs at the developer's pace, then an optional .NET 11 + Avalonia 12.2.0 upgrade on its own branch (kept out of `final`), then the "4.0 release" PR (version bump + What's new card).
+- `preview` rebuilt from `final` (9224b03, version kept at 3.9.1). The #104 comment still links the older build: change it only with the user's OK.
+- **Don't push old local branches.** `combined` and `final-next` reappeared on the fork (pushed from an old local copy) and were removed again; their content is in `final` and in `refs/archive/`. Push only `final` (and a `pr/*` branch when asked). Delete local copies with `git branch -D combined final-next` if they are still there.
+- Nothing is waiting on the PC.
+
 ## DONE (PC, 2026-11-23 late): the .mp4 file-name check passed (`final` 3607502, built 4.0.0)
 
 Run on the PC with the original-stream option on (Settings > Download > "Keep the original stream file"; the dialog has no separate "Disable conversion" box in this build, the setting is in Settings). `Backup`/`Restore` worked; auto-download was off during the run and is back on.
