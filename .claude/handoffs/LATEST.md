@@ -19,7 +19,7 @@ Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifac
 `final` (df8f791, CI green) now reads every Twitch and GitHub response with .NET's built-in JSON instead of Newtonsoft.Json. A slip would show as a search, video, clip, chat or sign-in that quietly returns nothing, so rerun part of the automated run below:
 - **R1–R5 and R7**, exactly as in 1b: sign-in check, search (VODs, clips, a pasted URL), a 2-minute crop with chat as HTML plus video details, a clip, Cancel, and `tl search`.
 - **Plus:** the same 2-minute crop with chat **as JSON** and **as text**. Both files should have the messages and timestamps.
-- **Plus:** the update check. Run `H SetLastVersion -Version 3.0.0`. That does not show an update by itself (the update check compares against the running build, 4.0.0), so instead look in Settings that "Check for updates" is on, restart, and confirm there is no error in `H Errors`.
+- **Plus:** the update check, which now reads GitHub's release list with the new JSON code. Make sure Settings has "Check for updates" on, restart the app, and confirm `H Errors` shows no new error log. No update notice is expected: the build is 4.0.0 and GitHub's latest is 3.9.1.
 - **Plus, if you can find one:** a VOD with a busy chat, to finally confirm the emote pictures in the HTML chat (open check from the last run).
 
 Same rules as 1b: `Backup` first, never type a login, short crops, `Restore` at the end (but not after a logout test). Report as before, in a "Results (date)" table, and update the Testing lines of `bodies/system-text-json.md` and `bodies/replace-webclient.md`.
