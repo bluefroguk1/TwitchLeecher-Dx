@@ -79,3 +79,5 @@ If you wan't to support me and the development of this project, please consider 
 
 ## LICENSE
 [MIT License](https://github.com/schneidermanuel/TwitchLeecher-DX/blob/master/LICENSE)
+
+Icons: [Font Awesome Free](https://fontawesome.com) by Fonticons, Inc., licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
