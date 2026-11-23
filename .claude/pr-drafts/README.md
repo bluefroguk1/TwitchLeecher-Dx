@@ -50,7 +50,7 @@ New issue #120 (crop time boxes cut off) was closed by its reporter as a duplica
 - **Desktop notifications are not a requirement** (user): `pr/desktop-notifications` stays on hold.
 - **`final` = `final-next`**, `preview` rebuilt from it, and the #104 comment updated with the new build link and the code-quality and issue PRs.
 - Testing sections of the bodies are updated for everything checked in this round.
-- **#104 comment updated** (2026-11-23): new preview build, run 45195138459 (artifacts until 2026-12-07; Windows is the native AOT build), plus #85, the code-quality PRs, the CLI (#36) and fewer pop-ups.
+- **#104 comment updated** (2026-11-23): new preview build, run 45222297875 since the master update (artifacts until 2026-12-07; Windows is the native AOT build), plus #85, the code-quality PRs, the CLI (#36) and fewer pop-ups.
 - **Wave 1 waits until 2026-12-04** (user, 2026-11-23), unless the developer replies first. All 7 are ready and passed the AI-reference check today.
 - **Branches tidied** (2026-11-23). The fork keeps `master`, `final`, `preview`, the `pr/*` branches, the 16 `*-pr` branches behind #104-#119, and the unsubmitted work not in `final` (`add-unit-tests`, `improve-error-logging`, `replace-webclient`, `refactor-results-viewmodel`, `claude/refactor-shared-styles-35c0a9`, `tray-tooltip-events`, `claude/fix-slow-downloads-15ccca`, `deps-security-notifications`). The other 41 working branches (including `combined`, `combined-all`, `final-next` and the `claude/*` UI branches) moved to hidden refs `refs/archive/<name>`. Get them back with `git fetch origin 'refs/archive/*:refs/archive/*'`, then `git branch <name> refs/archive/<name>`.
 
