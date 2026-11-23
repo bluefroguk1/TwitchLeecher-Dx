@@ -49,6 +49,10 @@ public partial class App : Application
 
     public override void Initialize()
     {
+        // Avalonia 12 only resolves avares:// assets from assemblies that are already loaded, and App.axaml
+        // (tray icon) reads one from the Gui assembly before anything else touches it
+        _ = typeof(GuiModule).Assembly;
+
         AvaloniaXamlLoader.Load(this);
     }
 
