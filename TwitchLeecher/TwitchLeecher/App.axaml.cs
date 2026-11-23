@@ -5,7 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Ninject;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLeecher.Gui.Modules;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Gui.Views;
@@ -21,7 +21,7 @@ public partial class App : Application
 {
     private readonly Mutex _singletonMutex;
 
-    private IKernel _kernel;
+    private IServiceProvider _services;
     private Dictionary<string, ResourceDictionary> _themes;
     private ResourceDictionary _sharedResources;
 
@@ -52,39 +52,40 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    private IKernel CreateKernel()
+    private IServiceProvider CreateServices()
     {
-        IKernel kernel = new StandardKernel();
+        var services = new ServiceCollection();
 
-        RegisterTypes(kernel);
-        LoadModules(kernel);
+        RegisterTypes(services);
+        LoadModules(services);
 
-        return kernel;
+        // ValidateOnBuild: a missing registration fails at start-up, not when a page first opens
+        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }
 
-    private void RegisterTypes(IKernel kernel)
+    private void RegisterTypes(IServiceCollection services)
     {
-        kernel.Bind<MainWindow>().ToSelf().InSingletonScope();
-        kernel.Bind<MainWindowVM>().ToSelf().InSingletonScope();
-        kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainWindowVM>();
+        services.AddSingleton<IEventAggregator, EventAggregator>();
     }
 
-    private void LoadModules(IKernel kernel)
+    private void LoadModules(IServiceCollection services)
     {
-        kernel.Load<GuiModule>();
-        kernel.Load<ServiceModule>();
+        GuiModule.Load(services);
+        ServiceModule.Load(services);
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        _kernel = CreateKernel();
+        _services = CreateServices();
 
         _sharedResources = (ResourceDictionary)Resources["Shared"];
         _themes.Add("New", (ResourceDictionary)Resources["New"]);
         _themes.Add("Original", (ResourceDictionary)Resources["Original"]);
-        var themeService = _kernel.Get<IThemeService>();
+        var themeService = _services.GetRequiredService<IThemeService>();
         themeService.StyleChanged += (sender, args) => { SetTheme(themeService.GetTheme()); };
-        var preferencesService = _kernel.Get<IPreferencesService>();
+        var preferencesService = _services.GetRequiredService<IPreferencesService>();
         SetTheme(string.IsNullOrEmpty(preferencesService.CurrentPreferences.Theme)
             ? "New"
             : preferencesService.CurrentPreferences.Theme);
@@ -92,7 +93,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.Exit += OnExit;
-            desktop.MainWindow = _kernel.Get<MainWindow>();
+            desktop.MainWindow = _services.GetRequiredService<MainWindow>();
         }
 
         base.OnFrameworkInitializationCompleted();
