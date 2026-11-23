@@ -3,8 +3,6 @@ using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Avalonia.ReactiveUI;
-using Projektanker.Icons.Avalonia;
-using Projektanker.Icons.Avalonia.FontAwesome;
 using TwitchLeecher;
 
 namespace AvaloniaApplication2;
@@ -32,7 +30,6 @@ class Program
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
     {
-        IconProvider.Current.Register<FontAwesomeIconProvider>();
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
