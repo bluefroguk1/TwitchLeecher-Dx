@@ -14,7 +14,7 @@ Rebased onto the new master (24cab52) and each one CI-green on Windows and Linux
 | #126 | `pr/deps-security-pin` |
 | #127 | `pr/feature-85-open-folder` (closes #85) |
 
-New issue #120 (crop time boxes cut off) was closed by its reporter as a duplicate of #103. #104 already fixes it (time boxes widened 50 to 80, format "00"). Not yet said on #120 or in #104's description; waiting for the user's OK.
+New issue #120 (crop time boxes cut off) was closed by its reporter as a duplicate of #103. #104 already fixes it (time boxes widened 50 to 80, format "00"). Posted on #120 and added to #104's description (2026-11-23).
 
 **Next:** Wave 2 (UI refresh foundation) once the open PRs #104-#109 and #121-#127 are mostly dealt with. Rebuild `final` and the Wave 2/3 branches on the new master first, including the #107 JObject and #109 setting changes.
 
