@@ -1,6 +1,6 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-23 (evening) on the Mac**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-23 (evening) on the Mac; PC test run results added 2026-11-23 (late) on the PC**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
 ## START HERE ON THE PC (updated 2026-11-23 evening, Mac)
 
@@ -14,7 +14,7 @@ git pull
 
 Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifact from the latest Build run on `final`. Your old local `final-next`, `combined` and `combined-all` branches are archived on the fork (see the Branch map), so don't use them.
 
-### 1b. AUTOMATED PC TEST RUN: PC Claude does this (about 45 minutes, unattended after sign-in)
+### 1b. AUTOMATED PC TEST RUN (DONE 2026-11-23 on the PC; results and notes below). Kept as the recipe for the next run
 
 **PC Claude runs every pending check below by itself, then reports.** Nobody needs to watch, except for the sign-in in step R1. Rules:
 - **Drive the app with computer use** (screenshots, clicks, typing), and use `test-scripts\pc-test-helper.ps1` for everything that doesn't need the mouse. Run `powershell -ExecutionPolicy Bypass -File test-scripts\pc-test-helper.ps1` with no arguments to see its help.
@@ -106,11 +106,11 @@ Backup and Restore both worked (settings, theme and version back as before; watc
 - **The #104 overview comment is refreshed:** merged/open lists, a new preview build (run 45222297875, until 2026-12-07), and an **offer to group the ~26 remaining PRs into about 6 bigger ones** (UI refresh, search/download features, background features, export/processing, code quality, plus Native AOT and Avalonia 12 kept separate), or keep them small.
 - **The email to the developer was sent** by the user (2026-11-23) with the same update and offer. The draft is in `.claude/pr-drafts/email-developer.md`.
 
-### 3. NEW: test the "What's new" card (about 10 minutes)
+### 3. The "What's new" card (TESTED on the PC 2026-11-23, all six checks passed, see the results table in 1b)
 
 **The automated run in 1b covers this section.** The list below is the detail behind it.
 
-**2026-11-23: the user checked it on the PC, and it "looks great".** If any of checks 2-6 below weren't run, they are still worth a quick go before the PR. On the PC so far: checks 1 and 3 done (shows once, does not return after a relaunch); 2 and 4-6 not run.
+**2026-11-23: the user checked it on the PC, and it "looks great".** If any of checks 2-6 below weren't run, they are still worth a quick go before the PR. All six checks were run on the PC (R9-R15) and passed. Two PC changes since: the card is now centred on the main window and stays centred (4c024ad), and the first Enter did not close the card until it was clicked (keyboard focus; minor, not changed).
 
 `final` (8d963d6, CI green) adds a one-time "What's new in 4.0" card, built from the approved mockup (Option A: https://claude.ai/artifact/6pjwnc2sXaCqdUoDUtuzyn).
 - It shows once, the first time an **existing** install runs 4.0. It reads the version that last saved `%AppData%\Twitch Leecher DX\runtime.xml` (its `Version` attribute). A fresh install skips it.
@@ -129,7 +129,7 @@ Checks:
 
 `final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. On the PC the product title on the Info screen was also centred vertically against the logo (it was top-aligned); that fix is now also folded into `pr/feature-cli` (dd691a4, CI green). Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
 
-### 3c. NEW: test the WebClient -> HttpClient change (#31) (about 15 minutes)
+### 3c. The WebClient -> HttpClient change (#31): TESTED on the PC 2026-11-23, one bug found and fixed
 
 **The automated run in 1b covers this section.** The list below is the detail behind it.
 
@@ -146,7 +146,9 @@ Checks:
 
 If one fails, the log or the error text names the request. The PR branch is `pr/replace-webclient`.
 
-### 3b. One small PC check (optional, about 5 minutes)
+**PC result:** items 1, 2, 3, 4, 6, 7 and 9 pass. Item 3 first failed (every VOD playlist returned 400: the VOD token was escaped twice), fixed in 68c68bd on `final` and in `pr/replace-webclient` (5658660, one clean commit, no AI lines). **Not confirmed:** item 5 (emote pictures; the chat sampled had no emotes) and item 8 (the update check was not looked at on its own; there was no related error in the logs at any start). In the PR text (`bodies/replace-webclient.md`) these two are listed as not yet confirmed.
+
+### 3b. The #109 setting (TESTED on the PC 2026-11-23)
 
 **The automated run in 1b covers this section.** The list below is the detail behind it.
 
@@ -154,9 +156,14 @@ The #109 setting has only been built on CI, not run by a person. In the `final` 
 1. Settings › Download shows "Keep the unconverted video if conversion fails", ticked by default. Untick it, save, restart the app: it stays unticked.
 2. Optional, with the always-failing ffmpeg trick from the #109 test: with it ticked, a `.ts` is kept; with it unticked, no `.ts` is left.
 
-Report back; if it passes, the #109 description's Testing line can be updated.
+**PC result:** check 1 passed (ticked by default, stayed unticked after save and restart; ticked again afterwards). The optional ffmpeg trick (check 2) was not run. The #109 description's Testing line can say check 1 passed.
 
 ### 4. What's next (nothing to send now)
+
+- **Decided 2026-11-23 (user): leave the #31 PR queued.** `pr/replace-webclient` (5658660) already has the token fix. No PR is open for it, and it goes in the last wave (code quality) when the user says so. Before it goes, update its Testing text if the emote check or the update check has been run.
+- **Open check:** emote pictures in HTML chat. Use a VOD with a busy chat, download a short crop with "as HTML with emotes", and look for `<img` tags in the `.chat.html`.
+- **The Newtonsoft to System.Text.Json swap:** when it reaches `final`, rerun R1-R5 and R7 on the PC.
+- **Not run on the PC:** the Windows toast notifications (not a requirement), and the ffmpeg-failure part of the #109 check.
 
 - **Queued, after the #31 results:** swap Newtonsoft.Json for the built-in System.Text.Json (user decision, 2026-11-23). It is built on the Mac; the PC then reruns R1–R5 and R7 of the automated run. Details are in the PR guide.
 
@@ -260,6 +267,17 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 - **Rebuild `preview`** from `final` (recipe in `.claude/pr-drafts/README.md`).
 - **Ask the user** whether to point the #104 comment's build link at the new `preview` run. It still links run 44813082025: the earlier tested code, from before Ninject.
 - **Update the PR descriptions' Testing sections** with what you confirmed: `bodies/replace-ninject.md`, `remove-reactiveui.md`, `replace-icon-pack.md`, `native-aot.md` (add the memory and start-up numbers), `avalonia-12.md`.
+
+## Notes from the PC test run (2026-11-23), for the next run
+
+- **Build output trap.** `bin\Release` is shared by every branch checkout. Building a PR branch (for example `master`-based, version 3.9.1) overwrites it, and the next launch runs that build with the old look and a 3.9.1 title. The helper script starts the newest `TwitchLeecher.exe` it finds. **Rebuild `final` and check the title says 4.0 before testing.**
+- **The app starts minimised to the tray** when the user's saved settings say so (`StartMinimised`). The window then only appears from the tray icon (click the arrow by the clock, then the purple icon). A copy left running also blocks every other launch and locks `bin\`.
+- **The startup entry follows the last exe that ran** (the app rewrites it at each start), so Windows may open an old build at boot.
+- **Watched searches auto-download while the app runs.** The test run set `"Enabled": false` in `watched_searches.json` after `Backup`, and `Restore` put it back. Keep doing that, or a test can queue real downloads.
+- **Computer use.** Ask for access with the exe basename `twitchleecher.exe` (the display name did not match a running copy). The window opens small; the maximise button is at the top right of its title bar. Pages change about a second after a click, so wait before a screenshot.
+- **Log out invalidates the old sign-in.** After a logout test do **not** run `Restore`: it would bring back a revoked token. Sign in again, then delete `%TEMP%	l-test-backup`.
+- **Cause of the VOD 400, for reference.** `ApiService.GetVodAuthInfo` returns the token already URL-escaped, and `HttpRequestClient.AddQuery` escapes every value again. Any new code that passes an already-escaped value to `AddQuery` has the same problem. Pass plain values.
+- **The helper script worked unchanged** (`Backup`, `Restore`, `SetLastVersion`, `SetTheme`, `FreshInstall`, `Start`, `Stop`, `Cli`, `Errors`, `Show`).
 
 ## Branch map (2026-11-23 evening)
 
