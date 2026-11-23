@@ -29,6 +29,8 @@ Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifac
 
 ### 3. NEW: test the "What's new" card (about 10 minutes)
 
+**2026-11-23: the user checked it on the PC, and it "looks great".** If any of checks 2-6 below weren't run, they are still worth a quick go before the PR.
+
 `final` (8d963d6, CI green) adds a one-time "What's new in 4.0" card, built from the approved mockup (Option A: https://claude.ai/artifact/6pjwnc2sXaCqdUoDUtuzyn).
 - It shows once, the first time an **existing** install runs 4.0. It reads the version that last saved `%AppData%\Twitch Leecher DX\runtime.xml` (its `Version` attribute). A fresh install skips it.
 - **`final`'s version is now 4.0.0**, for testing. In the upstream PR the version bump is left to the developer.
