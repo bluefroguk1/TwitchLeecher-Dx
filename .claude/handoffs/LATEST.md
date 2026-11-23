@@ -14,6 +14,16 @@ git pull
 
 Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifact from the latest Build run on `final`. Your old local `final-next`, `combined` and `combined-all` branches are archived on the fork (see the Branch map), so don't use them.
 
+### 1a. NEXT PC RUN (2026-11-24): the System.Text.Json swap
+
+`final` (df8f791, CI green) now reads every Twitch and GitHub response with .NET's built-in JSON instead of Newtonsoft.Json. A slip would show as a search, video, clip, chat or sign-in that quietly returns nothing, so rerun part of the automated run below:
+- **R1–R5 and R7**, exactly as in 1b: sign-in check, search (VODs, clips, a pasted URL), a 2-minute crop with chat as HTML plus video details, a clip, Cancel, and `tl search`.
+- **Plus:** the same 2-minute crop with chat **as JSON** and **as text**. Both files should have the messages and timestamps.
+- **Plus:** the update check. Run `H SetLastVersion -Version 3.0.0`. That does not show an update by itself (the update check compares against the running build, 4.0.0), so instead look in Settings that "Check for updates" is on, restart, and confirm there is no error in `H Errors`.
+- **Plus, if you can find one:** a VOD with a busy chat, to finally confirm the emote pictures in the HTML chat (open check from the last run).
+
+Same rules as 1b: `Backup` first, never type a login, short crops, `Restore` at the end (but not after a logout test). Report as before, in a "Results (date)" table, and update the Testing lines of `bodies/system-text-json.md` and `bodies/replace-webclient.md`.
+
 ### 1b. AUTOMATED PC TEST RUN (DONE 2026-11-23 on the PC; results and notes below). Kept as the recipe for the next run
 
 **PC Claude runs every pending check below by itself, then reports.** Nobody needs to watch, except for the sign-in in step R1. Rules:

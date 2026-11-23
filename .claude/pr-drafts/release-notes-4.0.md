@@ -47,6 +47,7 @@ Nothing below this comment block is sent as-is without the user's OK.
 * ffmpeg 9.0.2, downloaded at build time
 * GitHub Actions builds for Windows and Linux
 * One shared HttpClient in place of the obsolete WebClient (#31)
+* .NET's built-in JSON reader in place of Newtonsoft.Json
 * Patched Tmds.DBus.Protocol (security advisory GHSA-xrw6-gwf8-vvr9, Linux)
 
 ### Issues closed with this release:
@@ -81,5 +82,5 @@ Map: line -> PR (x = merged upstream)
 [ ] second launch -> #121 | [ ] draggable dialogs -> #122 | [ ] Avalonia 11.3.23 -> #123 | [ ] unused packages -> #124 | [ ] GitHub Actions -> #125 | [ ] DBus pin -> #126 | [ ] Open folder -> #127
 [ ] UI refresh: theme colours, dark inputs, header, search sidebar, downloads queue, in-app sign-in -> Wave 2
 [ ] results toolbar (favourite star), download dialog, settings, Coyote, chat export (HTML/JSON), compress, tray, start with Windows, watched searches, schedule, perf follow-ups -> Wave 3
-[ ] Ninject, ReactiveUI, icons, Native AOT, Avalonia 12, tl CLI -> last wave | [ ] fewer pop-ups -> remove-popups | [ ] What's new card -> whats-new | [ ] HttpClient (#31) -> replace-webclient
+[ ] Ninject, ReactiveUI, icons, Native AOT, Avalonia 12, tl CLI -> last wave | [ ] fewer pop-ups -> remove-popups | [ ] What's new card -> whats-new | [ ] HttpClient (#31) -> replace-webclient | [ ] System.Text.Json -> system-text-json
 -->
