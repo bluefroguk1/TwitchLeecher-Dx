@@ -48,6 +48,21 @@ Checks:
 
 `final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. On the PC the product title on the Info screen was also centred vertically against the logo (it was top-aligned); that fix is now also folded into `pr/feature-cli` (dd691a4, CI green). Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
 
+### 3c. NEW: test the WebClient -> HttpClient change (#31) (about 15 minutes)
+
+`final` (98b9a4e, CI green) sends every web request through one shared HttpClient: sign-in check, search, video info, playlists, clips, chat, emotes and the update check. **Every one of these needs a quick run**, because a mistake would show as a failed request:
+1. Start the app while signed in: no "sign-in has stopped working" prompt (token check). Settings › General shows your account.
+2. Search a channel (VODs, then clips) and paste a VOD URL: results and thumbnails load.
+3. Download a short cropped VOD: it finishes, and the log shows the playlist and chunks.
+4. Download a clip: it finishes (now streamed straight to disk).
+5. A short download with chat as HTML with embedded emotes: the emotes show in the .chat.html (Content-Type is read differently now).
+6. Start a longer download and press Cancel: it stops quickly and shows "Canceled", not an error.
+7. Log out and sign in again (the revoke request).
+8. Settings: with "check for updates" on, restart; no error (the update check uses it too).
+9. `tl search <channel> --last 3` works (the CLI uses the same services).
+
+If one fails, the log or the error text names the request. The PR branch is `pr/replace-webclient`.
+
 ### 3b. One small PC check (optional, about 5 minutes)
 
 The #109 setting has only been built on CI, not run by a person. In the `final` build:

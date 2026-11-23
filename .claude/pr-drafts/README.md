@@ -21,7 +21,17 @@
 - **Newtonsoft.Json is pinned to 13.0.5-beta1 (a pre-release) in upstream master**; 13.0.4 is the latest stable. Small PR: pin 13.0.4. Bigger option: replace Newtonsoft with System.Text.Json (50 uses in 2 files), which removes a dependency and most of the AOT warnings.
 - Everything else is current (CommunityToolkit.Mvvm 8.4.2, DataGrid/WebView 12.1.2, ProgressRing 0.11.0, DesktopNotifications 1.3.1, the CI actions).
 
-**Worth doing next (ask the user):** 1) #31 WebClient -> HttpClient, rebuilt on the new master, in final, PC-tested; 2) Newtonsoft stable pin; 3) Avalonia 12.2 after about 2026-12-07.
+**Worth doing next (ask the user):** 1) ~~#31~~ DONE, see below; 2) Newtonsoft stable pin, or System.Text.Json in its place (user asked; recommended as its own PR after #31); 3) Avalonia 12.2 after about 2026-12-07.
+
+## #31 WebClient -> HttpClient (built 2026-11-23)
+
+- **`pr/replace-webclient`** (2aa3ec8, on master, one commit, CI green, body `bodies/replace-webclient.md`):
+  - `HttpRequestClient` (per-request headers and query, one shared HttpClient, synchronous `Send`).
+  - Fixes in master's chunk loop: an endless retry once retries were used up, unsafe warnings list, Cancel aborting in-flight requests (still ends "Canceled"), `.part` then rename, connection count 1.
+  - It will conflict with `pr/ui-downloads-queue` (which rewrites the same loop); rebase whichever goes second.
+- **`final`** (98b9a4e, CI green): the same helper for API, playlist, clip (streamed to disk), emote and update requests. SYSLIB0014 warnings went from 24 to 0.
+- The old `replace-webclient` (never run) is archived as `refs/archive/replace-webclient`.
+- **Needs a PC round** (handoff section 3c). When to send: with the code-quality wave, or earlier as a standalone fix if the developer prefers.
 
 ## Release notes draft (2026-11-23)
 
