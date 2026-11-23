@@ -1,8 +1,46 @@
 ﻿# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
 
-Updated 2026-11-19 (late night), on the Windows PC. **Every branch below has now been built and tested by the user on Windows.** The next job is to turn the tested branches into clean upstream PRs, one PR per change.
+Updated 2026-11-23 on the Mac (top section); the rest was last updated 2026-11-19/20 on the Windows PC. **Every branch below has now been built and tested by the user on Windows.** The next job is to turn the tested branches into clean upstream PRs, one PR per change.
 
-Read this file from `combined` (`git show combined:.claude/handoffs/LATEST.md`). Other branches carry their own older, branch-specific `LATEST.md` or `ui-*.md` notes; this overview is the one to trust.
+Read this file from **`final`** (`git show origin/final:.claude/handoffs/LATEST.md`). `final` replaces `combined` and `combined-all`. Other branches carry their own older, branch-specific `LATEST.md` or `ui-*.md` notes; this overview is the one to trust.
+
+## PC TEST ROUND, START HERE (2026-11-23): `final` with Ninject replaced
+
+**What's new since your last test (the combined-all round you finished 2026-11-20):**
+- **`final` branch** = `combined-all` (all 35 of your tweaks) + the PR guide from `combined` + **one code change: Ninject is replaced by `Microsoft.Extensions.DependencyInjection`** (commit 69e245c). **Nothing else in the app changed**, so this round only has to prove the swap.
+- **Why:** Ninject is an unmaintained 2017 beta, and it blocks Native AOT (faster start-up, less memory). See `.claude/pr-drafts/bodies/replace-ninject.md`.
+- **The risk:** the new container needs every class it creates to be listed. Ninject made unlisted ones on the fly. A missing entry would make a page fail to open. `ValidateOnBuild` is on, so most mistakes would stop the app **at start-up** with an error naming the missing type. On the Mac every constructor was checked against the registrations (36, no gaps; `WatchedSearchesViewModel` was the one that had been missing).
+- **Builds:** `final` 69e245c (run 45164559544), `preview` c81c316 (run 45164599008), and `replace-ninject` on master (run 45164438058) all compiled on Windows and Linux. **None has been run yet.**
+
+**1. Get the build** (close every copy first: `Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force`):
+- `git fetch origin; git checkout final; git pull`, then `& 'C:\Program Files\dotnet\dotnet.exe' build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release`, then run `TwitchLeecher\TwitchLeecher\bin\Release\net10.0\TwitchLeecher.exe`.
+- **Or** download `TwitchLeecher-final-win-x64` from Actions run 45164559544 and run its exe.
+- **Trap (it happened on 2026-11-20):** switching branches does **not** rebuild the exe (`bin\` isn't tracked), and a copy left in the tray swallows a new launch. If the app looks old, it is old: kill it and rebuild.
+- Use `final`, not `preview`. `preview` has the same code, but **no `test-scripts\`**. It's the clean copy for the developer.
+
+**2. Check the Ninject swap (about 10 minutes).** Every item opens a class the container creates. Note PASS/FAIL and the error text:
+1. The app starts without an error. Theme is applied, and it opens on Search.
+2. Search: run a channel search. Results appear in the right-hand pane.
+3. Click a result's download: the download dialog opens. Cancel.
+4. Downloads tab opens.
+5. Settings opens, and every side-menu section opens, **especially Watched searches**.
+6. Info (header icon) opens. Donate opens the browser.
+7. Downloads: open a download's log (if the queue is empty, queue a short one first).
+8. Log out, then sign in again (the in-app sign-in window opens and returns to Search).
+9. A message box (e.g. Settings › unsaved changes, or remove a watched search) opens centred and can be dragged.
+10. Minimise to the tray, then reopen from the tray. A second launch of the exe wakes the running window.
+- **Optional, broader:** `powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild` (Tier 1) still matches `final`.
+
+**3. If something fails:** the log is in `%APPDATA%\Twitch Leecher DX` (or Settings › Log). A missing-registration error reads like `Unable to resolve service for type 'X' while attempting to activate 'Y'`. The fix is one `services.AddTransient<X>();` line in `TwitchLeecher.Gui/Modules/GuiModule.cs` (or `AddSingleton` in `TwitchLeecher.Services/Modules/ServiceModule.cs` for a service). Make the same fix on `replace-ninject`, then cut `pr/replace-ninject` again.
+
+**4. When it passes:**
+- Update the Testing section of `.claude/pr-drafts/bodies/replace-ninject.md`.
+- Rebuild `preview` from `final` (recipe in `.claude/pr-drafts/README.md`).
+- Ask the user whether to point the #104 comment's build link at the new preview run. It currently links run 44813082025, which is the earlier, tested code without the swap.
+
+**Upstream status (checked 2026-11-23):**
+- The overview is posted on #104 and links the `preview` branch. There's no reply yet, and none of #104–#119 is reviewed.
+- **Do not submit any PRs.** Wave 1 waits for the developer to reply, or until about 2026-12-04. The plan is at the top of `.claude/pr-drafts/README.md`.
 
 ## Rules (from the user, keep them)
 
@@ -96,7 +134,7 @@ Also: `claude/ci-build-41fa8a` (GitHub Actions build + Windows zip, passed earli
 
 **Before pushing:** origin copies of several of these branches differ from local, so check `git log origin/<branch>..<branch>` and use `--force-with-lease` only for rebased ones. Squash stray `.claude/handoff-nudge-state.json` commits in `improve-error-logging` and `tray-tooltip-events` when cutting PR branches. Expect conflicts between `refactor-shared-styles` and `refactor-results-viewmodel`. `fix-slow-downloads` showed no measured gain, do not claim a speed-up. Windows toast notifications are still unverified.
 
-## TEST PLAN FOR combined-all: START HERE (updated 2026-11-20, round 3 UI tweaks)
+## TEST PLAN FOR combined-all (done 2026-11-20; kept for reference, the 2026-11-23 round above comes first)
 
 `combined-all` holds **every change** (the 16 open PRs plus all new work) and **compiles on GitHub Actions** (Windows + Linux, run 44752247971 at commit dfccddd). It has **not been run yet** in this form, so this round is about finding cross-change bugs before any more PRs go upstream.
 
