@@ -494,6 +494,7 @@ namespace TwitchLeecher.Gui.ViewModels
 
         public void Shown()
         {
+            _dialogService.ShowWhatsNewIfUpgraded(_runtimeDataService.RuntimeData.Version);
             ShowUpdateDialog();
 
             if (_showAuthError)

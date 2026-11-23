@@ -13,7 +13,7 @@
         <Product>Twitch Leecher DX</Product>
         <Description>Twitch Broadcast Downloader</Description>
         <Company>BrainySoftware</Company>
-        <FileVersion>3.9.1</FileVersion>
+        <FileVersion>4.0.0</FileVersion>
     </PropertyGroup>
 
     <!-- Native AOT for Windows publishes: faster start-up, less memory, no .NET runtime to install.

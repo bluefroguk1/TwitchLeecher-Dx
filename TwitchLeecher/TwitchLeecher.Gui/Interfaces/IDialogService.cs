@@ -15,6 +15,9 @@ namespace TwitchLeecher.Gui.Interfaces
 
         void ShowUpdateInfoDialog(UpdateInfo updateInfo);
 
+        // once per release: lastRunVersion is the version that last saved the runtime data
+        void ShowWhatsNewIfUpgraded(System.Version lastRunVersion);
+
         void SetBusy();
 
         /// <summary>

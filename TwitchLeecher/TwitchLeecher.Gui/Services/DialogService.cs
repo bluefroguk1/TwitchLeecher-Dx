@@ -10,6 +10,8 @@ using TwitchLeecher.Gui.Types;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Gui.Views;
 using TwitchLeecher.Services.Interfaces;
+using TwitchLeecher.Shared.Extensions;
+using TwitchLeecher.Shared.Reflection;
 
 namespace TwitchLeecher.Gui.Services
 {
@@ -174,6 +176,16 @@ namespace TwitchLeecher.Gui.Services
             };
 
             view.ShowDialog(mainWindow);
+        }
+
+        public void ShowWhatsNewIfUpgraded(Version lastRunVersion)
+        {
+            Version running = AssemblyUtil.Get.GetAssemblyVersion().Trim();
+
+            if (WhatsNewWindow.ShouldShow(lastRunVersion, running))
+            {
+                new WhatsNewWindow(running).ShowDialog(_services.GetRequiredService<MainWindow>());
+            }
         }
 
         public async Task<TwitchSignInResult> ShowTwitchSignIn(bool signIn, bool subOnly)

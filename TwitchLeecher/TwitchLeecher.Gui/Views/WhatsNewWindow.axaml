@@ -1,0 +1,147 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
+        xmlns:views="clr-namespace:TwitchLeecher.Gui.Views"
+        x:Class="TwitchLeecher.Gui.Views.WhatsNewWindow"
+        Title="What's new"
+        WindowDecorations="BorderOnly"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Width="520"
+        SizeToContent="Height">
+    <Window.Styles>
+        <Style Selector="Border.item">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,9" />
+        </Style>
+        <Style Selector="Border.tile">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource FeatureIconTintBrush}" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Border.tile avalonia|Icon">
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="Foreground" Value="{DynamicResource FeatureIconBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.title">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBlock.text">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="LineHeight" Value="17.5" />
+        </Style>
+    </Window.Styles>
+
+    <!-- Same frameless card as the message box: the whole card is the drag handle. -->
+    <Border Padding="26,22" BorderThickness="1"
+            BorderBrush="{DynamicResource DividerBrush}"
+            Background="{DynamicResource PanelBackgroundBrush}"
+            views:WindowDrag.IsHandle="True">
+        <StackPanel>
+            <TextBlock Text="Twitch Leecher DX" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource TextMutedBrush}" />
+            <TextBlock x:Name="Heading" Text="What's new" FontSize="24" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4" />
+            <TextBlock Text="A fresh look and some handy new features." FontSize="13.5"
+                       Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+            <StackPanel Spacing="6">
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-wand-magic-sparkles" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="A fresh new look" />
+                            <TextBlock Classes="text" Text="Search, downloads and settings have been redesigned to be clearer and easier to use." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-star" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Your favourite streamers" />
+                            <TextBlock Classes="text" Text="Press the star next to a streamer's name to add them to your favourites." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-eye" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Watched searches" />
+                            <TextBlock Classes="text" Text="Click &#x201C;Watch this search&#x201D; and new videos download automatically as they appear. You can also set the times it downloads in Settings." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-desktop" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Runs in the background" />
+                            <TextBlock Classes="text" Text="Start Twitch Leecher when your computer starts and keep it in the tray, so your watched searches keep downloading." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-film" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Clips too" />
+                            <TextBlock Classes="text" Text="Find and download clips, not just full videos." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-comment" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Save the chat" />
+                            <TextBlock Classes="text" Text="Keep the chat, emotes included, next to your video." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-compress" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Smaller files" />
+                            <TextBlock Classes="text" Text="Shrink videos after they download to save space." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Classes="item">
+                    <Grid ColumnDefinitions="Auto,14,*">
+                        <Border Classes="tile"><avalonia:Icon Value="fa-solid fa-screwdriver-wrench" /></Border>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Classes="title" Text="Lots of fixes and more" />
+                            <TextBlock Classes="text" Text="Lots of bug fixes and improvements, downloading several videos at once, and even a command-line tool." />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerBrush}" Margin="0,14,0,0" Padding="0,14,0,0">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Button Grid.Column="0" Content="Full release notes" Click="ReleaseNotes_OnClick"
+                            Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            FontWeight="Medium" Foreground="{DynamicResource AccentBrush}"
+                            VerticalAlignment="Center" HorizontalAlignment="Left" />
+                    <Button Grid.Column="1" Content="Got it" Click="GotIt_OnClick" IsDefault="True" IsCancel="True"
+                            Height="36" Padding="22,0" CornerRadius="6" FontWeight="SemiBold"
+                            VerticalContentAlignment="Center"
+                            Background="{DynamicResource AccentBrush}"
+                            Foreground="{DynamicResource AccentForegroundBrush}" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Border>
+</Window>
