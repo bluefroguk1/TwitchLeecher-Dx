@@ -21,8 +21,3 @@
 ## Merge notes
 - `MainWindow.axaml`: only the WelcomeView DataTemplate is removed. `ui-header-nav` re-indents that block, so resolve by dropping the Welcome template.
 - `MainWindowVM.cs`: `ShowWelcomeOrSearch` became `ShowSearchOnStart`.
-
-## Added after testing
-- The Search tab (`MainWindowVM.ShowSearch`) always opens the form; before, it jumped to the results whenever there were any, so the form was unreachable.
-- The sidebar shows "← Back to results (N)" under the Search button when the last search has results (`SearchViewModel.HasResults` / `BackToResultsCommand`, count from `ISearchService.Videos`). The VM is created per visit, so the count is read once.
-- `IsSearchActive` (header underline on both pages) lives on `ui-header-nav`, not here.

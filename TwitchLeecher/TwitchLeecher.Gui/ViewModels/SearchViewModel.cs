@@ -107,11 +107,6 @@ namespace TwitchLeecher.Gui.ViewModels
 
         public bool HasFavChannels => FavChannels.Count > 0;
 
-        // The VM is created on each visit to Search, so the count is read once (no change tracking needed)
-        public bool HasResults => _searchService.Videos?.Count > 0;
-
-        public string BackToResultsText => "\u2190 Back to results (" + (_searchService.Videos?.Count ?? 0) + ")";
-
         public bool IsLinksMode
         {
             get => _isLinksMode;
@@ -274,12 +269,6 @@ namespace TwitchLeecher.Gui.ViewModels
             }
 
             RunSearch();
-        }
-
-        [RelayCommand]
-        private void BackToResults()
-        {
-            _navigationService.ShowSearchResults();
         }
 
         [RelayCommand]

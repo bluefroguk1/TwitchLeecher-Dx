@@ -192,8 +192,14 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 lock (_commandLockObject)
                 {
-                    // Always the form; it links back to the results when there are any
-                    _navigationService.ShowSearch();
+                    if (_videosCount > 0)
+                    {
+                        _navigationService.ShowSearchResults();
+                    }
+                    else
+                    {
+                        _navigationService.ShowSearch();
+                    }
                 }
             }
             catch (Exception ex)
