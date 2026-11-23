@@ -2,7 +2,20 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs, both passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
-## NEW SINCE (Mac, 2026-11-24): one small PC check, about 5 minutes
+## DONE (PC, 2026-11-23 late): the .mp4 file-name check passed (`final` 3607502, built 4.0.0)
+
+Run on the PC with the original-stream option on (Settings > Download > "Keep the original stream file"; the dialog has no separate "Disable conversion" box in this build, the setting is in Settings). `Backup`/`Restore` worked; auto-download was off during the run and is back on.
+
+| Step | Result | Evidence |
+|---|---|---|
+| 1 | PASS | With the option on, the Settings file-name preview and the download dialog's suggested name both end in `.ts`; the dialog has no crop section |
+| 2 | PASS | Renamed to `.mp4`: no error, Download was accepted and queued |
+| 3 | PASS | A 160p download of a 3 h 12 min VOD (342 MB) finished as "Done": a real MP4 (`mov,mp4`, h264 + aac, 284x160, 11552 s) |
+| 4 | PASS | A name ending in `.mkv`: the file name box turns red with an error icon, the tooltip starts "Filename must end with one of the supported ...", and nothing is queued |
+
+Use 160p for this kind of check: with conversion off a crop is not possible, so a full VOD downloads. The error log shows only the known "Failed to create ShellLink object" notification message. The test file was deleted afterwards. The original instructions are kept below.
+
+### Original instructions: one small PC check, about 5 minutes
 
 `final` (c6e6684, CI green) now accepts **.mp4** as the file name when "Disable conversion" is on (newer Twitch VODs are MP4 inside). This came from comparing mpeter50's fork. PR branch: `pr/fix-mp4-unconverted`.
 1. In the download dialog, tick "Disable conversion" (or turn it on in Settings › Download). The suggested name ends in `.ts`, as before.
@@ -13,7 +26,7 @@ Report as before. Add files by name, not `.claude` as a whole.
 
 ## STATUS IN ONE GLANCE (PC, end of 2026-11-23)
 
-- **Nothing is waiting on the PC.** Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
+- **Nothing is waiting on the PC** (the .mp4 file-name check at the top also passed). Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
 - **`final` is the tested version** (latest code commit: the What's new card centring, 4c024ad; System.Text.Json is df8f791). Local `final` and `origin/final` match.
 - **Open items, none urgent:** emote pictures are now confirmed; still not run on the PC are the Windows toast notifications (not a requirement) and the ffmpeg-failure half of the #109 check.
 - **`preview` is behind `final`.** It was rebuilt at 9a08fcf, before the #31 token fix, the card centring and the System.Text.Json swap. If the developer is pointed at a `preview` build again, rebuild it from `final` first (recipe in `.claude/pr-drafts/README.md`) and ask the user before changing the #104 comment's build link.

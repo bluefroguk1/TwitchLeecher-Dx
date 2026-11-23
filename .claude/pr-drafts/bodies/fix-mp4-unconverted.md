@@ -1,4 +1,4 @@
-<!-- title: Allow .mp4 as well as .ts when conversion is off -->
+﻿<!-- title: Allow .mp4 as well as .ts when conversion is off -->
 ## Summary
 
 With "Disable conversion" on, the file is Twitch's own stream saved as it is. Newer VODs are fragmented MP4 (the new DASH format), but the app only accepted a `.ts` name, so they were saved as MP4 data with a `.ts` extension.
@@ -14,4 +14,6 @@ This is the small, safe part of #101 (thanks @mpeter50). The DASH parsing in #10
 
 ## Testing
 
-Builds on Windows and Linux (GitHub Actions), and the published app starts on both. Not yet run on Windows.
+Builds on Windows and Linux (GitHub Actions), and the published app starts on both.
+
+Run on Windows with conversion off: the suggested name still ends in `.ts`, a name ending in `.mp4` is accepted, a full download with that name finished and plays (a valid MP4), and a name ending in `.mkv` is still refused with an error.
