@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Avalonia;
@@ -67,6 +67,7 @@ public partial class App : Application
         kernel.Bind<MainWindow>().ToSelf().InSingletonScope();
         kernel.Bind<MainWindowVM>().ToSelf().InSingletonScope();
         kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
+        kernel.Bind<IDesktopNotificationService>().To<DesktopNotificationService>().InSingletonScope();
     }
 
     private void LoadModules(IKernel kernel)

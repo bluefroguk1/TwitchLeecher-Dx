@@ -1,7 +1,7 @@
-﻿# Test script for the "feature-tray-notifications" branch.
-# Builds the app, then walks you through the first-minimise prompt, the tray icon and minimise-to-tray checks (desktop notifications were removed).
+# Test script for the "feature-tray-notifications" branch.
+# Builds the app, then walks you through the tray icon, minimise-to-tray and desktop notification checks.
 # Windows:  powershell -ExecutionPolicy Bypass -File test-scripts\test-tray-notifications.ps1
-# Linux:    pwsh test-scripts/test-tray-notifications.ps1   (needs ffmpeg on PATH)
+# Linux:    pwsh test-scripts/test-tray-notifications.ps1   (needs ffmpeg on PATH and a notification daemon)
 param([switch]$SkipBuild)
 
 $ErrorActionPreference = 'Stop'
@@ -28,26 +28,7 @@ if (-not $SkipBuild) {
 }
 if (-not (Test-Path $dll)) { throw "App not found at $dll" }
 
-# Start from a clean prompt state: remove the saved flag so the first-minimise question shows.
-$cfg = Get-ChildItem -Path ([Environment]::GetFolderPath('ApplicationData')) -Directory -Filter '*Leecher*' -ErrorAction SilentlyContinue |
-    ForEach-Object { Get-Item (Join-Path $_.FullName 'config.xml') -ErrorAction SilentlyContinue } | Select-Object -First 1
-if ($cfg) {
-    [xml]$x = Get-Content $cfg.FullName
-    $app = $x.Preferences.Application
-    foreach ($n in 'TrayPromptShown', 'MinimiseToTray') { $el = $app.SelectSingleNode($n); if ($el) { [void]$app.RemoveChild($el) } }
-    $x.Save($cfg.FullName)
-    Write-Host "Reset tray prompt in $($cfg.FullName)"
-} else { Write-Host 'No config.xml found; assuming a fresh install.' -ForegroundColor Yellow }
-
 $p = Start-App
-
-# --- 0. First-minimise prompt ---------------------------------------------------
-Ask 'prompt on first minimise' 'Minimise the window. It goes to the taskbar, then a small dialog asks "Minimise to the system tray instead?" with "Don''t ask again" ticked. Is that what you see, in the app''s theme colours?'
-Ask 'prompt No' 'UNTICK "Don''t ask again" and click "No, keep it on the taskbar". Does the window stay minimised on the taskbar?'
-Ask 'prompt asks again' 'Restore the window and minimise it again. Does the dialog appear again (because "Don''t ask again" was unticked)?'
-Ask 'prompt Yes' 'Leave "Don''t ask again" ticked and click "Yes, use the tray". Does the window leave the taskbar, with the tray icon still there?'
-Ask 'prompt not again' 'Click the tray icon to restore, then open Settings. Is "Minimise to tray" ticked? Minimise again: does it go straight to the tray with no dialog?'
-Ask 'reset for next steps' 'Untick "Minimise to tray" in Settings and save, so the next checks start from the default.'
 
 # --- 1. Tray icon ------------------------------------------------------------
 Ask 'tray icon shown' 'Is the Twitch Leecher icon in the system tray (check the ^ overflow on Windows)? Hovering shows "Twitch Leecher DX".'
@@ -74,7 +55,26 @@ if (-not $p.HasExited) { $p.Kill() }
 $p = Start-App
 Ask 'window position kept' 'The app restarted. Is the window where you left it before the tray Exit (window state still saved)?'
 
-# (desktop notifications were removed from this branch; Windows toasts did not show, revisit later)
+# --- 3. Notifications ------------------------------------------------------------
+Ask 'show notifications default' 'Settings > Application: is "Show notifications" ticked (it is on by default)?'
+Ask 'single download toast' @'
+Download ONE short VOD (Crop: Start 00:00:00, End 00:01:00).
+When it reaches Done, does a desktop notification appear: "Download finished" with the video title?
+(On Windows the first one may take a few seconds while the app registers itself.)
+'@
+Ask 'batch toast' @'
+Queue THREE short VODs (crop each to 1 minute) so they run one after another.
+Expected: a "Download finished" notification for each, and after the last one also "All 3 downloads finished".
+'@
+Ask 'no batch toast for one' 'After a single download on its own (the first check), there was NO "All N downloads finished" notification?'
+Ask 'notifications off' @'
+Untick "Show notifications" and save. Download one more short VOD.
+Expected: it finishes with NO desktop notification. Tick the setting again afterwards.
+'@
+Ask 'app fine without backend' @'
+Linux only (s on Windows): stop the notification daemon (e.g. kill dunst/mako) and download a short VOD.
+Expected: the download still completes and the app shows no error.
+'@
 
 if (-not $p.HasExited) { Write-Host 'Close Twitch Leecher to finish.' -ForegroundColor Yellow; $p.WaitForExit() }
 $report = ($results.GetEnumerator() | ForEach-Object { '{0,-40} {1}' -f $_.Key, $_.Value }) -join [Environment]::NewLine

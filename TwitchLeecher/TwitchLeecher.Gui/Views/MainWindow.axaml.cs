@@ -20,8 +20,6 @@ namespace TwitchLeecher.Gui.Views
 
         private bool _shown;
 
-        private bool _trayPromptOpen;
-
         #endregion Fields
 
         #region Constructors
@@ -74,22 +72,11 @@ namespace TwitchLeecher.Gui.Views
 
             PropertyChanged += (s, e) =>
             {
-                if (e.Property != WindowStateProperty || WindowState != WindowState.Minimized)
-                {
-                    return;
-                }
-
-                Preferences preferences = _preferencesService.CurrentPreferences;
-
                 // the tray icon in App.axaml brings the window back
-                if (preferences.AppMinimiseToTray)
+                if (e.Property == WindowStateProperty && WindowState == WindowState.Minimized &&
+                    _preferencesService.CurrentPreferences.AppMinimiseToTray)
                 {
                     Hide();
-                }
-                else if (!preferences.AppTrayPromptShown && !_trayPromptOpen)
-                {
-                    // let the minimise finish first
-                    Dispatcher.UIThread.Post(AskAboutTray);
                 }
             };
 
@@ -152,43 +139,6 @@ namespace TwitchLeecher.Gui.Views
 
                 Dispatcher.UIThread.InvokeAsync(() => { this.Topmost = false; });
             });
-        }
-
-        private void AskAboutTray()
-        {
-            _trayPromptOpen = true;
-
-            // no owner: an owned dialog would be minimised along with this window
-            TrayPromptWindow prompt = new TrayPromptWindow();
-
-            prompt.Closed += (s, e) =>
-            {
-                _trayPromptOpen = false;
-
-                if (prompt.UseTray is not bool useTray)
-                {
-                    return;
-                }
-
-                try
-                {
-                    Preferences preferences = _preferencesService.CurrentPreferences.Clone();
-                    preferences.AppMinimiseToTray = useTray;
-                    preferences.AppTrayPromptShown = prompt.DontAskAgainChecked;
-                    _preferencesService.Save(preferences);
-                }
-                catch (Exception ex)
-                {
-                    _dialogService.ShowAndLogException(ex);
-                }
-
-                if (useTray && WindowState == WindowState.Minimized)
-                {
-                    Hide();
-                }
-            };
-
-            prompt.Show();
         }
 
         public void LoadWindowState()
