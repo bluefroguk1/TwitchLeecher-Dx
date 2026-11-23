@@ -2,7 +2,40 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
-## NEXT PC RUN (2026-11-24): the .NET 11 + Avalonia 12.2.0 branch
+## PC RUN of the .NET 11 + Avalonia 12.2.0 branch (DONE 2026-11-23, late, on the PC): one regression found
+
+Run on `upgrade/net11-avalonia12.2` at 7ce4d3f (= `final` b4226ab plus one commit; the hash in the instructions below, 2fb84f7, is an earlier version of it). The .NET 11 SDK (11.0.100) was installed on the PC with winget; the build had 0 errors and 18 warnings, version 4.0.0, Avalonia 12.2.0. `Backup`/`Restore` worked and the sign-in survived. Afterwards the PC went back to `final` and rebuilt it (the `net11.0` output folders were deleted so the helper cannot pick them up).
+
+**Result: everything passes except R14. Do not merge the upgrade until R14 is fixed.**
+
+| Step | Result | Evidence |
+|---|---|---|
+| R1 | PASS | Settings > General: "Signed in as ...", no sign-in prompt |
+| R2 | PASS | Broadcasts (8), clips (7), pasted link: all returned cards with thumbnails |
+| R3 | PASS | 1-minute crops saved with chat as HTML plus details, as JSON and as text: all three had the same 2 messages with timestamps; the `.info.json` has its fields. The video was a **1440p60 HEVC** `.mp4` (2560x1440, hevc + aac, exactly 60.0 s), so HEVC works on this build |
+| R4 | PASS | A 7-second clip: h264 + aac, 7.55 s |
+| R5 | PASS | An uncropped 1440p VOD was started; **Cancel** ended as "Canceled" |
+| R6 | PASS | The "keep unconverted video" setting was ticked, unticked and saved, and stayed unticked after a restart |
+| R7 | PASS | `tl search <channel> --last 3` listed 3 videos, exit 0 |
+| R8 | PASS | `tl --bogus` exit code 2 |
+| R9 | PASS | Dark: "What's new in 4.0", 8 items, purple icons, centred on the main window |
+| R10 | PASS | **Full release notes** opened the GitHub "Page not found" page (expected 404); Esc closed the card |
+| R11 | PASS | After a restart no card |
+| R12 | PASS | Classic: gold icons, readable. Enter closed it only after a click on the card (same as on `final`) |
+| R13 | PASS | Coyote: blue icons, red **Got it**, readable |
+| R14 | **FAIL** | Started with `--minimized`: the main window **and the card appeared on their own**. On `final` the same start stays hidden in the tray until opened from the tray icon. The process command line was confirmed to contain `--minimized`. The Windows startup entry passes `--minimized`, so on this build "Start Twitch Leecher when Windows starts" would open the window instead of the tray |
+| R15 | PASS | Fresh settings folder: "Connect with Twitch", no card. **The sign-in web view works:** pressing Connect showed Twitch's "Log in to Twitch" form (nothing was typed) |
+| R16 | PASS | `Restore` put theme Original and version 4.0 back |
+
+Other things looked at:
+- **Styled controls:** the Custom date pop-up calendar (rounded card, gold selected day, dimmed future days), the **Hide downloaded** switch (gold on, grey off) and the sort drop-down all work. Two small differences to compare with `final` if you care: a thin **blue focus ring** around the selected day in the calendar, and the **highlighted item in the sort drop-down is blue**.
+- **Log page and Log > Copy:** the log page shows the full text, and **Copy** put the whole log (3,723 characters) on the clipboard. **There is no DataGrid anywhere in the app now** (a code search finds none), so the "DataGrid on the Log page" line in the instructions below no longer applies.
+- **Tray:** opening the window from the tray icon works. The `--minimized` problem is in R14.
+- **Update check:** at start-up the only error log was the known "Failed to create ShellLink object" one. (Restore replaced the logs folder, so only the last session's log could be read at the end.)
+- **Likely cause of R14 (not investigated further):** `App.axaml.cs` keeps the window hidden on `--minimized` by assigning `desktop.MainWindow = mainWindow` **after** the lifetime has started (`Dispatcher.UIThread.Post`). On Avalonia 12.2.0 / .NET 11 that assignment seems to show the window. A fix would hide it explicitly instead (for example create the window but do not assign it until the user opens it from the tray, or hide it right after the assignment), then repeat R14 and R9-R13 on the tray path.
+- **Not done:** R17 (logout) was not repeated, and Audio Only chat sampling was not repeated.
+
+### Original instructions for this run
 
 A separate branch, **not** `final`: `upgrade/net11-avalonia12.2` (2fb84f7, CI green on Windows and Linux). It needs the **.NET 11 SDK** on the PC (`dotnet --list-sdks` should show 11.0.x; if not, ask the user to install it from Microsoft's .NET download page).
 ```
@@ -44,7 +77,7 @@ Report as before. Add files by name, not `.claude` as a whole.
 
 ## STATUS IN ONE GLANCE (PC, end of 2026-11-23)
 
-- **Nothing is waiting on the PC** (the .mp4 file-name check at the top also passed). Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
+- **The .NET 11 + Avalonia 12.2.0 branch has one open problem (R14: `--minimized` shows the window); see the section at the top. Otherwise nothing is waiting on the PC** (the .mp4 file-name check also passed). Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
 - **`final` is the tested version.** Everything in it has been run on the PC: the What's new card and its centring (4c024ad), the #31 HttpClient token fix (68c68bd), the System.Text.Json swap (df8f791) and the `.mp4` file-name change (c6e6684). The PC checked it at 3607502; later commits only touched notes and PR text. Local `final` and `origin/final` match.
 - **Open items, none urgent:** emote pictures are now confirmed; still not run on the PC are the Windows toast notifications (not a requirement) and the ffmpeg-failure half of the #109 check.
 - **`preview` is behind `final`.** It was rebuilt at 9a08fcf, before the #31 token fix, the card centring, the System.Text.Json swap and the `.mp4` change. If the developer is pointed at a `preview` build again, rebuild it from `final` first (recipe in `.claude/pr-drafts/README.md`) and ask the user before changing the #104 comment's build link.
