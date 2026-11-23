@@ -11,4 +11,4 @@ nothing. Both now use Constants.PipeName.
 
 ## Testing
 
-Not yet tested on Windows. To test: start the app, minimise it, start it again; the running window comes to the front.
+Tested on Windows 11 (2026-11-23), in the combined build: with the app running, starting it a second time brings the existing window to the front instead of opening another copy.

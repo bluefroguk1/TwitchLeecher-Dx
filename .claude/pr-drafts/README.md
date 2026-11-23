@@ -19,7 +19,7 @@
 
 **Known gaps between `final` and the Wave 2/3 branches** (carry these over at the refresh): calendar future days dimmed (`ui-dark-inputs`); results toolbar sizing without the opening animation and the results-pane loading state (`ui-results-toolbar` / `ui-search-sidebar`); Pause all greyed out when nothing can pause (`ui-downloads-queue`); the frameless message box (needs the theme colours and Avalonia 12); AOT-safe JSON for watched searches, VOD info and chat (only in `final`); and the tweaks listed under "Status 2026-11-23" below. **How to refresh depends on the developer's answer:** bundles are cut straight from `final` by area; small PRs are rebuilt from `final` one wave at a time and CI-checked.
 
-**Testing lines:** updated from the PC runs for chat export, in-app sign-in and start with Windows (2026-11-24). Still "not yet tested" because nothing specific was recorded: `download-schedule`, the three `perf-*`, `deps-patch-updates`/`deps-remove-unused` (final runs Avalonia 12, not 11.3.23). **Open upstream #121 says "not yet tested"**, but the second-launch check passed in the 2026-11-23 round: updating that open PR's text needs the user's OK.
+**Testing lines:** updated from the PC runs for chat export, in-app sign-in and start with Windows (2026-11-24). Still "not yet tested" because nothing specific was recorded: `download-schedule`, the three `perf-*`, `deps-patch-updates`/`deps-remove-unused` (final runs Avalonia 12, not 11.3.23). Open upstream #121's Testing line was updated (2026-11-24, user OK) to the second-launch check that passed on 2026-11-23. The #104 comment now links the preview build 45286160385 (until 2026-12-07).
 
 ## Check 2026-11-23 (evening): issues, frameworks, optimisations
 
