@@ -67,9 +67,9 @@ Backup and Restore both worked (settings, theme and version back as before; watc
 |---|---|---|
 | R1 | PASS | Settings > General shows "Signed in as ..." and no sign-in prompt appeared |
 | R2 | PASS | A channel's broadcasts (8), its clips (7) and a pasted `twitch.tv/videos/<id>` link all returned cards with thumbnails |
-| R3 | **FAIL** | The download dialog for a VOD never opens. Error log: `400 (Bad Request)` in `ApiService.GetPlaylistInfo` (line 1012). See "Bug found" below |
+| R3 | **FAIL, then PASS after the fix (68c68bd)** | First run: the download dialog for a VOD never opened (`400 (Bad Request)` in `ApiService.GetPlaylistInfo`, see "Bug found"). After the fix: the dialog opened and the filmstrip loaded; a 2-minute crop with chat as HTML with emotes and video details finished (`.mp4` of exactly 120.0 s, `.chat.html` with the chat lines, `.info.json` with its fields). **Not confirmed:** the emote pictures. The 2 sampled minutes of chat, and a second 1-minute sample at 1:30:00, had no emotes (0 `<img>` tags), so only the plain-text part of the HTML chat was checked |
 | R4 | PASS | A 7-second clip finished ("Done"): a 6.7 MB `.mp4`, h264 + aac, duration 7.55 s |
-| R5 | NOT RUN | Needs a VOD download, which hits the R3 bug |
+| R5 | PASS (after the fix) | An uncropped 3 h VOD started (0%, about 12 MB/s); pressing **Cancel** after about 10 s showed "Canceled" straight away, not an error |
 | R6 | PASS | The setting was ticked, I unticked and saved it (`KeepTsOnFailure` false in `config.xml`), restarted, and it was still unticked. Ticked and saved again afterwards |
 | R7 | PASS | `tl search <channel> --last 3` listed 3 videos, exit code 0 |
 | R8 | PASS | `tl --bogus` printed the usage hint, exit code 2 |
@@ -87,8 +87,10 @@ Backup and Restore both worked (settings, theme and version back as before; watc
 - `ApiService.GetVodAuthInfo` (line 915) already does `Uri.EscapeDataString` on the token, because `WebClient.QueryString` sent values as they were. `HttpRequestClient.Send` now encodes every query value again, so the playlist request carries a double-encoded token.
 - Checked directly against Twitch with the same request: token encoded once gives HTTP 200 (2217 bytes of playlist); encoded twice (what the app now sends) gives HTTP 400. `tl qualities <id>` fails the same way for every VOD, so this is not one bad video.
 - Not affected: clips (the clip URL is built separately, and R4 passed), and the other `AddQuery` calls, which pass plain values.
-- **Suggested fix (not applied; the run is "fix nothing"):** make the token reach the playlist request unescaped once, for example `webClient.AddQuery("token", Uri.UnescapeDataString(vodAuthInfo.Token))` in `GetPlaylistInfo` (line 1009), or stop escaping it at line 915 and change the `HttpUtility.UrlDecode(token)` just below. Fix it on `replace-webclient` and on `final`, re-cut `pr/replace-webclient`, then repeat R3, R5 and R17.
-- The failure is quiet in the app: clicking Download on a VOD showed no error message on screen.
+- **FIXED (68c68bd on `final`, after the run, with the user's go-ahead). The idea was:** make the token reach the playlist request unescaped once, for example `webClient.AddQuery("token", Uri.UnescapeDataString(vodAuthInfo.Token))` in `GetPlaylistInfo` (line 1009), or stop escaping it at line 915 and change the `HttpUtility.UrlDecode(token)` just below. Fix it on `replace-webclient` and on `final`, re-cut `pr/replace-webclient`, then repeat R3, R5 and R17.
+- Verified after the fix: `tl qualities <id>` lists the qualities (exit 0), and the app downloads VODs. Still to do: the same one-line fix on `replace-webclient` and in `pr/replace-webclient`, then R17.
+- The failure was quiet in the app: clicking Download on a VOD showed no error message on screen.
+- **Also fixed after the run (4c024ad):** the What's new card sat low and off to one side of the main window. It is now centred on the main window and stays centred if that window is moved or resized (placed by hand, because `CenterOwner` with `SizeToContent` uses the size before layout).
 - Also noticed: the app starts minimised to the tray with the user's saved settings (`StartMinimised`), so a tester first sees no window.
 
 ### 2. What happened since your test round

@@ -24,6 +24,6 @@ The API methods stay synchronous; making the whole service async would change ev
 
 Builds on Windows and Linux (GitHub Actions), and the published app starts on both, with no SYSLIB0014 warnings left.
 
-Run on Windows: the sign-in token check, channel search (broadcasts and clips), pasting a video URL, a clip download (plays), and the command-line `search` and its exit codes all work.
+Run on Windows: the sign-in token check, channel search (broadcasts and clips), pasting a video URL, a clip download (plays), a 2-minute VOD crop with chat (HTML) and video details, cancelling a running VOD download (ends as "Canceled"), and the command-line `search` and `qualities` with their exit codes all work.
 
-Not yet confirmed on Windows: VOD downloads, cancelling one, and logging out. (Update this section once they have been run.)
+Not yet confirmed on Windows: logging out (the revoke request), and emote pictures in the HTML chat (the chat sampled had no emotes). (Update this section once they have been run.)
