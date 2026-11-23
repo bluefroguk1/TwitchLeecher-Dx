@@ -142,7 +142,6 @@
         <PackageReference Include="Avalonia.Controls.WebView" Version="11.4.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.11-preview20251127001" />
-        <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.2" />
     </ItemGroup>
     <ItemGroup>
         <Resource Include="..\Resources\Images\TL_Icon.png">

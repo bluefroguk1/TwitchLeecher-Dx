@@ -37,8 +37,6 @@
         <PackageReference Include="DesktopNotifications.FreeDesktop" Version="1.3.1" />
         <PackageReference Condition="$([MSBuild]::IsOSPlatform('Windows'))" Include="DesktopNotifications.Windows" Version="1.3.1" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.11-preview20251127001" />
-        <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.2" />
-        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
     </ItemGroup>
 
 

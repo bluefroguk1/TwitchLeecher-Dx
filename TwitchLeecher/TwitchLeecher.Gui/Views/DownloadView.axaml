@@ -1,4 +1,4 @@
-﻿<UserControl xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+﻿<UserControl xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
              x:Class="TwitchLeecher.Gui.Views.DownloadView"
              x:Name="control"
              xmlns="https://github.com/avaloniaui"

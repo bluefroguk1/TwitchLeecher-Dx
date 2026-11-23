@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
              xmlns:models="clr-namespace:TwitchLeecher.Core.Models;assembly=TwitchLeecher.Core"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
              x:DataType="viewModels:DownloadsViewModel">
     <Design.DataContext>
         <viewModels:DownloadsViewModel />

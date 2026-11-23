@@ -4,7 +4,7 @@
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
              xmlns:interfaces="clr-namespace:TwitchLeecher.Gui.Interfaces"
              xmlns:models="clr-namespace:TwitchLeecher.Core.Models;assembly=TwitchLeecher.Core"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
              x:DataType="viewModels:WatchedSearchesViewModel">
     <!-- Settings > Watched searches. Self-contained: give it a WatchedSearchesViewModel as DataContext and drop it in. -->
     <UserControl.Styles>
