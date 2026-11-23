@@ -13,4 +13,4 @@ If the Downloads page redesign is merged first, the same one-line change applies
 
 ## Testing
 
-- Builds on Windows and Linux (GitHub Actions), and the published app starts on both.
+Tested on Windows 11 (2026-11-23): Open folder shows and opens the folder while a download is queued, downloading, paused or failed, as well as when it has finished.

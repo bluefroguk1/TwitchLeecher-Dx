@@ -8,6 +8,8 @@
   of being dropped.
 - Buttons fit each state (Pause/Cancel, Move up/Remove, Resume, Play/Open
   folder, Retry/View log) and failed downloads show a short reason.
+- Cancel stops in-flight chunk requests at once, and the card says
+  "Cancelling" while temporary files are cleaned up.
 
 ## Depends on
 
@@ -17,4 +19,4 @@ Until those are merged this PR also shows their changes; please review the last 
 
 ## Testing
 
-Tested on Windows: per-download pause/resume, speed and time left, failure reasons.
+Tested on Windows 11 (2026-11-23): per-download pause/resume, speed and time left, failure reasons, and Cancel (shows "Cancelling" while it cleans up).

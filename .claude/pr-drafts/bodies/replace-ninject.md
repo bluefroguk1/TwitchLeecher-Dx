@@ -16,5 +16,4 @@ Replaces Ninject with the built-in .NET container, `Microsoft.Extensions.Depende
 
 ## Testing
 
-- Builds on Windows and Linux (GitHub Actions).
-- Every registered class's constructor parameters were checked against the registrations.
+Tested on Windows 11 (2026-11-23): in the normal build and the Native AOT build: every page and dialog opens (search, downloads, settings, log, sign-in, info, update notice).

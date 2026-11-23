@@ -16,5 +16,4 @@ The app uses 27 Font Awesome icons, so they now live in `TwitchLeecher.Gui/Contr
 
 ## Testing
 
-- Builds on Windows and Linux (GitHub Actions), and the published app starts on both.
-- Every icon name used in the code was checked against `IconData`.
+Tested on Windows 11 (2026-11-23): every page in the dark and light themes: icons show at the right size, centred and in the right colour.

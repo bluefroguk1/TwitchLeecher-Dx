@@ -18,4 +18,4 @@ Why: `Avalonia.ReactiveUI` isn't published for Avalonia 12, and ReactiveUI's ref
 
 ## Testing
 
-- Builds on Windows and Linux (GitHub Actions), and the published app starts on both.
+Tested on Windows 11 (2026-11-23): the three changed commands: Download in the download dialog, and Undo and Defaults in Settings.

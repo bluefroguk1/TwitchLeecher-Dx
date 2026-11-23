@@ -1,5 +1,18 @@
 # PR submission guide
 
+## Status 2026-11-23 (after the final-next test round on the PC)
+
+- **`final-next` passed the Windows test round** (checks 1-13 in the handoff), with these fixes made on the PC and now in the PR branches:
+  - Avalonia 12 start-up crash (tray icon asset read before the Gui assembly loaded): `pr/avalonia-12`.
+  - CLI: search dates set, no-op desktop notifications: `pr/feature-cli` (the notification part is only in `final`; master has no desktop notifications).
+  - Compress: NVENC quality scale, CPU retry when the GPU result isn't smaller: `pr/compress-video`.
+  - Downloads: faster Cancel with a "Cancelling" message, no text on queued cards: `pr/ui-downloads-queue`.
+  - Search sidebar FAVOURITES header: `pr/ui-search-sidebar`. Only in `final` for now: results toolbar with no animation on entering Search (fold into `pr/ui-results-toolbar` at the Wave 3 refresh) and the frameless message box (needs the theme colours and Avalonia 12's `WindowDecorations`, so it is a small follow-up after `pr/avalonia-12`, not part of Wave 1's `pr/ui-draggable-dialogs`).
+- **Three PC tweaks from 2026-11-20 that only lived on `preview` are now in `final`** (user, 2026-11-23: keep all three): Default quality on one line (folded into `pr/ui-settings-sections`), corner pop-ups removed, and a message box when a quick download queues nothing. The last two touch about 15 PR branches, so they are **one follow-up PR sent last**: body `bodies/remove-popups.md`, no branch yet (cut it from `final` once the others merge).
+- **Desktop notifications are not a requirement** (user): `pr/desktop-notifications` stays on hold.
+- **`final` = `final-next`**, `preview` rebuilt from it, and the #104 comment updated with the new build link and the code-quality and issue PRs.
+- Testing sections of the bodies are updated for everything checked in this round.
+
 ## Submission plan (2026-11-20, after the combined-all test round)
 
 **Upstream reality:** the maintainer's last commit was 2026-08-07. Merges are months apart, and another contributor's PRs (#76, #101) have waited since 2025 and August. Our 16 PRs (#104–#119, opened 2026-11-18) have no reviews or comments. Adding 33 more now would bury them.
@@ -10,7 +23,7 @@
 2. **When the developer first responds, or after about 2 weeks of silence: Wave 1 (6 small, independent PRs on `master`, ready now).** `pr/fix-single-instance-pipe`, `pr/ui-draggable-dialogs`, `pr/deps-patch-updates`, `pr/deps-remove-unused`, `pr/ci-build`, `pr/deps-security-pin` (cut 2026-11-20, CI green, body in `bodies/deps-security-pin.md`), `pr/feature-85-open-folder` (issue #85, cut 2026-11-23, body in `bodies/feature-85-open-folder.md`). None is affected by the latest testing tweaks.
 3. **When at least half of #104–#119 are merged or closed: Wave 2 (UI refresh foundation).** `ui-theme-keys` → `ui-dark-inputs`, `ui-header-nav`, `ui-search-sidebar`, `ui-downloads-queue`, `in-app-signin`. Send at most about 5 open at a time.
 4. **After the rest of #104–#119 are dealt with: Wave 3 (stacked features), a few at a time.** Results toolbar, download dialog, Settings, Coyote, chat export, compress, tray → start with Windows, watched searches → schedule, the perf follow-ups.
-5. **Last: code quality, after a Windows test round.** Also `pr/feature-cli` (issue #36, the `tl` command-line tool, stacked on replace-ninject, body `bodies/feature-cli.md`). Ready on the fork: `pr/remove-reactiveui` and `pr/replace-icon-pack` (both on `master`, independent), then `pr/native-aot` (stacked on replace-ninject + remove-reactiveui) and `pr/avalonia-12` (stacked on remove-reactiveui + replace-icon-pack; send it after the UI PRs, since it touches every project file). Bodies are in `bodies/`. All four are in `final-next` for the 2026-11-23 test round. `pr/replace-ninject` (on `master`, CI green, body `bodies/replace-ninject.md`; also applied to `final`/`preview` for testing; it unlocks Native AOT), `improve-error-logging`, `replace-webclient` (#31), `add-unit-tests`, `refactor-results-viewmodel`, `refactor-shared-styles`, `tray-tooltip-events`. These are **not in `final`** and have not been run on Windows.
+5. **Last: code quality (passed the 2026-11-23 Windows round).** Also `pr/feature-cli` (issue #36, the `tl` command-line tool, stacked on replace-ninject, body `bodies/feature-cli.md`). Ready on the fork: `pr/remove-reactiveui` and `pr/replace-icon-pack` (both on `master`, independent), then `pr/native-aot` (stacked on replace-ninject + remove-reactiveui) and `pr/avalonia-12` (stacked on remove-reactiveui + replace-icon-pack; send it after the UI PRs, since it touches every project file). Bodies are in `bodies/`. All four are in `final-next` for the 2026-11-23 test round. `pr/replace-ninject` (on `master`, CI green, body `bodies/replace-ninject.md`; also applied to `final`/`preview` for testing; it unlocks Native AOT), `improve-error-logging`, `replace-webclient` (#31), `add-unit-tests`, `refactor-results-viewmodel`, `refactor-shared-styles`, `tray-tooltip-events`. These are **not in `final`** and have not been run on Windows.
 6. **Hold:** `desktop-notifications` (toasts never confirmed on Windows), `fix-slow-downloads` (no measured gain), `login-page-and-icon` (superseded).
 
 **Refresh each wave just before sending.** The `pr/*` branches were cut before the last PC session. Waves 2–3 are missing up to 35 tested tweaks from `combined-all`, for example the results pane, toolbar staging, date picker, watched-search rows and header order. Waves 1 and 5 are unaffected.

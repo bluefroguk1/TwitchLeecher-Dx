@@ -16,6 +16,6 @@ The Ninject and ReactiveUI removals. Both rely on runtime reflection. This draft
 
 ## Testing
 
-- The native Windows exe publishes on GitHub Actions and starts.
-- Linux builds and starts as before.
-- Remaining AOT warnings come from Newtonsoft.Json and System.Linq.Expressions. The app only uses `JObject`/`JToken` parsing and compiled `CanExecute` expressions, which both run under AOT.
+Tested on Windows 11 (2026-11-23): the native exe: start-up, search, a cropped download with chat and video details, compression (ffmpeg is found), sign-in in the web view, watched searches saving and loading, tray and second launch.
+
+Remaining AOT warnings come from Newtonsoft.Json and System.Linq.Expressions. The app only uses `JObject`/`JToken` parsing and compiled `CanExecute` expressions, which both run under AOT. Linux builds stay as before (JIT).

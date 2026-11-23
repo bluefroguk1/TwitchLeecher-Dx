@@ -15,4 +15,4 @@ This draft includes both as its first two commits, so please review only the las
 
 ## Testing
 
-- Builds on Windows and Linux (GitHub Actions), and the published app starts on both.
+Tested on Windows 11 (2026-11-23): styled controls (date picker, calendar, toggle switch, combo box, scroll bars), header, tray, the log grid and Log > Copy. Includes a start-up fix: Avalonia 12 only resolves `avares://` assets from loaded assemblies, so `App` loads the Gui assembly before reading the tray icon.

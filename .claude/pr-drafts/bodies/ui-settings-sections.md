@@ -7,7 +7,8 @@
   of the resulting name, replacing the long wildcard table.
 - A save bar appears only when something changed (Reset, Undo, Save).
 - Plain-English toggles, with the temporary folder and connection count
-  alongside the other download settings.
+  alongside the other download settings. Default quality sits on one line
+  with its label, like Theme.
 
 ## Depends on
 

@@ -22,4 +22,4 @@ The Ninject removal: the tool registers the same services with `ServiceModule.Lo
 
 ## Testing
 
-- Builds on Windows and Linux (GitHub Actions). In CI, `tl --help` runs, a wrong option exits with 2, and running without a sign-in exits with 3.
+Tested on Windows 11 (2026-11-23): `tl search`, `tl qualities` and a cropped `tl download` with a signed-in account. In CI, `tl --help` runs, a wrong option exits with 2, and running without a sign-in exits with 3.
