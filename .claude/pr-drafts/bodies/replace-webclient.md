@@ -28,4 +28,4 @@ Run on Windows: the sign-in token check, channel search (broadcasts and clips), 
 
 Also run on Windows: logging out and signing in again (the revoke request is sent, and a fresh token works for a search).
 
-Not yet confirmed on Windows: emote pictures in the HTML chat (the chat sampled had no emotes). (Update this section once it has been run.)
+Emote pictures in the HTML chat also load (a 20-minute chat sample had 44 emote images, and an emote URL returns a PNG).

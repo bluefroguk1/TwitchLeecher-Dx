@@ -1,4 +1,4 @@
-<!-- title: Read JSON with System.Text.Json instead of Newtonsoft.Json -->
+﻿<!-- title: Read JSON with System.Text.Json instead of Newtonsoft.Json -->
 ## Summary
 
 The app read Twitch and GitHub responses with Newtonsoft.Json, currently pinned to a pre-release (13.0.5-beta1). They are now read with .NET's built-in System.Text.Json (`JsonNode`), and the Newtonsoft.Json package is removed.
@@ -14,4 +14,6 @@ The HttpClient change (#31): both touch the same API code, so this is stacked on
 
 ## Testing
 
-Builds on Windows and Linux (GitHub Actions), and the published app starts on both. Not yet run on Windows.
+Builds on Windows and Linux (GitHub Actions), and the published app starts on both.
+
+Run on Windows: the sign-in check, channel search (broadcasts and clips), pasting a video link, a VOD crop with chat saved as HTML (with emote pictures), JSON and text plus the video-details file, a clip download, cancelling a running download, the command-line `search`, and the update check at start-up (no error).

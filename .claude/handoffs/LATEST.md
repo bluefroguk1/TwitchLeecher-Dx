@@ -14,7 +14,29 @@ git pull
 
 Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifact from the latest Build run on `final`. Your old local `final-next`, `combined` and `combined-all` branches are archived on the fork (see the Branch map), so don't use them.
 
-### 1a. NEXT PC RUN (2026-11-24): the System.Text.Json swap
+### 1a. PC RUN of the System.Text.Json swap (DONE 2026-11-23, late, on the PC): PASS
+
+Run on `final` 7c39ea1 (built 4.0.0). `Backup` and `Restore` worked, watched-search auto-download was switched off during the run and is back on. No fixes were needed. The original instructions are kept below the table.
+
+| Step | Result | Evidence |
+|---|---|---|
+| R1 | PASS | Settings > General: "Signed in as ...", "Check for updates" ticked |
+| R2 | PASS | Broadcasts (8), clips (7) and a pasted video link all returned cards with thumbnails |
+| R3, chat as HTML + details | PASS | 1-minute crop (06:00:00-06:01:00 of a 13 h VOD): `.mp4` 57.6 MB, `.chat.html` with the 2 messages, `.info.json` with its fields (channel, cropStart, cropEnd, id, length, quality, title, url, ...) |
+| R3, chat as JSON | PASS | `.chat.json` with `messages` and `video`; each message has `offsetSeconds`, `timestamp`, `name`, `text` and `fragments` (2 messages) |
+| R3, chat as text | PASS | `.chat.txt` with the same 2 messages as `[hh:mm:ss] name: text` |
+| Emote pictures (open check from the last run) | **PASS** | Audio Only, 20-minute crop (06:00:00-06:20:00), chat as HTML with emotes: 132 messages and 44 `<img>` tags with `static-cdn.jtvnw.net/emoticons` URLs; the first one returns HTTP 200 `image/png` |
+| R4 | PASS | A 7-second clip finished: 6.7 MB `.mp4`, h264 + aac, 7.55 s |
+| R5 | PASS | An uncropped VOD started (0%); **Cancel** ended as "Canceled", not an error |
+| R7 | PASS | `tl search <channel> --last 8` listed 8 videos, exit 0 |
+| Update check | PASS | With "Check for updates" on, the app was restarted: the only new error log is the known "Failed to create ShellLink object" notification one. No update notice appeared (expected: 4.0.0 against GitHub's 3.9.1) |
+
+Notes from the run:
+- **A VOD's quality list changed during the day, not because of this change.** The same VOD showed 1080p60 at the top in the morning and now shows "1440p60 (2560x1440) HEVC" first. The build just before the JSON swap (`9c8a083`) lists it too, and a plain request without sign-in does not, so it comes from Twitch (or the new sign-in token), not from the JSON code.
+- **Audio Only changes the download dialog layout** (the Compress option goes), so fill in crop, file name and chat **before** choosing Audio Only. A cheap way to sample a lot of chat is Audio Only with a 20-minute crop (about 26 MB).
+- **R17 (logout) was not repeated.** The sign-in from the last run is still in use.
+
+#### Original instructions for this run
 
 `final` (df8f791, CI green) now reads every Twitch and GitHub response with .NET's built-in JSON instead of Newtonsoft.Json. A slip would show as a search, video, clip, chat or sign-in that quietly returns nothing, so rerun part of the automated run below:
 - **R1–R5 and R7**, exactly as in 1b: sign-in check, search (VODs, clips, a pasted URL), a 2-minute crop with chat as HTML plus video details, a clip, Cancel, and `tl search`.
@@ -156,7 +178,7 @@ Checks:
 
 If one fails, the log or the error text names the request. The PR branch is `pr/replace-webclient`.
 
-**PC result:** items 1, 2, 3, 4, 6, 7 and 9 pass. Item 3 first failed (every VOD playlist returned 400: the VOD token was escaped twice), fixed in 68c68bd on `final` and in `pr/replace-webclient` (5658660, one clean commit, no AI lines). **Not confirmed:** item 5 (emote pictures; the chat sampled had no emotes) and item 8 (the update check was not looked at on its own; there was no related error in the logs at any start). In the PR text (`bodies/replace-webclient.md`) these two are listed as not yet confirmed.
+**PC result:** items 1, 2, 3, 4, 6, 7 and 9 pass. Item 3 first failed (every VOD playlist returned 400: the VOD token was escaped twice), fixed in 68c68bd on `final` and in `pr/replace-webclient` (5658660, one clean commit, no AI lines). **Item 5 (emote pictures) was confirmed later the same night, see 1a.** **Not confirmed:** item 8 (the update check was not looked at on its own; there was no related error in the logs at any start). In the PR text (`bodies/replace-webclient.md`) these two are listed as not yet confirmed.
 
 ### 3b. The #109 setting (TESTED on the PC 2026-11-23)
 
@@ -170,8 +192,8 @@ The #109 setting has only been built on CI, not run by a person. In the `final` 
 
 ### 4. What's next (nothing to send now)
 
-- **Decided 2026-11-23 (user): leave the #31 PR queued.** `pr/replace-webclient` (5658660) already has the token fix. No PR is open for it, and it goes in the last wave (code quality) when the user says so. Before it goes, update its Testing text if the emote check or the update check has been run.
-- **Open check:** emote pictures in HTML chat. Use a VOD with a busy chat, download a short crop with "as HTML with emotes", and look for `<img` tags in the `.chat.html`.
+- **Decided 2026-11-23 (user): leave the #31 PR queued.** `pr/replace-webclient` (5658660) already has the token fix. No PR is open for it, and it goes in the last wave (code quality) when the user says so. Its Testing text is up to date (emotes and the update check were run in the System.Text.Json run).
+- **Emote pictures in HTML chat: confirmed on the PC 2026-11-23** (see 1a: 44 emote images in a 20-minute sample).
 - **The Newtonsoft to System.Text.Json swap:** when it reaches `final`, rerun R1-R5 and R7 on the PC.
 - **Not run on the PC:** the Windows toast notifications (not a requirement), and the ffmpeg-failure part of the #109 check.
 
