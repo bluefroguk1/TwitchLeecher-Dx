@@ -38,6 +38,7 @@ namespace TwitchLeecher.Core.Models
 
         private string _failureReason;
         private volatile bool _pauseRequested;
+        private volatile bool _cancelRequested;
 
         #endregion Fields
 
@@ -170,6 +171,17 @@ namespace TwitchLeecher.Core.Models
             set { _pauseRequested = value; }
         }
 
+        /// <summary>Set by the download service while a cancel is stopping transfers and cleaning up.</summary>
+        public bool CancelRequested
+        {
+            get { return _cancelRequested; }
+            set
+            {
+                _cancelRequested = value;
+                FirePropertyChanged(nameof(DetailLine));
+            }
+        }
+
         public string FailureReason
         {
             get { return _failureReason; }
@@ -251,6 +263,11 @@ namespace TwitchLeecher.Core.Models
                 switch (DownloadState)
                 {
                     case DownloadState.Downloading:
+                        if (_cancelRequested)
+                        {
+                            return "Cancelling: stopping transfers and cleaning up temporary files";
+                        }
+
                         if (_pauseRequested)
                         {
                             return "Pausing after the chunks in flight";
@@ -278,7 +295,7 @@ namespace TwitchLeecher.Core.Models
                         return line;
 
                     case DownloadState.Queued:
-                        return "Starts after the current download";
+                        return string.Empty;
 
                     case DownloadState.Paused:
                         if (DownloadParams.WaitForSchedule)
