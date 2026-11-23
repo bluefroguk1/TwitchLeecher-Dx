@@ -51,9 +51,6 @@
     <PackageReference Include="Avalonia.Desktop">
       <Version>11.3.11</Version>
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.5-beta1</Version>
-    </PackageReference>
     <PackageReference Include="Ninject">
       <Version>4.0.0-beta.1</Version>
     </PackageReference>

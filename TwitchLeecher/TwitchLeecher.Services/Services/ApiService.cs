@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using DynamicData;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
@@ -178,7 +178,7 @@ namespace TwitchLeecher.Services.Services
 
                 if (!string.IsNullOrWhiteSpace(jsonStr))
                 {
-                    JObject json = JObject.Parse(jsonStr);
+                    JsonObject json = JsonNodeExtensions.ParseObject(jsonStr);
 
                     if (json != null)
                     {
@@ -268,13 +268,13 @@ namespace TwitchLeecher.Services.Services
 
                 if (!string.IsNullOrWhiteSpace(result))
                 {
-                    JObject searchResultJson = JObject.Parse(result);
+                    JsonObject searchResultJson = JsonNodeExtensions.ParseObject(result);
 
-                    JArray usersJson = searchResultJson.Value<JArray>("data");
+                    JsonArray usersJson = searchResultJson.Value<JsonArray>("data");
 
-                    if (usersJson != null && usersJson.HasValues)
+                    if (usersJson != null && usersJson.HasValues())
                     {
-                        JToken userJson = usersJson.FirstOrDefault();
+                        JsonNode userJson = usersJson.FirstOrDefault();
 
                         if (userJson != null)
                         {
@@ -460,11 +460,11 @@ namespace TwitchLeecher.Services.Services
 
                     SetNextRequestTime(webClient);
 
-                    JObject videosResponseJson = JObject.Parse(result);
+                    JsonObject videosResponseJson = JsonNodeExtensions.ParseObject(result);
 
                     if (videosResponseJson != null)
                     {
-                        JArray videosJson = videosResponseJson.Value<JArray>("data");
+                        JsonArray videosJson = videosResponseJson.Value<JsonArray>("data");
 
                         if (videosJson.Count == 0)
                         {
@@ -472,7 +472,7 @@ namespace TwitchLeecher.Services.Services
                         }
                         else
                         {
-                            JObject paginationJson = videosResponseJson.Value<JObject>(
+                            JsonObject paginationJson = videosResponseJson.Value<JsonObject>(
                                 "pagination"
                             );
 
@@ -481,7 +481,7 @@ namespace TwitchLeecher.Services.Services
                                 cursor = paginationJson.Value<string>("cursor");
                             }
 
-                            foreach (JObject videoJson in videosJson)
+                            foreach (JsonObject videoJson in videosJson)
                             {
                                 sum++;
 
@@ -618,9 +618,9 @@ namespace TwitchLeecher.Services.Services
                 var gqlPlaybackAccessToken = CreateGqlPlaybackAccessToken(id);
                 string accessTokenStr = webClient.UploadString(GQL_URL, gqlPlaybackAccessToken);
 
-                JObject accessTokenJson = JObject.Parse(accessTokenStr);
+                JsonObject accessTokenJson = JsonNodeExtensions.ParseObject(accessTokenStr);
 
-                JToken vpaToken = accessTokenJson.SelectToken(
+                JsonNode vpaToken = accessTokenJson.SelectToken(
                     "$.data.videoPlaybackAccessToken",
                     false
                 );
@@ -646,7 +646,7 @@ namespace TwitchLeecher.Services.Services
                 bool privileged = false;
                 bool subOnly = false;
 
-                JObject tokenJson = JObject.Parse(HttpUtility.UrlDecode(token));
+                JsonObject tokenJson = JsonNodeExtensions.ParseObject(HttpUtility.UrlDecode(token));
 
                 if (tokenJson == null)
                 {
@@ -661,14 +661,14 @@ namespace TwitchLeecher.Services.Services
                 }
                 else
                 {
-                    JObject chansubJson = tokenJson.Value<JObject>("chansub");
+                    JsonObject chansubJson = tokenJson.Value<JsonObject>("chansub");
 
                     if (chansubJson == null)
                     {
                         throw new ApplicationException("Token property 'chansub' is null!");
                     }
 
-                    JArray restrictedQualitiesJson = chansubJson.Value<JArray>(
+                    JsonArray restrictedQualitiesJson = chansubJson.Value<JsonArray>(
                         "restricted_bitrates"
                     );
 
@@ -872,15 +872,15 @@ namespace TwitchLeecher.Services.Services
 
                     string result = webClient.DownloadString(VIDEOS_URL);
 
-                    JObject videosResponseJson = JObject.Parse(result);
+                    JsonObject videosResponseJson = JsonNodeExtensions.ParseObject(result);
 
                     if (videosResponseJson != null)
                     {
-                        JArray videosJson = videosResponseJson.Value<JArray>("data");
+                        JsonArray videosJson = videosResponseJson.Value<JsonArray>("data");
 
                         if (videosJson != null)
                         {
-                            JToken videoJson = videosJson.FirstOrDefault();
+                            JsonNode videoJson = videosJson.FirstOrDefault();
 
                             if (videoJson != null)
                             {
@@ -905,7 +905,7 @@ namespace TwitchLeecher.Services.Services
             return null;
         }
 
-        public TwitchVideo ParseVideo(JToken videoJson)
+        public TwitchVideo ParseVideo(JsonNode videoJson)
         {
             string id = videoJson.Value<string>("id");
             string title = videoJson.Value<string>("title");
@@ -919,7 +919,7 @@ namespace TwitchLeecher.Services.Services
             TimeSpan length = TimeSpanExtensions.ParseTwitchFormat(
                 videoJson.Value<string>("duration")
             );
-            JArray mutedSegments = videoJson.Value<JArray>("muted_segments");
+            JsonArray mutedSegments = videoJson.Value<JsonArray>("muted_segments");
 
             string recorded = videoJson.Value<string>("published_at");
 
