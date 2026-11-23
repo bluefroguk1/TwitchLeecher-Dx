@@ -1,4 +1,5 @@
-﻿using Ninject;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Events;
 using TwitchLeecher.Gui.Interfaces;
@@ -11,7 +12,7 @@ namespace TwitchLeecher.Gui.Services
     {
         #region Fields
 
-        private readonly IKernel _kernel;
+        private readonly IServiceProvider _services;
         private readonly IEventAggregator _eventAggregator;
 
         private ViewModelBase _lastView;
@@ -23,9 +24,9 @@ namespace TwitchLeecher.Gui.Services
 
         #region Constructor
 
-        public NavigationService(IKernel kernel, IEventAggregator eventAggregator)
+        public NavigationService(IServiceProvider services, IEventAggregator eventAggregator)
         {
-            _kernel = kernel;
+            _services = services;
             _eventAggregator = eventAggregator;
 
             _persistentViews = new Dictionary<Type, ViewModelBase>();
@@ -37,30 +38,30 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowAuth()
         {
-            Navigate(_kernel.Get<AuthViewModel>());
+            Navigate(_services.GetRequiredService<AuthViewModel>());
         }
 
 
         public void ShowWelcome()
         {
-            Navigate(_kernel.Get<WelcomeViewModel>());
+            Navigate(_services.GetRequiredService<WelcomeViewModel>());
         }
 
         public void ShowLoading()
         {
-            Navigate(_kernel.Get<LoadingViewModel>());
+            Navigate(_services.GetRequiredService<LoadingViewModel>());
         }
 
         public void ShowSearch()
         {
-            Navigate(_kernel.Get<SearchViewModel>());
+            Navigate(_services.GetRequiredService<SearchViewModel>());
         }
 
         public void ShowSearchResults()
         {
             if (!_persistentViews.TryGetValue(typeof(SearchResultViewModel), out ViewModelBase vm))
             {
-                vm = _kernel.Get<SearchResultViewModel>();
+                vm = _services.GetRequiredService<SearchResultViewModel>();
                 _persistentViews.Add(typeof(SearchResultViewModel), vm);
             }
 
@@ -69,7 +70,7 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowDownload(DownloadParameters downloadParams)
         {
-            DownloadViewModel model = _kernel.Get<DownloadViewModel>();
+            DownloadViewModel model = _services.GetRequiredService<DownloadViewModel>();
             model.DownloadParams = downloadParams ?? throw new ArgumentNullException(nameof(downloadParams));
 
             Navigate(model);
@@ -79,7 +80,7 @@ namespace TwitchLeecher.Gui.Services
         {
             if (!_persistentViews.TryGetValue(typeof(DownloadsViewModel), out ViewModelBase vm))
             {
-                vm = _kernel.Get<DownloadsViewModel>();
+                vm = _services.GetRequiredService<DownloadsViewModel>();
                 _persistentViews.Add(typeof(DownloadsViewModel), vm);
             }
 
@@ -90,7 +91,7 @@ namespace TwitchLeecher.Gui.Services
         {
             if (!_persistentViews.TryGetValue(typeof(PreferencesViewModel), out ViewModelBase vm))
             {
-                vm = _kernel.Get<PreferencesViewModel>();
+                vm = _services.GetRequiredService<PreferencesViewModel>();
                 _persistentViews.Add(typeof(PreferencesViewModel), vm);
             }
             
@@ -99,12 +100,12 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowInfo()
         {
-            Navigate(_kernel.Get<InfoViewModel>());
+            Navigate(_services.GetRequiredService<InfoViewModel>());
         }
 
         public void ShowLog(TwitchVideoDownload download)
         {
-            LogViewModel model = _kernel.Get<LogViewModel>();
+            LogViewModel model = _services.GetRequiredService<LogViewModel>();
             model.Download = download ?? throw new ArgumentNullException(nameof(download));
 
             Navigate(model);
@@ -120,7 +121,7 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowAuthSubOnly()
         {
-            Navigate(_kernel.Get<SubOnlyViewModel>());
+            Navigate(_services.GetRequiredService<SubOnlyViewModel>());
         }
 
         private void Navigate(ViewModelBase nextView)
