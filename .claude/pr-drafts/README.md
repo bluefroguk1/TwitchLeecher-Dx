@@ -1,5 +1,28 @@
 # PR submission guide
 
+## Check 2026-11-23 (evening): issues, frameworks, optimisations
+
+**Upstream:** master has not moved (24cab52), and all 13 open PRs can merge. The developer added a thank-you on #104 (16:25, before the email): since moving to Avalonia he has only kept the app working and fixed critical bugs. No reply yet on bigger versus small PRs.
+
+**Open issues (16):**
+- **12 have a fix in a PR:**
+  - Open: #103/#92/#87/#56 -> #104; #48 -> #105; #37 -> #106; #71 -> #107 (+ chat export, Wave 3); #96 -> #108; #49 -> #109; #85 -> #127.
+  - Prepared: #36 -> `pr/feature-cli`.
+  - (#35, #50, #86 were already closed by the merges.)
+- **#42** (hover preview): set aside by the user; the download dialog filmstrip (Wave 3) covers it.
+- **#31** (async HttpClient): **not done.** `replace-webclient` (2dfa767, cut on the old master, never run) swaps WebClient for a shared HttpClient. final still has 28 WebClient uses in ApiService, DownloadService and UpdateService.
+- **#102** (only "Audio only" offered): that VOD has been deleted, so it can't be reproduced.
+- **#38** (downloads not starting, v3.6.1 from 2024) and **#25** (download button, Windows 7): neither reproduces. .NET 10 does not run on Windows 7, so #25 can't be fixed; its light-mode part was fixed by the developer in 2024.
+
+**Frameworks:**
+- .NET 10 is LTS (patch 10.0.15). .NET 11 shipped 2026-11-10 but is STS, so stay on 10.
+- Avalonia **12.2.0 came out 2026-11-23**: wait about two weeks (about 2026-12-07), then a patch-update PR.
+- Microsoft.Extensions.DependencyInjection and ProtectedData 11.0.0 are .NET 11 releases; keep 10.0.x to match the LTS.
+- **Newtonsoft.Json is pinned to 13.0.5-beta1 (a pre-release) in upstream master**; 13.0.4 is the latest stable. Small PR: pin 13.0.4. Bigger option: replace Newtonsoft with System.Text.Json (50 uses in 2 files), which removes a dependency and most of the AOT warnings.
+- Everything else is current (CommunityToolkit.Mvvm 8.4.2, DataGrid/WebView 12.1.2, ProgressRing 0.11.0, DesktopNotifications 1.3.1, the CI actions).
+
+**Worth doing next (ask the user):** 1) #31 WebClient -> HttpClient, rebuilt on the new master, in final, PC-tested; 2) Newtonsoft stable pin; 3) Avalonia 12.2 after about 2026-12-07.
+
 ## Release notes draft (2026-11-23)
 
 `release-notes-4.0.md` is a working draft of the 4.0 release notes in the developer's own template. **Whenever a PR merges or is declined, update it:** tick or remove its line using the map at the bottom. If he releases the merged PRs first (for example as 3.10), move those lines out. Offer it to him only when the last wave is in, and only with the user's OK.

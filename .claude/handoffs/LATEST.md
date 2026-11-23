@@ -58,6 +58,9 @@ Report back; if it passes, the #109 description's Testing line can be updated.
 
 ### 4. What's next (nothing to send now)
 
+- **Issues, frameworks and optimisations were checked on 2026-11-23:** see the PR guide, "Check 2026-11-23 (evening)". Open candidates: #31 WebClient -> HttpClient, the Newtonsoft stable pin, and Avalonia 12.2 after about 2026-12-07.
+- `preview` was rebuilt from `final` (9a08fcf), kept at version 3.9.1 so the What's New card stays hidden for the developer.
+
 - **Wait for the developer's answer** on bigger versus small PRs, and for merges of #104–#109 and #121–#127.
 - Each merge of one of #104–#109 will need the others rebased (they overlap in `ApiService`/`DownloadService`).
 - Then Wave 2 (UI refresh), either as 6 PRs or 1, depending on his answer. **Don't open any PR without the user saying so.**
