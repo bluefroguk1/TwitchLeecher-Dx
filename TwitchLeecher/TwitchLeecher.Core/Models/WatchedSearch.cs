@@ -8,7 +8,7 @@ namespace TwitchLeecher.Core.Models
 {
     // A saved channel search that is re-run every few minutes; new results are queued.
     // Plain INotifyPropertyChanged (not BindableBase): it is saved with System.Text.Json and
-    // BindableBase's ReactiveObject properties do not serialise.
+    // BindableBase's notification members do not serialise.
     public class WatchedSearch : INotifyPropertyChanged
     {
         #region Constants

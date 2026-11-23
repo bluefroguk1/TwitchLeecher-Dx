@@ -5,7 +5,6 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
-using ReactiveUI;
 using TwitchLeecher.Core;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
@@ -229,7 +228,7 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 if (_downloadCommand == null)
                 {
-                    _downloadCommand = ReactiveCommand.CreateFromTask(async () => Download());
+                    _downloadCommand = DelegateCommand.FromAsyncHandler(Download);
                 }
 
                 return _downloadCommand;

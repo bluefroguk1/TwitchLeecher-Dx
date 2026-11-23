@@ -6,12 +6,10 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
-using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
-using DynamicData;
 using Newtonsoft.Json.Linq;
 using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Enums;
@@ -498,7 +496,10 @@ namespace TwitchLeecher.Services.Services
                     loadTo,
                     0
                 );
-                results.AddRange(videos);
+                foreach (TwitchVideo video in videos)
+                {
+                    results.Add(video);
+                }
             }
 
             results = new ObservableCollection<TwitchVideo>(
