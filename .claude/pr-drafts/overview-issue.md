@@ -2,20 +2,16 @@ Hi! I've sent a number of pull requests and have more ready, so here's an overvi
 
 **See it all in one place:** the [`preview` branch](https://github.com/bluefroguk1/TwitchLeecher-Dx/tree/preview) on my fork is a single commit on master with every change below merged in ([full diff](https://github.com/schneidermanuel/TwitchLeecher-Dx/compare/master...bluefroguk1:TwitchLeecher-Dx:preview)). It's only for looking at, not for merging. Ready-made Windows and Linux builds of it are on [this Actions run](https://github.com/bluefroguk1/TwitchLeecher-Dx/actions/runs/45222297875) (Artifacts, GitHub login needed, available until 7 December; the Windows one is a native AOT build), so you can try the result before reading any code.
 
-**Already open (#104–#119)**
-- Fixes and performance: #104 (resource usage, #56, #87, #92, #103), #110 (ffmpeg 9.0.2 fetched at build time), #111 (stream chunks into ffmpeg), #112 (stay on search after an error), #113 (keep scroll position), #114/#115/#116 (small performance fixes)
-- Features: #105 (HEVC/AV1, #48), #106 (clips, #37), #107 (save chat, #71), #108 (quick download / multi-select, #96), #109 (keep the .ts if conversion fails, #49), #117 (VOD info, #50), #118 (Favourites as default search, #86), #119 (estimated size, #35)
+**Merged, thank you!** #110–#119.
 
-**Ready next, small and independent**
-- Second launch brings the running window to the front (pipe name mismatch fix)
-- Draggable message boxes, opened centred on the main window
-- Avalonia 11.3.23 and other patch updates
-- Pin the patched Tmds.DBus.Protocol (security advisory GHSA-xrw6-gwf8-vvr9, Linux)
-- Remove unused packages (SQLite, ASP.NET framework reference, ...) for a smaller build
-- A GitHub Actions build (Windows + Linux) with downloadable artifacts
-- Open folder for every download, not only finished ones (#85)
+**Open now** (all rebased on the current master)
+- Fixes: #104 (resource usage, #56, #87, #92, #103 and its duplicate #120)
+- Features: #105 (HEVC/AV1, #48), #106 (clips, #37), #107 (save chat, #71, review change done), #108 (quick download / multi-select, #96), #109 (keep the .ts if conversion fails, #49, now with a setting to turn it off)
+- Small and independent: #121 (second launch brings the running window to the front), #122 (draggable message boxes), #123 (Avalonia 11.3.23 and patch updates), #124 (remove unused packages), #125 (GitHub Actions build), #126 (security pin for Tmds.DBus.Protocol, Linux), #127 (Open folder for every download, #85)
 
-**A UI refresh** (built on one new set of named theme colours, so every theme keeps working)
+#104–#109 overlap in a few files, so once one is merged I'll rebase the others. #123, #124 and #126 merge in any order.
+
+**Next: a UI refresh** (built on one new set of named theme colours, so every theme keeps working)
 1. Named theme colours (the base for the rest)
 2. Dark form controls and a consistent font scale
 3. Header with Search/Downloads tabs, and corner notifications
@@ -25,10 +21,10 @@ Hi! I've sent a number of pull requests and have more ready, so here's an overvi
 
 Would you prefer the UI refresh as one PR, or in the steps above?
 
-**After the open PRs above** (they build on them)
+**After that** (these build on the open PRs)
 - Search results toolbar (sort, filter, badges, channel favourite star): needs #106, #108
-- Download dialog with a crop preview filmstrip: needs #106, #107, #117, #119
-- Settings with a side menu and a save bar: needs #108, #118
+- Download dialog with a crop preview filmstrip: needs #106, #107
+- Settings with a side menu and a save bar: needs #108
 - A "Coyote" colour theme
 - Chat export as HTML with emotes, or JSON: needs #107
 - Compress videos after download (CPU or GPU)
@@ -46,4 +42,4 @@ Would you prefer the UI refresh as one PR, or in the steps above?
 
 **Later, tidy-ups:** logging of swallowed exceptions, `HttpClient` in place of the obsolete `WebClient` (#31), and a small unit test project.
 
-I'll send these in small batches as you get to the open ones, and I'm happy to rebase anything if master moves.
+I won't send anything new until most of the open ones are dealt with, then the next batch in small steps. Happy to rebase anything if master moves.
