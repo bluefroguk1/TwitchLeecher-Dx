@@ -144,12 +144,6 @@
         <Reference Include="Ninject">
             <HintPath>..\..\..\..\.nuget\packages\ninject\3.3.6\lib\netstandard2.0\Ninject.dll</HintPath>
         </Reference>
-        <Reference Include="Projektanker.Icons.Avalonia">
-            <HintPath>..\..\..\..\.nuget\packages\projektanker.icons.avalonia\9.0.1\lib\netstandard2.0\Projektanker.Icons.Avalonia.dll</HintPath>
-        </Reference>
-        <Reference Include="Projektanker.Icons.Avalonia">
-            <HintPath>..\..\..\..\.nuget\packages\projektanker.icons.avalonia\9.0.1\lib\netstandard2.0\Projektanker.Icons.Avalonia.dll</HintPath>
-        </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -168,7 +162,6 @@
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.11-preview20251127001" />
-        <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.2" />
     </ItemGroup>
     <ItemGroup>
         <Resource Include="..\Resources\Images\TL_Icon.png">
