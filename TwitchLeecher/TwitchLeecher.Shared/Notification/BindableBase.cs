@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using ReactiveUI;
 
 namespace TwitchLeecher.Shared.Notification
 {
-    public abstract class BindableBase : ReactiveObject, INotifyPropertyChanged, INotifyDataErrorInfo
+    public abstract class BindableBase : INotifyPropertyChanged, INotifyDataErrorInfo
     {
         #region Fields
 
