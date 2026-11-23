@@ -95,7 +95,10 @@ public static class Program
             Channel = channel,
             VideoType = videoType,
             LoadLimitType = LoadLimitType.LastVods,
-            LoadLastVods = last
+            LoadLastVods = last,
+            // ApiService reads both dates even when the limit is "last N"; they are not used for filtering then
+            LoadFrom = DateTime.Today.AddDays(-30),
+            LoadTo = DateTime.Today
         };
 
         IApiService api = provider.GetRequiredService<IApiService>();
