@@ -15,7 +15,7 @@ tl download <vod url or id> [--quality 1080p60|720p|source|audio] [--from <time>
 - Sub-only VODs give "This video is for subscribers only." An existing file is never overwritten.
 - The app's "quality closest to the default" logic moves from `SearchResultViewModel` into `DefaultQuality.PickFrom`, so the app and the tool share one copy.
 - No new packages. Arguments are parsed with a few lines of code.
-- The Info screen gets a short "Command-line tool" section, and the README gets a "Command-line tool" section (commands, examples, options, exit codes) plus a line in Features.
+- The Info screen gets a short "Command-line tool" section (and its title is now centred against the logo instead of top-aligned), and the README gets a "Command-line tool" section (commands, examples, options, exit codes) plus a line in Features.
 - **Packaging:** `tl` needs to sit next to `TwitchLeecher.exe` in the installer and release zips. The GitHub Actions build (if that PR is merged) already publishes it into the same folder.
 
 ## Depends on
@@ -24,4 +24,4 @@ The Ninject removal: the tool registers the same services with `ServiceModule.Lo
 
 ## Testing
 
-Tested on Windows 11 (2026-11-23): `tl search`, `tl qualities` and a cropped `tl download` with a signed-in account. In CI, `tl --help` runs, a wrong option exits with 2, and running without a sign-in exits with 3.
+Tested on Windows 11 (2026-11-23): the Info screen section, `tl search`, `tl qualities` and a cropped `tl download` with a signed-in account. In CI, `tl --help` runs, a wrong option exits with 2, and running without a sign-in exits with 3.

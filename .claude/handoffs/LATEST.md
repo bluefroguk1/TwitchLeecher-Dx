@@ -46,7 +46,7 @@ Checks:
 
 ### 3a. Quick look: the CLI on the Info screen (DONE 2026-11-23, PC: "all looks good")
 
-`final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. On the PC the product title on the Info screen was also centred vertically against the logo (it was top-aligned); that fix is in `InfoView.axaml` on `final` only, not yet in `pr/feature-cli`. Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
+`final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. On the PC the product title on the Info screen was also centred vertically against the logo (it was top-aligned); that fix is now also folded into `pr/feature-cli` (dd691a4, CI green). Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
 
 ### 3b. One small PC check (optional, about 5 minutes)
 
