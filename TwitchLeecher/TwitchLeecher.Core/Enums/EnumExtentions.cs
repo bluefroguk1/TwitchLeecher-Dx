@@ -1,15 +1,16 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace TwitchLeecher.Core.Enums
 {
     public static class EnumExtentions
     {
-        public static string GetDescription<T>(this T enumerationValue)
+        public static string GetDescription<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T>(this T enumerationValue)
             where T : struct
         {
-            Type type = enumerationValue.GetType();
+            Type type = typeof(T);
             if (!type.IsEnum)
             {
                 throw new ArgumentException("EnumerationValue must be of Enum type", "enumerationValue");
@@ -17,10 +18,10 @@ namespace TwitchLeecher.Core.Enums
 
             //Tries to find a DescriptionAttribute for a potential friendly name
             //for the enum
-            MemberInfo[] memberInfo = type.GetMember(enumerationValue.ToString());
-            if (memberInfo != null && memberInfo.Length > 0)
+            FieldInfo field = type.GetField(enumerationValue.ToString());
+            if (field != null)
             {
-                object[] attrs = memberInfo[0].GetCustomAttributes(typeof(DescriptionAttribute), false);
+                object[] attrs = field.GetCustomAttributes(typeof(DescriptionAttribute), false);
 
                 if (attrs != null && attrs.Length > 0)
                 {
