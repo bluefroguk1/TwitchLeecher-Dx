@@ -1,5 +1,9 @@
 # PR submission guide
 
+## #128 OPENED 2026-11-24: check for updates fixed (user asked to send it straight away)
+
+Since the Avalonia rewrite (5b972e0, 2023), `UpdateService` asked for the releases of `schneidermanuel/TwitchLeecher.Old-dx` (404, hidden by its `catch`), so the app never showed an update. **`pr/fix-update-check`** (c455dbc, on master, CI green, AI check clean) is open as **#128**. The same fix is in `final`. Copies of 3.9.1 and earlier keep asking the old address, so they will never hear about 4.0. When `pr/replace-webclient` is next rebased it will conflict on the User-Agent line in `UpdateService`; keep `"TwitchLeecher-Dx"`.
+
 ## SUBMISSION PLAN AND READINESS (2026-11-24, user's plan)
 
 **Order (the user's plan):**

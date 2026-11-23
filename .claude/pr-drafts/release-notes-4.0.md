@@ -38,6 +38,7 @@ Nothing below this comment block is sent as-is without the user's OK.
 **Fixes**
 * Lower CPU and memory use (#56), and several reported bugs (#87, #92, #103, #120)
 * A second launch brings the running window to the front
+* "Check for updates" works again (it had been asking for a repository that doesn't exist since 2023)
 * Stay on the search page after a failed search
 * Keep the scroll position on Downloads and Settings
 * Draggable message boxes, opened centred on the main window
@@ -83,5 +84,5 @@ Map: line -> PR (x = merged upstream)
 [ ] second launch -> #121 | [ ] draggable dialogs -> #122 | [ ] Avalonia 11.3.23 -> #123 | [ ] unused packages -> #124 | [ ] GitHub Actions -> #125 | [ ] DBus pin -> #126 | [ ] Open folder -> #127
 [ ] UI refresh: theme colours, dark inputs, header, search sidebar, downloads queue, in-app sign-in -> Wave 2
 [ ] results toolbar (favourite star), download dialog, settings, Coyote, chat export (HTML/JSON), compress, tray, start with Windows, watched searches, schedule, perf follow-ups -> Wave 3
-[ ] Ninject, ReactiveUI, icons, Native AOT, Avalonia 12, tl CLI -> last wave | [ ] fewer pop-ups -> remove-popups | [ ] What's new card -> whats-new | [ ] HttpClient (#31) -> replace-webclient | [ ] System.Text.Json -> system-text-json | [ ] .mp4 when unconverted -> fix-mp4-unconverted
+[ ] Ninject, ReactiveUI, icons, Native AOT, Avalonia 12, tl CLI -> last wave | [ ] fewer pop-ups -> remove-popups | [ ] What's new card -> whats-new | [ ] HttpClient (#31) -> replace-webclient | [ ] System.Text.Json -> system-text-json | [ ] .mp4 when unconverted -> fix-mp4-unconverted | [ ] update check -> #128
 -->
