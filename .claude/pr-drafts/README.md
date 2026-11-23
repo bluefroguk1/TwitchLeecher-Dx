@@ -1,6 +1,16 @@
 # PR submission guide
 
-## Status 2026-11-23 (after the final-next test round on the PC)
+## Developer review, 2026-11-23 (evening)
+
+- **Merged:** #110-#119 (10 of 16). The developer is happy to merge despite style differences and plans a rewrite later (#119). On #110 they may later move ffmpeg into the installer only.
+- **Asked and done** (rebased onto the new master, CI green on Windows and Linux, replies posted):
+  - #105, #106, #104: rebase only.
+  - #107: the chat GQL request is now a `JObject`, with `CHAT_OPERATION`/`CHAT_QUERY_HASH` constants.
+  - #108 (approved, "LGTM"): rebased. Its own scroll-restore code was dropped because #113's `ScrollPositionRestorer` covers it. The title is now "Quick download and multi-select download (#96)".
+  - #109: new setting `DownloadKeepTsOnFailure`, Settings > Download > "Keep the unconverted .ts if conversion fails". It's on by default (XML `KeepTsOnFailure`). Since #111, the streamed path re-joins the chunks into the `.ts`. The setting itself hasn't been run on Windows yet.
+- **Not yet in `final`:** the #107 `JObject` change and the #109 setting. Port them when `final` is next rebuilt on the new master.
+- **Wave conditions now met:** the developer has responded (Wave 1), and at least half of #104-#119 are merged (Wave 2). The user had said to wait until 2026-12-04; ask again before sending.
+
 
 - **`final-next` passed the Windows test round** (checks 1-13 in the handoff), with these fixes made on the PC and now in the PR branches:
   - Avalonia 12 start-up crash (tray icon asset read before the Gui assembly loaded): `pr/avalonia-12`.
