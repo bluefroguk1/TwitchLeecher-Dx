@@ -9,7 +9,7 @@ Hi! I've sent a number of pull requests and have more ready, so here's an overvi
 - Features: #105 (HEVC/AV1, #48), #106 (clips, #37), #107 (save chat, #71, review change done), #108 (quick download / multi-select, #96), #109 (keep the .ts if conversion fails, #49, now with a setting to turn it off)
 - Small and independent: #121 (second launch brings the running window to the front), #122 (draggable message boxes), #123 (Avalonia 11.3.23 and patch updates), #124 (remove unused packages), #125 (GitHub Actions build), #126 (security pin for Tmds.DBus.Protocol, Linux), #127 (Open folder for every download, #85)
 
-#104–#109 overlap in a few files, so once one is merged I'll rebase the others. #123, #124 and #126 merge in any order.
+#104–#109 overlap in a few files, so once one is merged I'll rebase the others. If that's annoying, I can also put them together in one PR. #123, #124 and #126 merge in any order.
 
 **Next: a UI refresh** (built on one new set of named theme colours, so every theme keeps working)
 1. Named theme colours (the base for the rest)
@@ -18,8 +18,6 @@ Hi! I've sent a number of pull requests and have more ready, so here's an overvi
 4. Search page as a sidebar with results alongside, opening on Search
 5. Downloads page with speed, time left and per-download pause
 6. Twitch sign-in inside the app, with sub-only in the same login (no more browser console step)
-
-Would you prefer the UI refresh as one PR, or in the steps above?
 
 **After that** (these build on the open PRs)
 - Search results toolbar (sort, filter, badges, channel favourite star): needs #106, #108
@@ -42,4 +40,12 @@ Would you prefer the UI refresh as one PR, or in the steps above?
 
 **Later, tidy-ups:** logging of swallowed exceptions, `HttpClient` in place of the obsolete `WebClient` (#31), and a small unit test project.
 
-I won't send anything new until most of the open ones are dealt with, then the next batch in small steps. Happy to rebase anything if master moves.
+I won't send anything new until most of the open ones are dealt with. Everything above is about 26 small PRs. If fewer, bigger PRs are easier for you, I can group them into about 6 instead:
+1. UI refresh
+2. Search and download features
+3. Background features (tray, watched searches, schedule)
+4. Export and processing (chat export, compression, performance)
+5. Code quality
+6. Native AOT and Avalonia 12, as two separate PRs, so you can say no to either on its own
+
+Or I keep them small, whatever suits you. Happy to rebase anything if master moves.
