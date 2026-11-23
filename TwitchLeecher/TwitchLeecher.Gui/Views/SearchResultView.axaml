@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:TwitchLeecher.Gui.Converters"
              xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
              x:DataType="viewModels:SearchResultViewModel"
              Classes="searchView">
     <Design.DataContext>

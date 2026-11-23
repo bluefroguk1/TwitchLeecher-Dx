@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TwitchLeecher.Gui.ViewModels"
         xmlns:view="clr-namespace:TwitchLeecher.Gui.Views"
-        xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+        xmlns:avalonia="using:TwitchLeecher.Gui.Controls"
         xmlns:models="clr-namespace:TwitchLeecher.Core.Models;assembly=TwitchLeecher.Core"
         Classes="TlWindow"
         Width="780"
