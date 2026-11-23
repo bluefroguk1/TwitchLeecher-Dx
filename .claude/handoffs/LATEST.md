@@ -44,6 +44,10 @@ Checks:
 5. Started minimised to the tray: the card waits until you first open the window.
 6. Fresh install: rename the `Twitch Leecher DX` folder in `%AppData%`, start the app, and no card should appear. Then put the folder back.
 
+### 3a. Quick look: the CLI on the Info screen (2 minutes)
+
+`final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
+
 ### 3b. One small PC check (optional, about 5 minutes)
 
 The #109 setting has only been built on CI, not run by a person. In the `final` build:

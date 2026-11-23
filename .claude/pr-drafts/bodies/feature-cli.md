@@ -15,6 +15,8 @@ tl download <vod url or id> [--quality 1080p60|720p|source|audio] [--from <time>
 - Sub-only VODs give "This video is for subscribers only." An existing file is never overwritten.
 - The app's "quality closest to the default" logic moves from `SearchResultViewModel` into `DefaultQuality.PickFrom`, so the app and the tool share one copy.
 - No new packages. Arguments are parsed with a few lines of code.
+- The Info screen gets a short "Command-line tool" section, and the README gets a "Command-line tool" section (commands, examples, options, exit codes) plus a line in Features.
+- **Packaging:** `tl` needs to sit next to `TwitchLeecher.exe` in the installer and release zips. The GitHub Actions build (if that PR is merged) already publishes it into the same folder.
 
 ## Depends on
 
