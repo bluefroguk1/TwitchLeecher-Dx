@@ -8,7 +8,7 @@ Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show or
 
 ### What's in `final-next`
 
-`final-next` = `final` + 4 changes (and the #85 Open folder fix, which is on `final` too). `final` = your tested `combined-all` + the PR guide + the Ninject swap. Each change is also its own PR branch on `master` (see "Branch map").
+`final-next` = `final` + 4 changes. The #85 Open folder fix and the new `tl` command-line tool (#36) are on `final` too. `final` = your tested `combined-all` + the PR guide + the Ninject swap. Each change is also its own PR branch on `master` (see "Branch map").
 
 | # | Change | What could break | Commit on final-next |
 |---|---|---|---|
@@ -54,7 +54,12 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 9. **Log:** open the download's log, then **Copy** (clipboard API changed), and paste it somewhere. **#85:** while a download is queued or downloading, its **Open folder** button shows and opens the download folder.
 10. **Sign-in:** log out, then sign in again in the in-app window (the web view is the biggest AOT unknown).
 11. **Tray and pop-ups:** minimise to the tray, then reopen from the tray. A second launch wakes the running window. A desktop notification appears when the download finishes (still unconfirmed from earlier rounds).
-12. **Optional, broader:** `powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild` (Tier 1) on build A.
+12. **Command-line tool (#36):** `tl.exe` is in the CI artifact next to `TwitchLeecher.exe`. From a JIT build, run `dotnet run --project TwitchLeecher\TwitchLeecher.Cli -c Release -- <args>`. Sign in in the app first. Try:
+    - `tl search <a channel you watch> --last 5`
+    - `tl qualities <a VOD id from that list>`
+    - `tl download <that id> --from 0:10:00 --to 0:13:00 --out C:\TL-cli`: progress shows, the file plays, and Ctrl+C on a second run cancels it.
+    - `tl download <id> --quality 720p` picks 720p (or tells you which qualities exist).
+12b. **Optional, broader:** `powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild` (Tier 1) on build A.
 13. **What AOT is for:** with nothing downloading, compare A and B in Task Manager (memory) and time from double-click to window. Note the numbers; they go in the AOT PR description.
 
 **Linux:** CI only proves it builds and starts under a virtual display. If you have WSL or a Linux VM, run the `TwitchLeecher-final-next-linux-x64` artifact and do checks 1, 2, 4 and 6.
@@ -67,6 +72,7 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
   | Change | Branch |
   |---|---|
   | 1 | `replace-ninject` |
+  | CLI | `feature-cli` |
   | 2 | `remove-reactiveui` |
   | 3 | `replace-icon-pack` |
   | 4 | `native-aot` (JSON parts: final only, see below) |
@@ -125,7 +131,7 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 | #85 "Open folder" on queued/downloading items | **Fixed 2026-11-23:** `feature-85-open-folder`, clean copy `pr/feature-85-open-folder` (on `master`, Wave 1 size). Also in `final` and `final-next`. Not run yet. |
 | #102 only "Audio Only" offered for one VOD | **Can't reproduce:** that VOD (2876332302) no longer exists (Twitch returns no playback token). Needs a fresh example. |
 | #25, #38 download buttons do nothing (2024, versions 3.5/3.6, no logs) | Not reproduced. Likely fixed by later releases and #104, but unconfirmed. Could ask the reporters to retry the `preview` build. |
-| #36 CLI | Not started (feature request) |
+| #36 CLI | **Built 2026-11-23:** `feature-cli`, clean copy `pr/feature-cli` (stacked on replace-ninject). Also in `final` and `final-next`. `tl search`, `tl qualities` and `tl download` work as described in check 12. CI only checks help, usage and the no-sign-in exits. |
 | #42 hover preview | **Ignore (user, 2026-11-23):** superseded by how this build handles previews (the download dialog's preview filmstrip). |
 
 ## Tools (`.claude/tools/`, run from Git Bash in the repo)
