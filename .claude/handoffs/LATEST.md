@@ -1,46 +1,137 @@
-﻿# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
+﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated 2026-11-23 on the Mac (top section); the rest was last updated 2026-11-19/20 on the Windows PC. **Every branch below has now been built and tested by the user on Windows.** The next job is to turn the tested branches into clean upstream PRs, one PR per change.
+Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. `final-next` carries the same copy. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
-Read this file from **`final`** (`git show origin/final:.claude/handoffs/LATEST.md`). `final` replaces `combined` and `combined-all`. Other branches carry their own older, branch-specific `LATEST.md` or `ui-*.md` notes; this overview is the one to trust.
+## PC TEST ROUND, START HERE (2026-11-23): `final-next`
 
-## PC TEST ROUND, START HERE (2026-11-23): `final` with Ninject replaced
+**One round tests everything new since your last test (the `combined-all` round, finished 2026-11-20).** That includes the Ninject swap, which was never run.
 
-**What's new since your last test (the combined-all round you finished 2026-11-20):**
-- **`final` branch** = `combined-all` (all 35 of your tweaks) + the PR guide from `combined` + **one code change: Ninject is replaced by `Microsoft.Extensions.DependencyInjection`** (commit 69e245c). **Nothing else in the app changed**, so this round only has to prove the swap.
-- **Why:** Ninject is an unmaintained 2017 beta, and it blocks Native AOT (faster start-up, less memory). See `.claude/pr-drafts/bodies/replace-ninject.md`.
-- **The risk:** the new container needs every class it creates to be listed. Ninject made unlisted ones on the fly. A missing entry would make a page fail to open. `ValidateOnBuild` is on, so most mistakes would stop the app **at start-up** with an error naming the missing type. On the Mac every constructor was checked against the registrations (36, no gaps; `WatchedSearchesViewModel` was the one that had been missing).
-- **Builds:** `final` 69e245c (run 45164559544), `preview` c81c316 (run 45164599008), and `replace-ninject` on master (run 45164438058) all compiled on Windows and Linux. **None has been run yet.**
+### What's in `final-next`
 
-**1. Get the build** (close every copy first: `Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force`):
-- `git fetch origin; git checkout final; git pull`, then `& 'C:\Program Files\dotnet\dotnet.exe' build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release`, then run `TwitchLeecher\TwitchLeecher\bin\Release\net10.0\TwitchLeecher.exe`.
-- **Or** download `TwitchLeecher-final-win-x64` from Actions run 45164559544 and run its exe.
-- **Trap (it happened on 2026-11-20):** switching branches does **not** rebuild the exe (`bin\` isn't tracked), and a copy left in the tray swallows a new launch. If the app looks old, it is old: kill it and rebuild.
-- Use `final`, not `preview`. `preview` has the same code, but **no `test-scripts\`**. It's the clean copy for the developer.
+`final-next` = `final` + 4 changes. `final` = your tested `combined-all` + the PR guide + the Ninject swap. Each change is also its own PR branch on `master` (see "Branch map").
 
-**2. Check the Ninject swap (about 10 minutes).** Every item opens a class the container creates. Note PASS/FAIL and the error text:
-1. The app starts without an error. Theme is applied, and it opens on Search.
-2. Search: run a channel search. Results appear in the right-hand pane.
-3. Click a result's download: the download dialog opens. Cancel.
-4. Downloads tab opens.
-5. Settings opens, and every side-menu section opens, **especially Watched searches**.
-6. Info (header icon) opens. Donate opens the browser.
-7. Downloads: open a download's log (if the queue is empty, queue a short one first).
-8. Log out, then sign in again (the in-app sign-in window opens and returns to Search).
-9. A message box (e.g. Settings › unsaved changes, or remove a watched search) opens centred and can be dragged.
-10. Minimise to the tray, then reopen from the tray. A second launch of the exe wakes the running window.
-- **Optional, broader:** `powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild` (Tier 1) still matches `final`.
+| # | Change | What could break | Commit on final-next |
+|---|---|---|---|
+| 1 | **Ninject → `Microsoft.Extensions.DependencyInjection`** (on `final` already) | A page or dialog fails to open if its class isn't registered. `ValidateOnBuild` makes most mistakes stop the app at start-up instead. All 36 registrations were checked against every constructor. | 69e245c (in `final`) |
+| 2 | **ReactiveUI removed**. Three commands now use the project's `DelegateCommand.FromAsyncHandler`. `BindableBase` no longer derives from `ReactiveObject`. DynamicData's `AddRange` is a loop. | The Download button in the dialog, Settings › Undo and Settings › Defaults (the three commands that changed) | 60cc9aa |
+| 3 | **Icon package replaced** by a built-in `Icon` control (`TwitchLeecher.Gui/Controls/Icon.cs` and `IconData.cs`, the same Font Awesome 6.7.2 shapes, credited in the README) | An icon missing, blank, the wrong size, off-centre or the wrong colour | 1bd2079, ca224a2 |
+| 4 | **Native AOT for Windows publishes**: ffmpeg path from `AppContext.BaseDirectory`, enum descriptions, `Marshal.SizeOf<T>`, compiled bindings in the Gui project, `BuiltInComInteropSupport` removed. Plus AOT-safe JSON: watched searches use a source-generated `WatchedSearchesJson`, and VOD info and chat JSON are built as `JsonObject`. | **Only in the published native exe:** sign-in web view, desktop notifications, ffmpeg not found, watched searches not saving or loading, chat/VOD-info JSON | a86311b |
+| 5 | **Avalonia 12.1.6** (DataGrid 12.1.2, progress ring 0.11.0, `Avalonia.Diagnostics` dropped, clipboard `using`) | Styled controls (date picker, calendar, toggle switch, combo box, scroll bars), header, tray, the DataGrid, the clipboard (Log › Copy) | cd7ad5b |
+| 6 | **CI start-up check:** CI now launches the published app (Linux under a virtual display) and fails if it exits within 20 s | — | 9c8a28d |
 
-**3. If something fails:** the log is in `%APPDATA%\Twitch Leecher DX` (or Settings › Log). A missing-registration error reads like `Unable to resolve service for type 'X' while attempting to activate 'Y'`. The fix is one `services.AddTransient<X>();` line in `TwitchLeecher.Gui/Modules/GuiModule.cs` (or `AddSingleton` in `TwitchLeecher.Services/Modules/ServiceModule.cs` for a service). Make the same fix on `replace-ninject`, then cut `pr/replace-ninject` again.
+**CI:** `final-next` 9c8a28d, run **45169606631**, is green. The native Windows exe publishes and starts, and Linux builds and starts. Only 5 AOT warnings are left, from Newtonsoft.Json, System.Linq.Expressions and Microsoft.CSharp. **None of this has been run by a person.**
 
-**4. When it passes:**
-- Update the Testing section of `.claude/pr-drafts/bodies/replace-ninject.md`.
-- Rebuild `preview` from `final` (recipe in `.claude/pr-drafts/README.md`).
-- Ask the user whether to point the #104 comment's build link at the new preview run. It currently links run 44813082025, which is the earlier, tested code without the swap.
+### 1. Two builds, because AOT only exists in the published exe
 
-**Upstream status (checked 2026-11-23):**
-- The overview is posted on #104 and links the `preview` branch. There's no reply yet, and none of #104–#119 is reviewed.
-- **Do not submit any PRs.** Wave 1 waits for the developer to reply, or until about 2026-12-04. The plan is at the top of `.claude/pr-drafts/README.md`.
+`dotnet build` gives the normal (JIT) exe, which tests changes 1, 2, 3 and 5. **Only `dotnet publish` makes the native AOT exe.** Local AOT publishing needs the Visual Studio "Desktop development with C++" tools, so use the CI artifact.
+
+Close every copy first: `Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force`.
+
+- **A. JIT build (normal):** `git fetch origin; git checkout final-next; git pull`, then `& 'C:\Program Files\dotnet\dotnet.exe' build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release`, then run `TwitchLeecher\TwitchLeecher\bin\Release\net10.0\TwitchLeecher.exe`. The test scripts use this one.
+- **B. AOT build:** GitHub → Actions → run 45169606631 → Artifacts → `TwitchLeecher-final-next-win-x64`. Unzip it into its own folder, e.g. `C:\TL-aot\`, and run `TwitchLeecher.exe`. Check it's native: the folder has no `TwitchLeecher.dll`, and Task Manager shows no ".NET Host".
+- **Traps:**
+  - Switching branches doesn't rebuild the exe (`bin\` isn't tracked).
+  - A copy in the tray swallows the next launch. If the app looks old, it is old.
+  - Both builds share `%APPDATA%\Twitch Leecher DX`, so settings, sign-in and watched searches carry over between them. That's useful for test 7.
+
+### 2. Checks (about 30 minutes; note PASS/FAIL and any error text)
+
+**PC Claude can run these for you.** In the Claude desktop app on the PC, ask it to "use computer use to run the PC TEST ROUND checks in LATEST.md". It takes screenshots and clicks through the app, and it can compare icons against `final` itself.
+- **You still do:** typing the Twitch password in check 10, granting it screen access when asked, and judging anything it flags as uncertain.
+- **It records:** PASS/FAIL per check in a results file, and screenshots of any failures.
+
+
+Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **build B**. Those are the ones AOT can break.
+
+1. **Start-up:** no error. The theme applies, and it opens on Search. Switch New → Original → Coyote once.
+2. **Icons (change 3):** compare against `final` or a screenshot from before. Check the header tabs and buttons (Search, Downloads, Settings, Info, Donate), the result card buttons and ★, the Downloads page (pause, play, bin), message-box icons and the watched-search bin. Each icon should match in size, centring and colour, including hover and active states, in all three themes.
+3. **Styled controls (change 5):** the Custom date range picker (field, calendar button, pop-up calendar, dimmed future days), toggle switches (Hide downloaded, watched searches On/Off), combo boxes, scroll bars, the results toolbar shrinking as you narrow the window.
+4. **Search:** a channel search. Results appear in the right-hand pane, with thumbnails and badges.
+5. **Download dialog:** opens, the filmstrip loads, and **Download** queues it (changed command).
+6. **Settings:** every side-menu section opens, especially **Watched searches** (the one registration that had been missing). Change something, then **Undo**, then **Defaults** (changed commands). Save.
+7. **Watched searches save and load (AOT JSON):** add a watched search, close the app, reopen it. It's still there with its settings. On B, also check that a search added in A shows up.
+8. **One short download** (3-minute crop) with **Save chat as JSON**, **Save video details** and **Compress**. The download finishes. `.chat.json` and `.info.json` open, with the same fields as before. Compression runs (proves ffmpeg is found).
+9. **Log:** open the download's log, then **Copy** (clipboard API changed), and paste it somewhere.
+10. **Sign-in:** log out, then sign in again in the in-app window (the web view is the biggest AOT unknown).
+11. **Tray and pop-ups:** minimise to the tray, then reopen from the tray. A second launch wakes the running window. A desktop notification appears when the download finishes (still unconfirmed from earlier rounds).
+12. **Optional, broader:** `powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild` (Tier 1) on build A.
+13. **What AOT is for:** with nothing downloading, compare A and B in Task Manager (memory) and time from double-click to window. Note the numbers; they go in the AOT PR description.
+
+**Linux:** CI only proves it builds and starts under a virtual display. If you have WSL or a Linux VM, run the `TwitchLeecher-final-next-linux-x64` artifact and do checks 1, 2, 4 and 6.
+
+### 3. If something fails
+
+- **The log** is in `%APPDATA%\Twitch Leecher DX` (or Settings › Log). For an AOT-only failure, also run the AOT exe from a terminal to see what it prints.
+- **Which branch owns it:**
+
+  | Change | Branch |
+  |---|---|
+  | 1 | `replace-ninject` |
+  | 2 | `remove-reactiveui` |
+  | 3 | `replace-icon-pack` |
+  | 4 | `native-aot` (JSON parts: final only, see below) |
+  | 5 | `avalonia-12` |
+
+  Fix it on that branch and again on `final-next`, then re-cut its `pr/*` branch with `.claude/tools/make_pr.sh` (see "Tools").
+- **Known fix patterns:**
+  - "Unable to resolve service for type 'X'": add `services.AddTransient<X>();` in `TwitchLeecher.Gui/Modules/GuiModule.cs`.
+  - A blank icon: add its name, view box and path to `IconData.cs`. The names come from the Font Awesome 6 free set.
+  - An AOT-only crash in JSON: use a source-generated context or `JsonObject`.
+  - An AOT-only crash elsewhere: the culprit is usually reflection, so search the log for the type name.
+- **If Avalonia 12 or AOT can't be fixed quickly:** leave it out. `final` stays your working version, and the PRs are independent.
+
+### 4. When it passes
+
+- **Make it final:** fast-forward `final` to `final-next` (`git checkout final; git merge --ff-only origin/final-next; git push`).
+- **Rebuild `preview`** from `final` (recipe in `.claude/pr-drafts/README.md`).
+- **Ask the user** whether to point the #104 comment's build link at the new `preview` run. It still links run 44813082025: the earlier tested code, from before Ninject.
+- **Update the PR descriptions' Testing sections** with what you confirmed: `bodies/replace-ninject.md`, `remove-reactiveui.md`, `replace-icon-pack.md`, `native-aot.md` (add the memory and start-up numbers), `avalonia-12.md`.
+
+## Branch map (2026-11-23)
+
+| Branch | What it is |
+|---|---|
+| `final` | **Your working version.** `combined-all` + `combined`'s PR guide + Ninject swap. Holds this handoff, `.claude/pr-drafts/`, `.claude/tools/`, `test-scripts/`. |
+| `final-next` | `final` + ReactiveUI removal, icons, AOT, Avalonia 12, CI start-up check. **The test branch for this round.** |
+| `preview` | One clean commit on `master` with `final`'s code (no notes, scripts or AI lines). Linked from the #104 comment for the developer. Rebuild it whenever `final` changes. |
+| `combined`, `combined-all` | Superseded by `final`; kept, don't add to them. |
+| `pr/*` | Clean single-commit PR branches, all pushed, **none submitted**. New this week: `pr/deps-security-pin`, `pr/replace-ninject`, `pr/remove-reactiveui`, `pr/replace-icon-pack`, `pr/native-aot` (stacked: Ninject + ReactiveUI commits, then its own), `pr/avalonia-12` (stacked: ReactiveUI + icons commits, then its own). `pr/ci-build` now includes the start-up check. |
+| Working branches for the new PRs | `replace-ninject`, `remove-reactiveui`, `replace-icon-pack`, `native-aot`, `avalonia-12` (on `master`) |
+| Code-quality branches, **not in `final`, never run** | `improve-error-logging`, `replace-webclient` (#31), `add-unit-tests`, `refactor-results-viewmodel`, `refactor-shared-styles` (`claude/refactor-shared-styles-35c0a9`), `tray-tooltip-events`, `deps-security-fixes` (cut as `pr/deps-security-pin`), `deps-security-notifications` |
+
+**Final-only AOT work:** the JSON fixes for watched searches, VOD info and chat live only in `final-next` (commit a86311b). When those feature PRs (watched searches, #117 VOD info, chat export) are re-cut, carry the matching part over so each one is AOT-safe on its own.
+
+## Upstream status and PR plan
+
+- **The 16 open PRs (#104–#119):** no reviews or comments. The maintainer's last commit was 2026-08-07.
+- **Overview comment:** posted on #104 on 2026-11-20 (https://github.com/schneidermanuel/TwitchLeecher-Dx/pull/104#issuecomment-7049853680). It links `preview`. No reply yet. Check first: `gh pr list --repo schneidermanuel/TwitchLeecher-Dx --author bluefroguk1` and the #104 comments.
+- **Do not submit any PRs** until the user says so. The plan is at the top of `.claude/pr-drafts/README.md`: Wave 1 (6 small PRs) waits for a reply, or until about 2026-12-04. The new PRs go in the last wave: icons and ReactiveUI first, then AOT, and Avalonia 12 after the UI PRs.
+- **Before any submit,** run the "no Claude references" check in that README. It must print nothing.
+
+## Upstream issues: what's covered (checked 2026-11-23, 19 open)
+
+| Issue | Covered by |
+|---|---|
+| #35 size estimate | #119 |
+| #37 clips | #106 |
+| #48 HEVC/AV1 | #105 |
+| #49 keep .ts | #109 |
+| #50 VOD info file | #117 |
+| #56, #87, #92, #103 | #104 |
+| #71 chat | #107, plus the chat-export branch (HTML/JSON) |
+| #86 Favourites default | #118 |
+| #96 QOL | #108 |
+| #31 async/HttpClient | **Partly:** `replace-webclient` (untested, not in `final`) |
+| #85 "Open folder" on queued/downloading items | **Not done.** The button still shows only when a download has finished (`DownloadsView.axaml`, `IsVisible="{Binding IsDone}"`). Small change: open the target folder for any state. |
+| #102 only "Audio Only" offered for one VOD | **Can't reproduce:** that VOD (2876332302) no longer exists (Twitch returns no playback token). Needs a fresh example. |
+| #25, #38 download buttons do nothing (2024, versions 3.5/3.6, no logs) | Not reproduced. Likely fixed by later releases and #104, but unconfirmed. Could ask the reporters to retry the `preview` build. |
+| #36 CLI, #42 hover preview | Not started (feature requests) |
+
+## Tools (`.claude/tools/`, run from Git Bash in the repo)
+
+- `make_pr.sh <pr-branch> <target-base> <source> <source-base> <message-file>` squashes `source-base..source` into one clean commit on `target-base`. It leaves out `test-scripts/`, `.claude/` and AI lines. Write the message file without any `Co-Authored-By` line.
+- `ci.sh <ref> <name>` pushes `<ref>` (plus the `pr/ci-build` workflow if it has none) as `ci-check/<name>` so Actions builds and start-up-checks it. Delete the branch afterwards (`git push origin --delete ci-check/<name>`).
+- The edit scripts used for this round (`ninject.py`, `reactiveui.py`, `icons.py`, `aot.py`, `stj.py`, `avalonia12.py`) were one-offs on the Mac and are already applied. They aren't needed again.
 
 ## Rules (from the user, keep them)
 
@@ -48,7 +139,7 @@ Read this file from **`final`** (`git show origin/final:.claude/handoffs/LATEST.
 - **Each change is its own branch and its own upstream PR**, so the developer can pick and choose. Don't bundle.
 - **PR branches and PR text must contain no reference to Claude or any AI**: no `Co-Authored-By` line, no "Generated with" line, no `.claude/` files, no test scripts. (Working branches still carry the `Co-Authored-By: Claude Opus 5.5` trailer; the recipe below strips it.)
 - **PR "Testing" sections claim only what the user actually confirmed** (see the results below). Do not invent coverage.
-- Commit freely on working branches. **Push, force-push and open PRs only when the user asks.** Never commit to `master`.
+- Commit freely on working branches. Pushing working, `pr/*`, `final*` and `ci-check/*` branches to the fork is routine (the user asked for everything to be synced there). **Opening PRs or commenting upstream only when the user asks.** Never commit to `master`.
 - Ask before merging branches into each other or opening PRs to upstream.
 - Mark known limits in code as `// shortcut: <limit>, <when to upgrade>`.
 - **Views use theme brushes only** (`{DynamicResource <Key>Brush}`), never hex colours (translucent black overlays and the red LIVE badge are the allowed exceptions).
@@ -56,15 +147,19 @@ Read this file from **`final`** (`git show origin/final:.claude/handoffs/LATEST.
 
 ## Project and PC setup
 
-- C# .NET 10, Avalonia 11.3, Ninject, CommunityToolkit.Mvvm. Solution in `TwitchLeecher/`; app project `TwitchLeecher/TwitchLeecher/TwitchLeecher.csproj`. Fork `bluefroguk1/TwitchLeecher-Dx`; upstream `schneidermanuel/TwitchLeecher-Dx`. Design canvas: https://claude.ai/artifact/CYBdwo46oR2LqydWnUdo62
+- C# .NET 10, Avalonia 11.3.23 on `final` (12.1.6 on `final-next`), Microsoft.Extensions.DependencyInjection (Ninject is gone), CommunityToolkit.Mvvm, no ReactiveUI on `final-next`, icons from the built-in `TwitchLeecher.Gui.Controls.Icon`. Solution in `TwitchLeecher/`; app project `TwitchLeecher/TwitchLeecher/TwitchLeecher.csproj`. Fork `bluefroguk1/TwitchLeecher-Dx`; upstream `schneidermanuel/TwitchLeecher-Dx`. Design canvas: https://claude.ai/artifact/CYBdwo46oR2LqydWnUdo62
 - **.NET SDK is at `C:\Program Files\dotnet\dotnet.exe`, not on PATH by default** (an x86 `dotnet` without an SDK comes first). Build: `& 'C:\Program Files\dotnet\dotnet.exe' build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release` (0 errors is the bar; ~20 warnings are normal).
-- Run `bin\Release\net10.0\TwitchLeecher.exe` (not `dotnet TwitchLeecher.dll`, which shows as ".NET Host").
+- Run `bin\Release\net10.0\TwitchLeecher.exe` (not `dotnet TwitchLeecher.dll`, which shows as ".NET Host"). That is the JIT build. The native AOT exe only comes from `dotnet publish -r win-x64` (needs the VS C++ tools) or the CI artifact.
 - **The app is single-instance.** A hidden/tray instance, or one left by a test script, blocks new launches and locks `bin\` so builds fail with "file is locked". Kill every `TwitchLeecher` process (`Get-Process TwitchLeecher | Stop-Process -Force`) before building or launching.
 - Terminal tool: `run_in_terminal` types literal lines only. Start scripts with `$env:Path = 'C:\Program Files\dotnet;C:\Windows\System32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Program Files\Git\cmd'; powershell -ExecutionPolicy Bypass -File test-scripts\<script>.ps1 -SkipBuild`.
 - **App settings are shared by every branch** (`%APPDATA%\Twitch Leecher DX\config.xml`). The user's saved Theme is "Original" (the code default is "New"); Quick download and similar toggles persist between branches and change behaviour (e.g. "Disable conversion" hides the crop section). Check them when something looks wrong.
 - ffmpeg on `master` is the old committed 5.0. PR #110 replaces it with 9.0.2 fetched at build time (the 9.x exe is over GitHub's 100 MB file limit).
 
-## Where things stand
+---
+
+# HISTORY (reference only, older rounds; the sections above win where they disagree)
+
+## Where things stand (as of 2026-11-19)
 
 - **16 PRs are open** upstream (#104–#119), all from `*-pr` branches on the fork, no reviews or comments yet. They are a separate, earlier body of work (bugfixes, HEVC, clips, chat, quick-download, keep-.ts, ffmpeg 9, direct-to-ffmpeg, search-error, page scroll, three perf fixes, #50, #86, #35). `combined` = all of them merged. The `test-scripts` branch README maps each script to its PR. Check `gh pr list --repo schneidermanuel/TwitchLeecher-Dx --author bluefroguk1` for review feedback before anything else.
 - **The 13 branches below are new and NOT yet PRs.** All pass their test scripts, with the exceptions noted.
@@ -408,6 +503,9 @@ Each is its own branch. Build it on `combined-all` so it can be tested with ever
 
 ## Lessons (read before touching colours or XAML)
 
+- **(2026-11-23) Icons:** use `<avalonia:Icon Value="fa-solid fa-name"/>` where `xmlns:avalonia="using:TwitchLeecher.Gui.Controls"`. A new icon needs an entry in `IconData.cs` (view box width and height, SVG path from Font Awesome Free 6). An unknown name draws nothing, and asserts in Debug.
+- **(2026-11-23) AOT rules for new code:** no reflection-based `JsonSerializer` (add the type to a `JsonSerializerContext`, or use `JsonObject`); no `Assembly.Location` (use `AppContext.BaseDirectory`); every view needs `x:DataType` (bindings are compiled); register new view models and services in `GuiModule`/`ServiceModule`. CI's start-up check catches crashes at launch, but not a page that only breaks when opened.
+
 - **A `SolidColorBrush` whose `Color` is a `{DynamicResource ...Color}` does not resolve after `App.SetTheme()` clears and refills `Application.Resources`.** Anything using it renders transparent (this hid all input text, then the progress bar). Define brushes with literal colours inside each theme dictionary (`New`, `Original`, `Coyote`) and remove indirect ones from `Shared`. Old brushes still defined indirectly (`MainWindowBackground`, `TlScrollingTextBox*`, ...) work only because they are read with `StaticResource` at startup; don't use `DynamicResource` on them. Duplicate keys between `Shared` and a theme dictionary make the theme switch throw.
 - **Avalonia XAML:** a grouped selector (`TextBox, ComboBox, NumericUpDown, CalendarDatePicker`) fails to compile if a setter such as `VerticalContentAlignment` isn't on the common base. Split per control. Template part names (`Border#border`, `ContentPresenter#PART_ContentPresenter`, `Ellipse#border`) come from SimpleTheme.
 - **Windows tooling:** files are CRLF; Python edits must normalise `\r\n` first and assert the match. In Python heredocs, `\n` inside a path string becomes a newline (this corrupted `bin\Release\net10.0`); use real backslashes via byte constants or `\x5c`. Put multi-line PR bodies in a script file, not nested shell quoting.
@@ -446,7 +544,7 @@ Then `gh pr create --repo schneidermanuel/TwitchLeecher-Dx --base master --head 
 - `.claude/handoffs/LATEST.md`: keep this overview.
 - The 16 open PRs overlap each other and these branches (e.g. #106/#107/#108, #104/#111); see each PR's description.
 
-## Later (not started)
+## Later (as of 2026-11-19; since then: deps updates, Ninject, ReactiveUI, Avalonia 12 and AOT are built, see the top)
 
 - `deps-patch-updates` from `master`: Avalonia 11.3.11 → 11.3.23 (all Avalonia packages), Avalonia.ReactiveUI 11.3.8 → 11.3.9, CommunityToolkit.Mvvm 8.4.0 → 8.4.2.
 - `deps-remove-unused` from `master`: System.Data.SQLite (unused, ships native DLLs), System.ComponentModel.Annotations, the Upgrade Assistant analyzers (3 projects).
