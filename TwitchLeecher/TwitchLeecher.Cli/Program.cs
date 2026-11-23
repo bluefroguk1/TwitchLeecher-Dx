@@ -57,6 +57,8 @@ public static class Program
 
         ServiceCollection services = new ServiceCollection();
         services.AddSingleton<IEventAggregator, EventAggregator>();
+        // DownloadService reports finished downloads through this; a console run prints its own result instead
+        services.AddSingleton<IDesktopNotificationService, NoNotifications>();
         ServiceModule.Load(services);
         using ServiceProvider provider = services.BuildServiceProvider();
 
@@ -95,7 +97,10 @@ public static class Program
             Channel = channel,
             VideoType = videoType,
             LoadLimitType = LoadLimitType.LastVods,
-            LoadLastVods = last
+            LoadLastVods = last,
+            // ApiService reads both dates even when the limit is "last N"; they are not used for filtering then
+            LoadFrom = DateTime.Today.AddDays(-30),
+            LoadTo = DateTime.Today
         };
 
         IApiService api = provider.GetRequiredService<IApiService>();
@@ -393,5 +398,12 @@ public static class Program
         Console.Error.WriteLine(error);
         Console.Error.WriteLine("Run 'tl --help' for usage.");
         return USAGE;
+    }
+}
+
+internal sealed class NoNotifications : IDesktopNotificationService
+{
+    public void Notify(string title, string message)
+    {
     }
 }
