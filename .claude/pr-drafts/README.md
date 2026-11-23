@@ -1,5 +1,9 @@
 # PR submission guide
 
+## Email sent to the developer, 2026-11-23
+
+The user sent `email-developer.md`: the same update and offer as the #104 comment, including grouping the ~26 remaining PRs into about 6. Wait for his answer before cutting or sending anything.
+
 ## Branches updated to the new master, 2026-11-23
 
 - Fork `master` = upstream `master` (24cab52, with #110-#119).

@@ -1,15 +1,46 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. `final-next` has been archived; `final` is current. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-23 (evening) on the Mac**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
-## CURRENT STATE (2026-11-23, after the PC test round)
+## START HERE ON THE PC (updated 2026-11-23 evening, Mac)
 
-**The `final-next` round PASSED** on the PC, with fixes made there (Avalonia 12 start-up crash, CLI search dates and notifications, NVENC compression, faster Cancel, UI tweaks). Then on the Mac:
-- The three PC tweaks that only lived on `preview` (pop-ups removed, quick-download message box, Default quality on one line) were added to `final-next` (user: keep all three). CI green.
-- **`final` = `final-next`** (fast-forwarded), and **`preview` was rebuilt** from it. To use it on the PC: `git fetch origin; git checkout final; git pull`, then rebuild (`dotnet build`), or download the `final` CI artifact.
-- PR branches carry the fixes (see `.claude/pr-drafts/README.md` "Status 2026-11-23"), bodies' Testing sections are updated, and the #104 comment points at the new preview build.
-- **Branches tidied:** `final-next`, `combined`, `combined-all` and 38 other working branches moved to `refs/archive/<name>` on the fork (see the PR guide's Status section). Use **`final`** from now on.
-- **No PC test is pending.** The next thing is the upstream submission waves in the PR guide.
+### 1. Get the current code
+
+```
+git fetch origin --prune
+git checkout final
+git pull
+```
+
+Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifact from the latest Build run on `final`. Your old local `final-next`, `combined` and `combined-all` branches are archived on the fork (see the Branch map), so don't use them.
+
+### 2. What happened since your test round
+
+- **The developer reviewed everything on 2026-11-23.** He merged **#110–#119** (10 PRs). He is happy to merge despite style differences and plans a rewrite later (#119). His comments are short and friendly; match that tone.
+- **The other six (#104–#109) are rebased onto the new master and answered:**
+  - #107: the chat request is now a `JObject`, with `CHAT_OPERATION`/`CHAT_QUERY_HASH` constants.
+  - #108 (he wrote "LGTM"): its own scroll code was dropped, because #113 covers it. Renamed "Quick download and multi-select download (#96)".
+  - #109: new setting, Settings › Download › "Keep the unconverted .ts if conversion fails". It's on by default.
+  - #104: also linked to the new issue #120 (a duplicate of #103), with a comment on #120.
+- **Wave 1 is open as #121–#127:** pipe fix, draggable dialogs, Avalonia 11.3.23, unused packages, CI build, Tmds.DBus pin, #85 Open folder.
+- **All branches are on the new master:** fork `master` synced, `final` merged plus the #107/#109 changes, `preview` rebuilt, and all 35 `pr/*` branches rebased or re-parented. Every changed branch is CI-green.
+- **The #104 overview comment is refreshed:** merged/open lists, a new preview build (run 45222297875, until 2026-12-07), and an **offer to group the ~26 remaining PRs into about 6 bigger ones** (UI refresh, search/download features, background features, export/processing, code quality, plus Native AOT and Avalonia 12 kept separate), or keep them small.
+- **The email to the developer was sent** by the user (2026-11-23) with the same update and offer. The draft is in `.claude/pr-drafts/email-developer.md`.
+
+### 3. One small PC check (optional, about 5 minutes)
+
+The #109 setting has only been built on CI, not run by a person. In the `final` build:
+1. Settings › Download shows "Keep the unconverted video if conversion fails", ticked by default. Untick it, save, restart the app: it stays unticked.
+2. Optional, with the always-failing ffmpeg trick from the #109 test: with it ticked, a `.ts` is kept; with it unticked, no `.ts` is left.
+
+Report back; if it passes, the #109 description's Testing line can be updated.
+
+### 4. What's next (nothing to send now)
+
+- **Wait for the developer's answer** on bigger versus small PRs, and for merges of #104–#109 and #121–#127.
+- Each merge of one of #104–#109 will need the others rebased (they overlap in `ApiService`/`DownloadService`).
+- Then Wave 2 (UI refresh), either as 6 PRs or 1, depending on his answer. **Don't open any PR without the user saying so.**
+- Before any submit, run the "no Claude references" check in `.claude/pr-drafts/README.md`. It must print nothing.
 
 The test round below is kept as the record of what was checked.
 
@@ -104,26 +135,25 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 - **Ask the user** whether to point the #104 comment's build link at the new `preview` run. It still links run 44813082025: the earlier tested code, from before Ninject.
 - **Update the PR descriptions' Testing sections** with what you confirmed: `bodies/replace-ninject.md`, `remove-reactiveui.md`, `replace-icon-pack.md`, `native-aot.md` (add the memory and start-up numbers), `avalonia-12.md`.
 
-## Branch map (2026-11-23)
+## Branch map (2026-11-23 evening)
 
 | Branch | What it is |
 |---|---|
-| `final` | **Your working version.** `combined-all` + `combined`'s PR guide + Ninject swap. Holds this handoff, `.claude/pr-drafts/`, `.claude/tools/`, `test-scripts/`. |
-| `final-next` | `final` + ReactiveUI removal, icons, AOT, Avalonia 12, CI start-up check. **The test branch for this round.** |
-| `preview` | One clean commit on `master` with `final`'s code (no notes, scripts or AI lines). Linked from the #104 comment for the developer. Rebuild it whenever `final` changes. |
-| `combined`, `combined-all` | Superseded by `final`; kept, don't add to them. |
-| `pr/*` | Clean single-commit PR branches, all pushed, **none submitted**. New this week: `pr/deps-security-pin`, `pr/replace-ninject`, `pr/remove-reactiveui`, `pr/replace-icon-pack`, `pr/native-aot` (stacked: Ninject + ReactiveUI commits, then its own), `pr/avalonia-12` (stacked: ReactiveUI + icons commits, then its own). `pr/ci-build` now includes the start-up check. |
-| Working branches for the new PRs | `replace-ninject`, `remove-reactiveui`, `replace-icon-pack`, `native-aot`, `avalonia-12` (on `master`) |
-| Code-quality branches, **not in `final`, never run** | `improve-error-logging`, `replace-webclient` (#31), `add-unit-tests`, `refactor-results-viewmodel`, `refactor-shared-styles` (`claude/refactor-shared-styles-35c0a9`), `tray-tooltip-events`, `deps-security-fixes` (cut as `pr/deps-security-pin`), `deps-security-notifications` |
+| `master` | Synced with upstream (24cab52, includes #110–#119). |
+| `final` | **Your working version.** Everything tested, plus the new master, plus the #107/#109 review changes. Holds this handoff, `.claude/pr-drafts/`, `.claude/tools/` and `test-scripts/`. |
+| `preview` | One clean commit on `master` with `final`'s code (no notes, scripts or AI lines). Linked from the #104 comment. Rebuild it whenever `final` changes. |
+| `*-pr` (16) | Heads of upstream PRs #104–#119. #110–#119 are merged; #104–#109 are open and rebased. |
+| `pr/*` (35) | Clean PR branches, all on the new master. Wave 1 is open upstream as #121–#127. `pr/_after-open-prs`/`-theme` are the stand-in base for Wave 3 (master + #104–#109 as they were before the review changes). |
+| Not in `final`, never run | `improve-error-logging`, `replace-webclient` (#31), `add-unit-tests`, `refactor-results-viewmodel`, `claude/refactor-shared-styles-35c0a9`, `tray-tooltip-events`, `claude/fix-slow-downloads-15ccca` (on hold), `deps-security-notifications` |
+| `refs/archive/*` (41) | Old working branches (`final-next`, `combined`, `combined-all`, the `claude/*` UI branches and others). Get them with `git fetch origin 'refs/archive/*:refs/archive/*'`. |
 
-**Final-only AOT work:** the JSON fixes for watched searches, VOD info and chat live only in `final-next` (commit a86311b). When those feature PRs (watched searches, #117 VOD info, chat export) are re-cut, carry the matching part over so each one is AOT-safe on its own.
+**Final-only AOT work:** the JSON fixes for watched searches, VOD info and chat live only in `final`. When those feature PRs are re-cut, carry the matching part over so each one is AOT-safe on its own.
 
 ## Upstream status and PR plan
 
-- **The 16 open PRs (#104–#119):** no reviews or comments. The maintainer's last commit was 2026-08-07.
-- **Overview comment:** posted on #104 on 2026-11-20 (https://github.com/schneidermanuel/TwitchLeecher-Dx/pull/104#issuecomment-7049853680). It links `preview`. No reply yet. Check first: `gh pr list --repo schneidermanuel/TwitchLeecher-Dx --author bluefroguk1` and the #104 comments.
-- **Do not submit any PRs** until the user says so. The plan is at the top of `.claude/pr-drafts/README.md`: Wave 1 (6 small PRs) waits for a reply, or until about 2026-12-04. The new PRs go in the last wave: icons and ReactiveUI first, then AOT, and Avalonia 12 after the UI PRs.
-- **Before any submit,** run the "no Claude references" check in that README. It must print nothing.
+- **Merged:** #110–#119. **Open:** #104–#109 (rebased, review changes done), #121–#127 (Wave 1). New issue #120 is covered by #104.
+- **Overview comment:** https://github.com/schneidermanuel/TwitchLeecher-Dx/pull/104#issuecomment-7049853680 (refreshed 2026-11-23). Check first: `gh pr list --repo schneidermanuel/TwitchLeecher-Dx --author bluefroguk1 --state all`, plus the comments on each open PR.
+- **Waiting for the developer** to choose between bigger grouped PRs and small ones. The full plan and history are in `.claude/pr-drafts/README.md`.
 
 ## Upstream issues: what's covered (checked 2026-11-23, 19 open)
 
