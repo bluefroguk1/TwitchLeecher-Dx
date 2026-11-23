@@ -257,7 +257,8 @@
                                                         <TextBlock Text="Play" />
                                                     </StackPanel>
                                                 </Button>
-                                                <Button Classes="dl" Content="Open folder" IsVisible="{Binding IsDone}"
+                                                <!-- Any state -->
+                                                <Button Classes="dl" Content="Open folder"
                                                         Command="{Binding $parent[ItemsControl].((viewModels:DownloadsViewModel)DataContext).OpenDownloadFolderCommand}"
                                                         CommandParameter="{Binding Id}" />
                                                 <!-- Failed or canceled -->
