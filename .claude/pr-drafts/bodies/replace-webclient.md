@@ -1,4 +1,4 @@
-<!-- title: Replace WebClient with one shared HttpClient (#31) -->
+﻿<!-- title: Replace WebClient with one shared HttpClient (#31) -->
 ## Summary
 
 Closes #31 (the HttpClient part). `WebClient` is obsolete (24 SYSLIB0014 warnings) and opened a new connection for every request.
@@ -22,4 +22,8 @@ The API methods stay synchronous; making the whole service async would change ev
 
 ## Testing
 
-Builds on Windows and Linux (GitHub Actions), and the published app starts on both, with no SYSLIB0014 warnings left. Not yet run on Windows.
+Builds on Windows and Linux (GitHub Actions), and the published app starts on both, with no SYSLIB0014 warnings left.
+
+Run on Windows: the sign-in token check, channel search (broadcasts and clips), pasting a video URL, a clip download (plays), and the command-line `search` and its exit codes all work.
+
+Not yet confirmed on Windows: VOD downloads, cancelling one, and logging out. (Update this section once they have been run.)

@@ -59,6 +59,38 @@ powershell -ExecutionPolicy Bypass -File test-scripts\pc-test-helper.ps1 Backup
 - Record what passed in the Testing lines of `.claude/pr-drafts/bodies/replace-webclient.md` (R1–R5, R7, R17) and `feature-requests` (#109: R6).
 - Mark the What's New checks (R9–R15) in section 3 below.
 
+### Results of the automated PC test run (2026-11-23, PC Claude, `final` 90bcdc7)
+
+Backup and Restore both worked (settings, theme and version back as before; watched-search auto-download was switched off during the run and is back on). The helper script ran without any fix. Screenshots are in `%TEMP%/tl-test/` (R1, R2, R4, R9, R12, R13, R15 as `.png`; not committed).
+
+| Step | Result | Evidence |
+|---|---|---|
+| R1 | PASS | Settings > General shows "Signed in as ..." and no sign-in prompt appeared |
+| R2 | PASS | A channel's broadcasts (8), its clips (7) and a pasted `twitch.tv/videos/<id>` link all returned cards with thumbnails |
+| R3 | **FAIL** | The download dialog for a VOD never opens. Error log: `400 (Bad Request)` in `ApiService.GetPlaylistInfo` (line 1012). See "Bug found" below |
+| R4 | PASS | A 7-second clip finished ("Done"): a 6.7 MB `.mp4`, h264 + aac, duration 7.55 s |
+| R5 | NOT RUN | Needs a VOD download, which hits the R3 bug |
+| R6 | PASS | The setting was ticked, I unticked and saved it (`KeepTsOnFailure` false in `config.xml`), restarted, and it was still unticked. Ticked and saved again afterwards |
+| R7 | PASS | `tl search <channel> --last 3` listed 3 videos, exit code 0 |
+| R8 | PASS | `tl --bogus` printed the usage hint, exit code 2 |
+| R9 | PASS | What's new card shown in Dark: "What's new in 4.0", 8 items, purple icons |
+| R10 | PASS | **Full release notes** opened a "Page not found - GitHub" page in Chrome (the expected 404). Esc closed the card |
+| R11 | PASS | Restarted: no card |
+| R12 | PASS | Classic: gold icons, readable. Enter closed it, but only after I clicked the card; the first Enter did nothing (the card may not take keyboard focus by itself) |
+| R13 | PASS | Coyote: blue icons, red **Got it** button, readable. **Got it** closed it |
+| R14 | PASS | `--minimized`: no window and no card after 7 s. Opening from the tray icon showed the card |
+| R15 | PASS | Fresh settings folder: the app opened on "Connect with Twitch" and no card |
+| R16 | PASS | `Restore` put Theme Original and Version 4.0 back |
+| R17 | NOT RUN | Needs the user to log out and sign in. Do it after the fix below, because it is the other #31 change |
+
+**Bug found (R3): every VOD playlist request returns 400. The #31 `HttpRequestClient` double-encodes the VOD token.**
+- `ApiService.GetVodAuthInfo` (line 915) already does `Uri.EscapeDataString` on the token, because `WebClient.QueryString` sent values as they were. `HttpRequestClient.Send` now encodes every query value again, so the playlist request carries a double-encoded token.
+- Checked directly against Twitch with the same request: token encoded once gives HTTP 200 (2217 bytes of playlist); encoded twice (what the app now sends) gives HTTP 400. `tl qualities <id>` fails the same way for every VOD, so this is not one bad video.
+- Not affected: clips (the clip URL is built separately, and R4 passed), and the other `AddQuery` calls, which pass plain values.
+- **Suggested fix (not applied; the run is "fix nothing"):** make the token reach the playlist request unescaped once, for example `webClient.AddQuery("token", Uri.UnescapeDataString(vodAuthInfo.Token))` in `GetPlaylistInfo` (line 1009), or stop escaping it at line 915 and change the `HttpUtility.UrlDecode(token)` just below. Fix it on `replace-webclient` and on `final`, re-cut `pr/replace-webclient`, then repeat R3, R5 and R17.
+- The failure is quiet in the app: clicking Download on a VOD showed no error message on screen.
+- Also noticed: the app starts minimised to the tray with the user's saved settings (`StartMinimised`), so a tester first sees no window.
+
 ### 2. What happened since your test round
 
 - **The developer reviewed everything on 2026-11-23.** He merged **#110–#119** (10 PRs). He is happy to merge despite style differences and plans a rewrite later (#119). His comments are short and friendly; match that tone.
