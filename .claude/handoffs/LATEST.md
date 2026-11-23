@@ -2,6 +2,15 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs, both passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## NEW SINCE (Mac, 2026-11-24): one small PC check, about 5 minutes
+
+`final` (c6e6684, CI green) now accepts **.mp4** as the file name when "Disable conversion" is on (newer Twitch VODs are MP4 inside). This came from comparing mpeter50's fork. PR branch: `pr/fix-mp4-unconverted`.
+1. In the download dialog, tick "Disable conversion" (or turn it on in Settings › Download). The suggested name ends in `.ts`, as before.
+2. Change the name to end in `.mp4`. No error, and Download is allowed. A 1-minute crop isn't possible with conversion off, so pick a short VOD or a clip-length one, or cancel after a few seconds and only check there's no name error.
+3. If it finishes, the `.mp4` plays in a normal player.
+4. A name ending in `.mkv` with conversion off still shows an error (only .ts and .mp4 are allowed).
+Report as before. Add files by name, not `.claude` as a whole.
+
 ## STATUS IN ONE GLANCE (PC, end of 2026-11-23)
 
 - **Nothing is waiting on the PC.** Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.

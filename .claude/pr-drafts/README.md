@@ -23,6 +23,12 @@
 
 **Worth doing next (ask the user):** 1) ~~#31~~ DONE, see below; 2) Newtonsoft stable pin, or System.Text.Json in its place (user asked; recommended as its own PR after #31); 3) Avalonia 12.2 after about 2026-12-07.
 
+## mpeter50's fork compared, and the .mp4 fix (2026-11-24)
+
+- **Compared** mpeter50/TwitchLeecher-Dx (the other upstream contributor). Six of their eight branches are merged upstream and in `final`. Their open #76 (tooltip wrap) is covered by #104 and our settings redesign. Their open #101 (DASH) is mostly covered by the owner's 3.9.1. Both of their open PRs already conflict with upstream master.
+- **One gap fixed:** with conversion off, only a `.ts` name was accepted, though newer VODs are MP4 inside. **`pr/fix-mp4-unconverted`** (ec3e7ff, on master, CI green, AI check clean, body `bodies/fix-mp4-unconverted.md`, credits @mpeter50) and in `final` (c6e6684). It is small and independent, so it can go with any batch. Their "skip conversion when the output is .mp4" part was **not** taken: it would also skip conversion for `.ts` VODs and for crops.
+- Their remote is added locally as `mpeter50` (fetch only).
+
 ## Newtonsoft -> System.Text.Json (built 2026-11-24, after the #31 PC test)
 
 - **`pr/system-text-json`** (3be427f): stacked on `pr/replace-webclient` (5658660), its own commit on top, CI green, AI check clean, body `bodies/system-text-json.md`.
