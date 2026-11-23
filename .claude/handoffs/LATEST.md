@@ -81,7 +81,7 @@ Backup and Restore both worked (settings, theme and version back as before; watc
 | R14 | PASS | `--minimized`: no window and no card after 7 s. Opening from the tray icon showed the card |
 | R15 | PASS | Fresh settings folder: the app opened on "Connect with Twitch" and no card |
 | R16 | PASS | `Restore` put Theme Original and Version 4.0 back |
-| R17 | NOT RUN | Needs the user to log out and sign in. Do it after the fix below, because it is the other #31 change |
+| R17 | PASS | Log out asked for confirmation and returned to "Connect with Twitch" with no new error in the log. The user signed in again in the in-app window (the user typed the login). Settings showed "Signed in as ..." and `tl search <channel> --last 1` returned a video, exit 0. The revoke request ignores failures by design, so this does not prove Twitch accepted the revoke. The settings backup was not restored afterwards, because the logout had invalidated the old token |
 
 **Bug found (R3): every VOD playlist request returns 400. The #31 `HttpRequestClient` double-encodes the VOD token.**
 - `ApiService.GetVodAuthInfo` (line 915) already does `Uri.EscapeDataString` on the token, because `WebClient.QueryString` sent values as they were. `HttpRequestClient.Send` now encodes every query value again, so the playlist request carries a double-encoded token.
