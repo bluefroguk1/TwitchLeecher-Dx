@@ -1,5 +1,16 @@
 # PR submission guide
 
+## Branches updated to the new master, 2026-11-23
+
+- Fork `master` = upstream `master` (24cab52, with #110-#119).
+- `final`: master merged in, keeping final's tree, because the 10 merged commits are byte-for-byte our PRs. Also gained the #107 `JObject` chat request and the #109 "Keep the unconverted video if conversion fails" setting. CI green.
+- `preview`: rebuilt as one commit on the new master from `final`.
+- **Every `pr/*` branch now sits on the new master:**
+  - Wave 2 and the code-quality set (13 branches): rebased, each CI-green on Windows and Linux.
+  - `ui-downloads-queue` needed real resolution against #111, #113 and #115. It keeps the queue's pause clean-up and failure stages inside #111's streaming structure, and the view's ScrollViewer is now `x:Name="Scroller"` for #113's `ScrollPositionRestorer` instead of the old `Offset` binding. `perf-downloads-idle` is its last commit on top.
+  - `pr/_after-open-prs`, `pr/_after-open-prs-theme` and the 13 Wave 3 branches were re-parented onto the new master with **identical file contents**, so no rebuild was needed. The base still holds the six open PRs (#104-#109) as they were before today's review changes. Re-cut it when those merge.
+- **Heads-up:** #104-#109 conflict with each other (for example #106 and #107 both touch `ApiService`/`DownloadService`), so each merge will need the next one rebased.
+
 ## Wave 1 SENT 2026-11-23 (user: open it now that the developer is responding)
 
 Rebased onto the new master (24cab52) and each one CI-green on Windows and Linux, separately and all seven stacked. The three dependency PRs apply in any order: the Tmds.DBus.Protocol pin now sits in its own ItemGroup above the PropertyGroups, so it no longer touches the lines the other two change.
