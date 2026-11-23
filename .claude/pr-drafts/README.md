@@ -1,5 +1,9 @@
 # PR submission guide
 
+## "What's new" card (built 2026-11-23, in `final`, not yet a PR branch)
+
+A one-time card on the first run of a new feature release after an upgrade. The design and wording were approved by the user (mockup Option A). It goes **last**, after the other PRs: its eight items must match what actually merged, and the version number is the developer's call. When cutting `pr/whats-new` from `final`, leave out the 4.0.0 version bump (`GlobalAssemblyInfo.cs`, `TwitchLeecher.csproj` FileVersion), so it shows once he sets the version. Body to write then.
+
 ## Email sent to the developer, 2026-11-23
 
 The user sent `email-developer.md`: the same update and offer as the #104 comment, including grouping the ~26 remaining PRs into about 6. Wait for his answer before cutting or sending anything.

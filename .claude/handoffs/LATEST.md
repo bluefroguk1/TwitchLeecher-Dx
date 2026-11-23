@@ -27,7 +27,22 @@ Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifac
 - **The #104 overview comment is refreshed:** merged/open lists, a new preview build (run 45222297875, until 2026-12-07), and an **offer to group the ~26 remaining PRs into about 6 bigger ones** (UI refresh, search/download features, background features, export/processing, code quality, plus Native AOT and Avalonia 12 kept separate), or keep them small.
 - **The email to the developer was sent** by the user (2026-11-23) with the same update and offer. The draft is in `.claude/pr-drafts/email-developer.md`.
 
-### 3. One small PC check (optional, about 5 minutes)
+### 3. NEW: test the "What's new" card (about 10 minutes)
+
+`final` (8d963d6, CI green) adds a one-time "What's new in 4.0" card, built from the approved mockup (Option A: https://claude.ai/artifact/6pjwnc2sXaCqdUoDUtuzyn).
+- It shows once, the first time an **existing** install runs 4.0. It reads the version that last saved `%AppData%\Twitch Leecher DX\runtime.xml` (its `Version` attribute). A fresh install skips it.
+- **`final`'s version is now 4.0.0**, for testing. In the upstream PR the version bump is left to the developer.
+- Code: `TwitchLeecher.Gui/Views/WhatsNewWindow.axaml(.cs)` (text and `ForVersion = 4.0`), `DialogService.ShowWhatsNewIfUpgraded`, called from `MainWindowVM.Shown()`. Five Font Awesome icons were added to `IconData.cs`, plus `FeatureIconBrush`/`FeatureIconTintBrush` per theme in `App.axaml` (Coyote uses its blue `#45C7D9`).
+
+Checks:
+1. Build `final` and run it with your existing settings. The card shows once, over the main window: "What's new in 4.0", 8 items, frameless, and you can drag it by the card.
+2. **Full release notes** opens `https://github.com/schneidermanuel/TwitchLeecher-Dx/releases/tag/v4.0.0` (a 404 until that release exists, which is expected). **Got it**, Enter and Esc all close it.
+3. Close and reopen the app: it does **not** show again.
+4. To see it again: close the app, set `Version="3.9.1"` in `runtime.xml`, and start the app. Do this once each in Dark, Classic and Coyote (Settings › General › Theme): icons are purple, gold and blue respectively, and the text is readable.
+5. Started minimised to the tray: the card waits until you first open the window.
+6. Fresh install: rename the `Twitch Leecher DX` folder in `%AppData%`, start the app, and no card should appear. Then put the folder back.
+
+### 3b. One small PC check (optional, about 5 minutes)
 
 The #109 setting has only been built on CI, not run by a person. In the `final` build:
 1. Settings › Download shows "Keep the unconverted video if conversion fails", ticked by default. Untick it, save, restart the app: it stays unticked.
