@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using TwitchLeecher.Shared.Extensions;
+using TwitchLeecher.Shared.Notification;
 
 namespace TwitchLeecher.Core.Models
 {
-    public class TwitchVideo
+    public class TwitchVideo : BindableBase
     {
         #region Constatnts
 
@@ -38,7 +39,9 @@ namespace TwitchLeecher.Core.Models
             Views = views;
             Length = length;
             RecordedDate = recordedDate;
-            Thumbnail = ImageHelper.LoadFromWeb(thumbnail);
+            // Created on first access, i.e. when a card is realised and binds to it, so
+            // off-screen results do not download their thumbnails up front.
+            _thumbnail = new Lazy<Task<Bitmap>>(() => ImageHelper.LoadFromWeb(thumbnail));
             Url = url;
             Muted = muted;
             Live = live;
@@ -47,6 +50,51 @@ namespace TwitchLeecher.Core.Models
         #endregion Constructors
 
         #region Properties
+
+        private bool _isSelected;
+
+        // ticked in the search results for "Download Selected" (#96)
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set { SetProperty(ref _isSelected, value); }
+        }
+
+        private bool _isQueued;
+
+        // search results badges, set by the results view model
+        public bool IsQueued
+        {
+            get { return _isQueued; }
+            set { SetProperty(ref _isQueued, value); }
+        }
+
+        private bool _isDownloaded;
+
+        public bool IsDownloaded
+        {
+            get { return _isDownloaded; }
+            set { SetProperty(ref _isDownloaded, value); }
+        }
+
+        // "Clip by X · 9 Nov · 1.8K views · muted parts"
+        public string MetaStr
+        {
+            get
+            {
+                string views = Views >= 1_000_000 ? (Views / 1_000_000.0).ToString("0.#") + "M"
+                    : Views >= 1_000 ? (Views / 1_000.0).ToString("0.#") + "K"
+                    : Views.ToString();
+                string meta = RecordedDate.ToString("d MMM") + " · " + views + " views";
+
+                if (IsClip && !string.IsNullOrWhiteSpace(ClipCreator))
+                {
+                    meta = "Clip by " + ClipCreator + " · " + meta;
+                }
+
+                return Muted ? meta + " · muted parts" : meta;
+            }
+        }
 
         public string Channel { get; }
 
@@ -68,7 +116,9 @@ namespace TwitchLeecher.Core.Models
 
         public DateTime RecordedDate { get; }
 
-        public Task<Bitmap> Thumbnail { get; }
+        private readonly Lazy<Task<Bitmap>> _thumbnail;
+
+        public Task<Bitmap> Thumbnail => _thumbnail.Value;
 
         public Uri Url { get; }
 
@@ -79,6 +129,12 @@ namespace TwitchLeecher.Core.Models
         public bool Live { get; }
 
         public TimeSpan? StartTime { get; set; }
+
+        // Clips are a single mp4 identified by their slug (Id), not a VOD playlist (#37)
+        public bool IsClip { get; init; }
+
+        // who clipped it, empty for VODs
+        public string ClipCreator { get; init; }
 
         #endregion Properties
     }

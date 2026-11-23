@@ -1,0 +1,299 @@
+﻿<UserControl x:Class="TwitchLeecher.Gui.Views.WatchedSearchesView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:TwitchLeecher.Gui.ViewModels"
+             xmlns:interfaces="clr-namespace:TwitchLeecher.Gui.Interfaces"
+             xmlns:models="clr-namespace:TwitchLeecher.Core.Models;assembly=TwitchLeecher.Core"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             x:DataType="viewModels:WatchedSearchesViewModel">
+    <!-- Settings > Watched searches. Self-contained: give it a WatchedSearchesViewModel as DataContext and drop it in. -->
+    <UserControl.Styles>
+        <Style Selector="Button.ws">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.ws:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.ws.accent">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.ws.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
+        <Style Selector="Button.ws avalonia|Icon">
+            <Setter Property="Width" Value="11" />
+            <Setter Property="Height" Value="11" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+
+        <Style Selector="ComboBox.ws, TextBox.ws, NumericUpDown.ws">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.muted">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+
+        <!-- Flat rows like the other Settings sections: 1px divider, card colour only on hover or while editing.
+             Transparent (not null) background so the whole row takes the pointer. -->
+        <Style Selector="Border.row">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="10,12" />
+        </Style>
+        <Style Selector="Border.row:pointerover, Border.row.editing">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+        </Style>
+        <Style Selector="Border.row.off > StackPanel">
+            <Setter Property="Opacity" Value="0.6" />
+        </Style>
+        <Style Selector="Border.row.activity">
+            <Setter Property="Padding" Value="10,8" />
+        </Style>
+        <!-- top line of a row list; -10 margins line row text up with the headings above -->
+        <Style Selector="Border.rows">
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+            <Setter Property="Margin" Value="-10,0" />
+        </Style>
+
+        <Style Selector="Border.tag">
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="7,1" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+        </Style>
+        <Style Selector="Border.tag TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+
+        <!-- Activity kinds: accent by default (PAUSED, FIRST RUN). -->
+        <Style Selector="TextBlock.kind">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="TextBlock.kind.success">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+        <Style Selector="TextBlock.kind.warning">
+            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+        </Style>
+        <Style Selector="TextBlock.kind.error">
+            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+        </Style>
+
+        <Style Selector="Ellipse.dot">
+            <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+        <Style Selector="Ellipse.dot.off">
+            <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+        </Style>
+        <Style Selector="StackPanel.wsBody:disabled">
+            <Setter Property="Opacity" Value="0.45" />
+        </Style>
+        <Style Selector="ToggleSwitch /template/ Border#SwitchKnobBounds, ToggleSwitch:pointerover /template/ Border#SwitchKnobBounds">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Uses the host page's section/h1/label/sub styles (PreferencesView), so it reads like the other Settings sections. -->
+    <StackPanel Classes="section">
+        <TextBlock Classes="h1" Text="Watched searches" />
+
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="Check watched searches for new videos" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Classes="sub" Text="Checks only run while Twitch Leecher is open" />
+            </StackPanel>
+            <ToggleSwitch Grid.Column="1" IsChecked="{Binding Enabled}" OnContent="On" OffContent="Off"
+                          VerticalAlignment="Center" AutomationProperties.Name="Check watched searches for new videos" />
+        </Grid>
+
+        <!-- everything below is greyed out while watched searches are off -->
+        <StackPanel Classes="wsBody" Spacing="18" IsEnabled="{Binding Enabled}">
+
+            <!-- Status: last/next check, interval, check now -->
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                <Ellipse Grid.Column="0" Classes="dot" Classes.off="{Binding !Enabled}" Width="8" Height="8"
+                         VerticalAlignment="Center" Margin="0,0,10,0" />
+                <TextBlock Grid.Column="1" Text="{Binding StatusText}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Text="Every" Classes="muted" VerticalAlignment="Center"
+                           Margin="10,0,8,0" />
+                <ComboBox Grid.Column="3" Classes="ws" MinWidth="90" ItemsSource="{Binding IntervalOptions}"
+                          SelectedItem="{Binding SelectedInterval}" />
+                <Button Grid.Column="4" Classes="ws" Margin="10,0,0,0" Command="{Binding CheckNowCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:Icon Value="fa-solid fa-arrows-rotate" />
+                        <TextBlock Text="Check now" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Searches -->
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="SEARCHES" Classes="label" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Classes="ws accent" Content="+ Add watched search"
+                            Command="{Binding AddCommand}" />
+                </Grid>
+                <TextBlock Classes="sub" IsVisible="{Binding !HasSearches}"
+                           Text="No watched searches yet. Add one here, or search a channel and press Watch this search." />
+                <Border Classes="rows" IsVisible="{Binding HasSearches}">
+                <ItemsControl ItemsSource="{Binding Searches}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:WatchedSearch">
+                            <Border Classes="row" Classes.off="{Binding !Active}" Classes.editing="{Binding IsEditing}">
+                                <StackPanel Spacing="10">
+                                    <!-- The text and "When found" stack on the left and shrink (trimmed); only Edit, Active and the
+                                         bin sit on the right at fixed widths, so rows always line up and never overflow -->
+                                    <!-- Three short lines. The long texts have a hard maximum width, so a row can never grow
+                                         past the pane; the controls get their own line and sit flush right -->
+                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" HorizontalAlignment="Left"
+                                               MaxWidth="460" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <ItemsControl ItemsSource="{Binding Tags}" HorizontalAlignment="Left">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="4" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Border Classes="tag">
+                                                    <TextBlock Text="{Binding}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="{Binding LatestResult}" Classes="muted" HorizontalAlignment="Left"
+                                               MaxWidth="460" TextTrimming="CharacterEllipsis"
+                                               IsVisible="{Binding LatestResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                               ToolTip.Tip="{Binding LatestResult}" />
+                                    <Grid ColumnDefinitions="Auto,8,170,*,Auto" Margin="0,2,0,0">
+                                        <TextBlock Grid.Column="0" Text="When found" Classes="muted" VerticalAlignment="Center" />
+                                        <ComboBox Grid.Column="2" Classes="ws" VerticalAlignment="Center"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectedIndex="{Binding WhenFoundIndex}"
+                                                  AutomationProperties.Name="When found">
+                                            <ComboBoxItem Content="Download now" />
+                                            <ComboBoxItem Content="Add to queue, paused" />
+                                        </ComboBox>
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <CheckBox Content="Active" IsChecked="{Binding Active}" VerticalAlignment="Center" Margin="0,0,-2,0" />
+                                            <Button Classes="ws" Content="Edit" Width="52" HorizontalContentAlignment="Center" Padding="0"
+                                                    Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
+                                                    CommandParameter="{Binding}" />
+                                            <Button Classes="ws" Width="32" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                    Foreground="{DynamicResource ErrorBrush}"
+                                                    ToolTip.Tip="Remove watched search"
+                                                    AutomationProperties.Name="Remove watched search"
+                                                    Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).RemoveCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <avalonia:Icon Value="fa-solid fa-trash" Width="12" Height="14" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Editor -->
+                                    <Grid IsVisible="{Binding IsEditing}" ColumnDefinitions="Auto,10,*"
+                                          RowDefinitions="Auto,8,Auto,8,Auto,8,Auto,10,Auto">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Channel" Classes="muted"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Grid.Row="0" Grid.Column="2" Classes="ws" Watermark="channel name"
+                                                 Text="{Binding Channel}" />
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Type" Classes="muted"
+                                                   VerticalAlignment="Center" />
+                                        <ComboBox Grid.Row="2" Grid.Column="2" Classes="ws" MinWidth="160"
+                                                  SelectedIndex="{Binding VideoTypeIndex}">
+                                            <ComboBoxItem Content="Broadcasts" />
+                                            <ComboBoxItem Content="Highlights" />
+                                            <ComboBoxItem Content="Uploads" />
+                                            <ComboBoxItem Content="Clips" />
+                                        </ComboBox>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Minimum views" Classes="muted"
+                                                   VerticalAlignment="Center" IsVisible="{Binding IsClip}" />
+                                        <NumericUpDown Grid.Row="4" Grid.Column="2" Classes="ws" Width="120"
+                                                       HorizontalAlignment="Left" Minimum="0" Maximum="10000000"
+                                                       Value="{Binding MinViews}" IsVisible="{Binding IsClip}" />
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Quality" Classes="muted"
+                                                   VerticalAlignment="Center" />
+                                        <ComboBox Grid.Row="6" Grid.Column="2" Classes="ws" MinWidth="160"
+                                                  ItemsSource="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).QualityOptions}"
+                                                  SelectedIndex="{Binding QualityIndex}" />
+
+                                        <StackPanel Grid.Row="8" Grid.Column="2" Orientation="Horizontal"
+                                                    HorizontalAlignment="Right" Spacing="8">
+                                            <Button Classes="ws accent" Content="Done"
+                                                    Command="{Binding $parent[ItemsControl].((viewModels:WatchedSearchesViewModel)DataContext).EditCommand}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <!-- Recent activity, from auto_download.log -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="RECENT ACTIVITY" Classes="label" />
+                <TextBlock Classes="sub" IsVisible="{Binding !HasActivity}"
+                           Text="Nothing yet. Activity shows here after the first check." />
+                <Border Classes="rows" IsVisible="{Binding HasActivity}">
+                    <ItemsControl ItemsSource="{Binding Activity}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="interfaces:WatchedActivity">
+                                <Border Classes="row activity">
+                                    <Grid ColumnDefinitions="52,80,*">
+                                        <TextBlock Grid.Column="0" Text="{Binding TimeText}" Classes="muted" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Kind}" FontSize="12" Classes="kind"
+                                                   Classes.success="{Binding IsSuccess}"
+                                                   Classes.warning="{Binding IsWarning}"
+                                                   Classes.error="{Binding IsError}" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Text}" FontSize="12" HorizontalAlignment="Left" MaxWidth="440"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Text}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <TextBlock Classes="sub"
+                       Text="Videos that already exist when a search is first checked are marked as seen, not downloaded." />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

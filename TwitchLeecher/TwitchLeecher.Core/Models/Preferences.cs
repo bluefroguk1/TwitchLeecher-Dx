@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Shared.Helpers;
@@ -33,6 +34,16 @@ namespace TwitchLeecher.Core.Models
 
         private bool _appShowDonationButton;
 
+        private bool _appMinimiseToTray;
+
+        private bool _appTrayPromptShown;
+
+        private bool _appStartWithOs;
+
+        private bool _appStartMinimised;
+
+        private bool _appShowNotifications;
+
         private RangeObservableCollection<string> _searchFavouriteChannels;
 
         private string _searchChannelName;
@@ -47,6 +58,8 @@ namespace TwitchLeecher.Core.Models
 
         private bool _searchOnStartup;
 
+        private bool _searchDefaultFavourites;
+
         private string _downloadTempFolder;
 
         private string _downloadFolder;
@@ -60,6 +73,34 @@ namespace TwitchLeecher.Core.Models
         private bool _downloadRemoveCompleted;
 
         private bool _downloadDisableConversion;
+
+        private bool _downloadQuickDownload;
+
+        private bool _scheduleEnabled;
+
+        private int _scheduleStartHour = 1;
+
+        private int _scheduleEndHour = 7;
+
+        private bool _scheduleIncludePaused = true;
+
+        private bool _schedulePauseAtEnd = true;
+
+        private bool _autoDownloadEnabled;
+
+        private int _autoDownloadInterval;
+
+        private string _autoDownloadChannels;
+
+        private bool _autoDownloadClips;
+
+        private int _autoDownloadClipMinViews;
+
+        private bool _downloadCompress;
+
+        private CompressionLevel _downloadCompressLevel = CompressionLevel.Balanced;
+
+        private CompressionEncoder _downloadCompressEncoder = CompressionEncoder.Auto;
 
         private bool _miscUseExternalPlayer;
 
@@ -87,6 +128,36 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _appShowDonationButton; }
             set { SetProperty(ref _appShowDonationButton, value); }
+        }
+
+        public bool AppMinimiseToTray
+        {
+            get { return _appMinimiseToTray; }
+            set { SetProperty(ref _appMinimiseToTray, value); }
+        }
+
+        public bool AppTrayPromptShown
+        {
+            get { return _appTrayPromptShown; }
+            set { SetProperty(ref _appTrayPromptShown, value); }
+        }
+
+        public bool AppStartWithOs
+        {
+            get { return _appStartWithOs; }
+            set { SetProperty(ref _appStartWithOs, value); }
+        }
+
+        public bool AppStartMinimised
+        {
+            get { return _appStartMinimised; }
+            set { SetProperty(ref _appStartMinimised, value); }
+        }
+
+        public bool AppShowNotifications
+        {
+            get { return _appShowNotifications; }
+            set { SetProperty(ref _appShowNotifications, value); }
         }
 
         public bool MiscUseExternalPlayer
@@ -157,6 +228,13 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _searchOnStartup, value); }
         }
 
+        // start the search page (and 'Search on Start') on the Favourites search type (#86)
+        public bool SearchDefaultFavourites
+        {
+            get { return _searchDefaultFavourites; }
+            set { SetProperty(ref _searchDefaultFavourites, value); }
+        }
+
         public string DownloadTempFolder
         {
             get { return _downloadTempFolder; }
@@ -204,6 +282,132 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _downloadDisableConversion, value); }
         }
 
+        // off-peak schedule: watched-search finds wait for this window (see DownloadSchedule)
+        public bool ScheduleEnabled
+        {
+            get { return _scheduleEnabled; }
+            set { SetProperty(ref _scheduleEnabled, value); }
+        }
+
+        public int ScheduleStartHour
+        {
+            get { return _scheduleStartHour; }
+            set { SetProperty(ref _scheduleStartHour, Math.Clamp(value, 0, 23)); }
+        }
+
+        public int ScheduleEndHour
+        {
+            get { return _scheduleEndHour; }
+            set { SetProperty(ref _scheduleEndHour, Math.Clamp(value, 0, 23)); }
+        }
+
+        // also start downloads the user paused when the window opens
+        public bool ScheduleIncludePaused
+        {
+            get { return _scheduleIncludePaused; }
+            set { SetProperty(ref _scheduleIncludePaused, value); }
+        }
+
+        // pause what the schedule started when the window closes
+        public bool SchedulePauseAtEnd
+        {
+            get { return _schedulePauseAtEnd; }
+            set { SetProperty(ref _schedulePauseAtEnd, value); }
+        }
+
+        public bool DownloadQuickDownload
+        {
+            get { return _downloadQuickDownload; }
+            set { SetProperty(ref _downloadQuickDownload, value); }
+        }
+
+        public bool AutoDownloadEnabled
+        {
+            get { return _autoDownloadEnabled; }
+            set { SetProperty(ref _autoDownloadEnabled, value); }
+        }
+
+        // minutes between channel checks
+        public int AutoDownloadInterval
+        {
+            get { return _autoDownloadInterval; }
+            set { SetProperty(ref _autoDownloadInterval, value); }
+        }
+
+        // channel names separated by commas, semicolons or spaces
+        public string AutoDownloadChannels
+        {
+            get { return _autoDownloadChannels; }
+            set { SetProperty(ref _autoDownloadChannels, value); }
+        }
+
+        public bool AutoDownloadClips
+        {
+            get { return _autoDownloadClips; }
+            set { SetProperty(ref _autoDownloadClips, value); }
+        }
+
+        public int AutoDownloadClipMinViews
+        {
+            get { return _autoDownloadClipMinViews; }
+            set { SetProperty(ref _autoDownloadClipMinViews, value); }
+        }
+
+        public string[] GetAutoDownloadChannels()
+        {
+            return (_autoDownloadChannels ?? string.Empty)
+                .Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        // re-encode finished downloads to make them smaller (default for the download dialog and quick download)
+        public bool DownloadCompress
+        {
+            get { return _downloadCompress; }
+            set { SetProperty(ref _downloadCompress, value); }
+        }
+
+        public CompressionLevel DownloadCompressLevel
+        {
+            get { return _downloadCompressLevel; }
+            set { SetProperty(ref _downloadCompressLevel, value); }
+        }
+
+        public CompressionEncoder DownloadCompressEncoder
+        {
+            get { return _downloadCompressEncoder; }
+            set { SetProperty(ref _downloadCompressEncoder, value); }
+        }
+
+        // the Settings dropdown lists the encoders in enum order
+        public int DownloadCompressEncoderIndex
+        {
+            get { return (int)_downloadCompressEncoder; }
+            set
+            {
+                if (value >= 0)
+                {
+                    DownloadCompressEncoder = (CompressionEncoder)value;
+                    FirePropertyChanged(nameof(DownloadCompressEncoderIndex));
+                }
+            }
+        }
+
+        // the Settings dropdown lists the levels in enum order
+        public int DownloadCompressLevelIndex
+        {
+            get { return (int)_downloadCompressLevel; }
+            set
+            {
+                if (value >= 0)
+                {
+                    DownloadCompressLevel = (CompressionLevel)value;
+                    FirePropertyChanged(nameof(DownloadCompressLevelIndex));
+                }
+            }
+        }
+
         public int MaxConnectionCount
         {
             get { return _maxConnectionCount; }
@@ -245,7 +449,7 @@ namespace TwitchLeecher.Core.Models
 
             if (string.IsNullOrWhiteSpace(propertyName) || propertyName == currentProperty)
             {
-                if (_searchOnStartup && string.IsNullOrWhiteSpace(_searchChannelName))
+                if (_searchOnStartup && !_searchDefaultFavourites && string.IsNullOrWhiteSpace(_searchChannelName))
                 {
                     AddError(currentProperty,
                         "If 'Search on Startup' is enabled, you need to specify a default channel name!");
@@ -271,6 +475,26 @@ namespace TwitchLeecher.Core.Models
                     (_searchLoadLastVods < 1 || _searchLoadLastVods > 999))
                 {
                     AddError(currentProperty, "Value has to be between 1 and 999!");
+                }
+            }
+
+            currentProperty = nameof(AutoDownloadInterval);
+
+            if (string.IsNullOrWhiteSpace(propertyName) || propertyName == currentProperty)
+            {
+                if (_autoDownloadInterval < 5 || _autoDownloadInterval > 1440)
+                {
+                    AddError(currentProperty, "Value has to be between 5 and 1440!");
+                }
+            }
+
+            currentProperty = nameof(AutoDownloadClipMinViews);
+
+            if (string.IsNullOrWhiteSpace(propertyName) || propertyName == currentProperty)
+            {
+                if (_autoDownloadClipMinViews < 0)
+                {
+                    AddError(currentProperty, "Value cannot be negative!");
                 }
             }
 
@@ -322,6 +546,11 @@ namespace TwitchLeecher.Core.Models
                 Version = Version,
                 AppCheckForUpdates = AppCheckForUpdates,
                 AppShowDonationButton = AppShowDonationButton,
+                AppMinimiseToTray = AppMinimiseToTray,
+                AppTrayPromptShown = AppTrayPromptShown,
+                AppStartWithOs = AppStartWithOs,
+                AppStartMinimised = AppStartMinimised,
+                AppShowNotifications = AppShowNotifications,
                 MiscUseExternalPlayer = MiscUseExternalPlayer,
                 MiscExternalPlayer = MiscExternalPlayer,
                 SearchChannelName = SearchChannelName,
@@ -330,6 +559,7 @@ namespace TwitchLeecher.Core.Models
                 SearchLoadLastDays = SearchLoadLastDays,
                 SearchLoadLastVods = SearchLoadLastVods,
                 SearchOnStartup = SearchOnStartup,
+                SearchDefaultFavourites = SearchDefaultFavourites,
                 DownloadTempFolder = DownloadTempFolder,
                 DownloadFolder = DownloadFolder,
                 DownloadFileName = DownloadFileName,
@@ -337,6 +567,20 @@ namespace TwitchLeecher.Core.Models
                 DownloadSubfoldersForFav = DownloadSubfoldersForFav,
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadDisableConversion = DownloadDisableConversion,
+                DownloadQuickDownload = DownloadQuickDownload,
+                ScheduleEnabled = ScheduleEnabled,
+                ScheduleStartHour = ScheduleStartHour,
+                ScheduleEndHour = ScheduleEndHour,
+                ScheduleIncludePaused = ScheduleIncludePaused,
+                SchedulePauseAtEnd = SchedulePauseAtEnd,
+                AutoDownloadEnabled = AutoDownloadEnabled,
+                AutoDownloadInterval = AutoDownloadInterval,
+                AutoDownloadChannels = AutoDownloadChannels,
+                AutoDownloadClips = AutoDownloadClips,
+                AutoDownloadClipMinViews = AutoDownloadClipMinViews,
+                DownloadCompress = DownloadCompress,
+                DownloadCompressLevel = DownloadCompressLevel,
+                DownloadCompressEncoder = DownloadCompressEncoder,
                 Theme = Theme,
                 MaxConnectionCount = MaxConnectionCount
             };

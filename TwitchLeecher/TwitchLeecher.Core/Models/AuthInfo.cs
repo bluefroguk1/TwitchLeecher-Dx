@@ -1,4 +1,7 @@
-﻿using System.Xml.Linq;
+using System;
+using System.Security.Cryptography;
+using System.Text;
+using System.Xml.Linq;
 using TwitchLeecher.Shared.Extensions;
 
 namespace TwitchLeecher.Core.Models
@@ -11,6 +14,10 @@ namespace TwitchLeecher.Core.Models
 
         private const string AUTHENTICATION_ACCESSTOKEN_EL = "AccessToken";
         private const string AUTHENTICATION_ACCESSTOKENSUBONLY_EL = "AccessTokenSubOnly";
+        private const string PROTECTED_ATTR = "Protected";
+        private const string PROTECTED_DPAPI = "DPAPI";
+
+        private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("TwitchLeecher-Dx.AuthInfo");
 
         #endregion Constants
 
@@ -35,12 +42,48 @@ namespace TwitchLeecher.Core.Models
 
             if (!string.IsNullOrWhiteSpace(AccessToken))
             {
-                XElement accessTokenEl = new XElement(AUTHENTICATION_ACCESSTOKEN_EL);
-                accessTokenEl.SetValue(AccessToken);
-                authenticationEl.Add(accessTokenEl);
+                authenticationEl.Add(GetTokenXml(AUTHENTICATION_ACCESSTOKEN_EL, AccessToken));
+            }
+
+            if (!string.IsNullOrWhiteSpace(AccessTokenSubOnly))
+            {
+                authenticationEl.Add(GetTokenXml(AUTHENTICATION_ACCESSTOKENSUBONLY_EL, AccessTokenSubOnly));
             }
 
             return authenticationEl;
+        }
+
+        private static XElement GetTokenXml(string name, string token)
+        {
+            XElement tokenEl = new XElement(name);
+
+            if (OperatingSystem.IsWindows())
+            {
+                tokenEl.SetAttributeValue(PROTECTED_ATTR, PROTECTED_DPAPI);
+                token = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(token), Entropy, DataProtectionScope.CurrentUser));
+            }
+
+            // shortcut: on Linux the token is stored as plain text (runtime.xml is made owner-only), use libsecret if Linux users ask for it.
+            tokenEl.SetValue(token);
+            return tokenEl;
+        }
+
+        private static string ReadToken(XElement tokenEl)
+        {
+            string value = tokenEl.GetValueAsString();
+
+            // No attribute: plain text from Linux or from an older version. It gets protected on the next save.
+            if (tokenEl.Attribute(PROTECTED_ATTR) == null)
+            {
+                return value;
+            }
+
+            if (!OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException("Token was protected on Windows.");
+            }
+
+            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(value), Entropy, DataProtectionScope.CurrentUser));
         }
 
         #endregion Methods
@@ -51,35 +94,36 @@ namespace TwitchLeecher.Core.Models
         {
             AuthInfo runtimeAuthInfo = new AuthInfo();
 
-            bool entryFound = false;
-
             if (authenticationEl != null)
             {
                 XElement accessTokenEl = authenticationEl.Element(AUTHENTICATION_ACCESSTOKEN_EL);
+                XElement accessTokenSubOnlyEl = authenticationEl.Element(AUTHENTICATION_ACCESSTOKENSUBONLY_EL);
 
-                if (accessTokenEl != null)
+                try
                 {
-                    try
+                    if (accessTokenEl != null)
                     {
-                        runtimeAuthInfo.AccessToken = accessTokenEl.GetValueAsString();
-                        entryFound = true;
+                        runtimeAuthInfo.AccessToken = ReadToken(accessTokenEl);
                     }
-                    catch
+
+                    if (accessTokenSubOnlyEl != null)
                     {
-                        // Malformed XML
-                        return null;
+                        runtimeAuthInfo.AccessTokenSubOnly = ReadToken(accessTokenSubOnlyEl);
                     }
+                }
+                catch
+                {
+                    // Malformed XML, or encrypted for another Windows user: the user signs in again
+                    return null;
                 }
             }
 
-            if (entryFound)
+            if (runtimeAuthInfo.AccessToken != null || runtimeAuthInfo.AccessTokenSubOnly != null)
             {
                 return runtimeAuthInfo;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         #endregion Static Methods

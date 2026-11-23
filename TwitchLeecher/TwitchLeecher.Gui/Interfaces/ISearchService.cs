@@ -10,6 +10,11 @@ namespace TwitchLeecher.Gui.Interfaces
 
         SearchParameters LastSearchParams { get; }
 
+        // true while a search is running; false and HasSearched = true once its results are in Videos
+        bool IsSearching { get; }
+
+        bool HasSearched { get; }
+
         void PerformSearch(SearchParameters searchParams);
     }
 }
