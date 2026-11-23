@@ -23,6 +23,7 @@ Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifac
 - **Evidence for every check:** what you saw, plus a screenshot saved as `%TEMP%\tl-test\<step>.png` (only report the path; do not commit screenshots).
 - **On a failure:** note it, collect `pc-test-helper.ps1 Errors` and the download's log text, and **carry on** with the other steps. Fix nothing during the run.
 - **Finish with `Restore`**, even if steps failed, so the user's settings are back as they were.
+- **The helper script was written on the Mac and has never run** (no PowerShell there). If one of its commands fails, fix the script (it is test tooling, not app code), commit the fix to `final`, note it in the report, and carry on. **Run `Backup` first and check it worked before anything else**: it is what makes the run safe for the user's settings.
 
 **Setup**
 ```
