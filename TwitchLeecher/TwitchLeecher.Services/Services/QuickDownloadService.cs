@@ -63,7 +63,7 @@ namespace TwitchLeecher.Services.Services
 
             Preferences currentPrefs = _preferencesService.CurrentPreferences.Clone();
 
-            TwitchVideoQuality selectedQuality = GetSelectedQuality(qualities, quality ?? currentPrefs.DownloadDefaultQuality);
+            TwitchVideoQuality selectedQuality = (quality ?? currentPrefs.DownloadDefaultQuality).PickFrom(qualities);
 
             (string folder, string filename, bool disableConversion) = GetDefaultTarget(video, currentPrefs, selectedQuality);
 
@@ -123,73 +123,6 @@ namespace TwitchLeecher.Services.Services
             filename = _filenameService.EnsureExtension(filename, disableConversion);
 
             return (folder, filename, disableConversion);
-        }
-
-        private TwitchVideoQuality GetSelectedQuality(List<TwitchVideoQuality> qualities, DefaultQuality defaultQuality)
-        {
-            TwitchVideoQuality sourceQuality = qualities.Find(q => q.IsSource);
-
-            if (sourceQuality == null)
-            {
-                sourceQuality = qualities[0];
-            }
-
-            if (defaultQuality.IsSource)
-            {
-                return sourceQuality;
-            }
-
-            if (defaultQuality.IsAudioOnly)
-            {
-                TwitchVideoQuality audioOnlyQuality = qualities.FirstOrDefault(q => q.IsAudioOnly);
-
-                if (audioOnlyQuality != null)
-                {
-                    return audioOnlyQuality;
-                }
-                else
-                {
-                    return sourceQuality;
-                }
-            }
-
-            IEnumerable<TwitchVideoQuality> visualQualities = qualities.Where(q => !q.IsAudioOnly);
-
-            int defaultRes = defaultQuality.VerticalResolution;
-
-            TwitchVideoQuality selectedQuality = null;
-
-            foreach (TwitchVideoQuality quality in visualQualities)
-            {
-                if (quality.VerticalResolution <= defaultRes && (selectedQuality == null ||
-                                                                 selectedQuality.VerticalResolution <
-                                                                 quality.VerticalResolution))
-                {
-                    selectedQuality = quality;
-                }
-            }
-
-            if (selectedQuality != null)
-            {
-                return selectedQuality;
-            }
-
-            foreach (TwitchVideoQuality quality in visualQualities)
-            {
-                if (quality.VerticalResolution >= defaultRes && (selectedQuality == null ||
-                                                                 selectedQuality.VerticalResolution >
-                                                                 quality.VerticalResolution))
-                {
-                    selectedQuality = quality;
-                }
-            }
-
-            if (selectedQuality != null)
-            {
-                return selectedQuality;
-            }
-
-            return sourceQuality;
         }
 
         #endregion Methods
