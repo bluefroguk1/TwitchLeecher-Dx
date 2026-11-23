@@ -29,7 +29,7 @@ Then `dotnet build` (close TwitchLeecher first). Or download the `final` artifac
 
 ### 3. NEW: test the "What's new" card (about 10 minutes)
 
-**2026-11-23: the user checked it on the PC, and it "looks great".** If any of checks 2-6 below weren't run, they are still worth a quick go before the PR.
+**2026-11-23: the user checked it on the PC, and it "looks great".** If any of checks 2-6 below weren't run, they are still worth a quick go before the PR. On the PC so far: checks 1 and 3 done (shows once, does not return after a relaunch); 2 and 4-6 not run.
 
 `final` (8d963d6, CI green) adds a one-time "What's new in 4.0" card, built from the approved mockup (Option A: https://claude.ai/artifact/6pjwnc2sXaCqdUoDUtuzyn).
 - It shows once, the first time an **existing** install runs 4.0. It reads the version that last saved `%AppData%\Twitch Leecher DX\runtime.xml` (its `Version` attribute). A fresh install skips it.
@@ -44,9 +44,9 @@ Checks:
 5. Started minimised to the tray: the card waits until you first open the window.
 6. Fresh install: rename the `Twitch Leecher DX` folder in `%AppData%`, start the app, and no card should appear. Then put the folder back.
 
-### 3a. Quick look: the CLI on the Info screen (2 minutes)
+### 3a. Quick look: the CLI on the Info screen (DONE 2026-11-23, PC: "all looks good")
 
-`final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
+`final` (922627e, CI green) adds a "Command-line tool" section to the Info screen, between Source Code and Donate, and a matching section in the README. On the PC the product title on the Info screen was also centred vertically against the logo (it was top-aligned); that fix is in `InfoView.axaml` on `final` only, not yet in `pr/feature-cli`. Open Info and check that the section reads well, the example line shows in a fixed-width font, and Donate still sits below it. The same change is in `pr/feature-cli`.
 
 ### 3b. One small PC check (optional, about 5 minutes)
 
