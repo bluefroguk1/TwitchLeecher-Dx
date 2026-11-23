@@ -125,7 +125,8 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 | #85 "Open folder" on queued/downloading items | **Fixed 2026-11-23:** `feature-85-open-folder`, clean copy `pr/feature-85-open-folder` (on `master`, Wave 1 size). Also in `final` and `final-next`. Not run yet. |
 | #102 only "Audio Only" offered for one VOD | **Can't reproduce:** that VOD (2876332302) no longer exists (Twitch returns no playback token). Needs a fresh example. |
 | #25, #38 download buttons do nothing (2024, versions 3.5/3.6, no logs) | Not reproduced. Likely fixed by later releases and #104, but unconfirmed. Could ask the reporters to retry the `preview` build. |
-| #36 CLI, #42 hover preview | Not started (feature requests) |
+| #36 CLI | Not started (feature request) |
+| #42 hover preview | **Ignore (user, 2026-11-23):** superseded by how this build handles previews (the download dialog's preview filmstrip). |
 
 ## Tools (`.claude/tools/`, run from Git Bash in the repo)
 
