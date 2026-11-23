@@ -1,4 +1,8 @@
-﻿# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
+﻿> **OUT OF DATE: the current handoff is on branch `final-next` (and `final`).** Run:
+> `git fetch origin; git checkout final-next; git pull`, then open `.claude/handoffs/LATEST.md` and start at "PC TEST ROUND, START HERE".
+> Or without switching branch: `git show origin/final-next:.claude/handoffs/LATEST.md`.
+
+# Handoff: TwitchLeecher-Dx, prepare the pull requests (master overview)
 
 Updated 2026-11-19 (late night), on the Windows PC. **Every branch below has now been built and tested by the user on Windows.** The next job is to turn the tested branches into clean upstream PRs, one PR per change.
 
