@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>14</LangVersion>
+        <RootNamespace>TwitchLeecher.Cli</RootNamespace>
+        <!-- the command is "tl" (tl.exe on Windows) -->
+        <AssemblyName>tl</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\TwitchLeecher.Services\TwitchLeecher.Services.csproj" />
+    </ItemGroup>
+</Project>
