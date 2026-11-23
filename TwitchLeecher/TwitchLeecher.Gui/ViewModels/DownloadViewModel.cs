@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using ReactiveUI;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.Types;
@@ -180,7 +179,7 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 if (_downloadCommand == null)
                 {
-                    _downloadCommand = ReactiveCommand.CreateFromTask(async () => Download());
+                    _downloadCommand = DelegateCommand.FromAsyncHandler(Download);
                 }
 
                 return _downloadCommand;
