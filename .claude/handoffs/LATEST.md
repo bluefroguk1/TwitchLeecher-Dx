@@ -8,7 +8,7 @@ Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show or
 
 ### What's in `final-next`
 
-`final-next` = `final` + 4 changes. `final` = your tested `combined-all` + the PR guide + the Ninject swap. Each change is also its own PR branch on `master` (see "Branch map").
+`final-next` = `final` + 4 changes (and the #85 Open folder fix, which is on `final` too). `final` = your tested `combined-all` + the PR guide + the Ninject swap. Each change is also its own PR branch on `master` (see "Branch map").
 
 | # | Change | What could break | Commit on final-next |
 |---|---|---|---|
@@ -51,7 +51,7 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 6. **Settings:** every side-menu section opens, especially **Watched searches** (the one registration that had been missing). Change something, then **Undo**, then **Defaults** (changed commands). Save.
 7. **Watched searches save and load (AOT JSON):** add a watched search, close the app, reopen it. It's still there with its settings. On B, also check that a search added in A shows up.
 8. **One short download** (3-minute crop) with **Save chat as JSON**, **Save video details** and **Compress**. The download finishes. `.chat.json` and `.info.json` open, with the same fields as before. Compression runs (proves ffmpeg is found).
-9. **Log:** open the download's log, then **Copy** (clipboard API changed), and paste it somewhere.
+9. **Log:** open the download's log, then **Copy** (clipboard API changed), and paste it somewhere. **#85:** while a download is queued or downloading, its **Open folder** button shows and opens the download folder.
 10. **Sign-in:** log out, then sign in again in the in-app window (the web view is the biggest AOT unknown).
 11. **Tray and pop-ups:** minimise to the tray, then reopen from the tray. A second launch wakes the running window. A desktop notification appears when the download finishes (still unconfirmed from earlier rounds).
 12. **Optional, broader:** `powershell -ExecutionPolicy Bypass -File test-scripts\test-combined-all.ps1 -SkipBuild` (Tier 1) on build A.
@@ -122,7 +122,7 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 | #86 Favourites default | #118 |
 | #96 QOL | #108 |
 | #31 async/HttpClient | **Partly:** `replace-webclient` (untested, not in `final`) |
-| #85 "Open folder" on queued/downloading items | **Not done.** The button still shows only when a download has finished (`DownloadsView.axaml`, `IsVisible="{Binding IsDone}"`). Small change: open the target folder for any state. |
+| #85 "Open folder" on queued/downloading items | **Fixed 2026-11-23:** `feature-85-open-folder`, clean copy `pr/feature-85-open-folder` (on `master`, Wave 1 size). Also in `final` and `final-next`. Not run yet. |
 | #102 only "Audio Only" offered for one VOD | **Can't reproduce:** that VOD (2876332302) no longer exists (Twitch returns no playback token). Needs a fresh example. |
 | #25, #38 download buttons do nothing (2024, versions 3.5/3.6, no logs) | Not reproduced. Likely fixed by later releases and #104, but unconfirmed. Could ask the reporters to retry the `preview` build. |
 | #36 CLI, #42 hover preview | Not started (feature requests) |
