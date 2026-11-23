@@ -218,6 +218,8 @@ namespace TwitchLeecher.Services.Services
                       RunCompress(log, setProgress, setIsIndeterminate, file, tempFile, gpuEncoder, quality, length,
                           cancellationToken);
 
+            bool usedGpu = ok;
+
             if (!ok && gpuEncoder != null)
             {
                 log(Environment.NewLine + "GPU encoding failed, trying again on the CPU...");
@@ -238,6 +240,26 @@ namespace TwitchLeecher.Services.Services
 
             long before = new FileInfo(file).Length;
             long after = new FileInfo(tempFile).Length;
+
+            // GPU encoders can miss their size target (their quality scales differ per vendor): try the CPU once
+            if (after >= before && usedGpu)
+            {
+                FileSystem.DeleteFile(tempFile);
+                log(Environment.NewLine + "GPU result was not smaller (" + FormatSize(before) + " -> " +
+                    FormatSize(after) + "), trying again on the CPU...");
+
+                if (RunCompress(log, setProgress, setIsIndeterminate, file, tempFile, cpuEncoder, quality, length,
+                        cancellationToken))
+                {
+                    after = new FileInfo(tempFile).Length;
+                }
+                else
+                {
+                    FileSystem.DeleteFile(tempFile);
+                    log(Environment.NewLine + "Compression failed, kept the original video.");
+                    return "Compression failed, the original video was kept";
+                }
+            }
 
             if (after >= before)
             {
@@ -261,7 +283,12 @@ namespace TwitchLeecher.Services.Services
 
             if (encoder.EndsWith("_nvenc", StringComparison.Ordinal))
             {
-                return new[] { "-c:v", encoder, "-preset", "p5", "-rc", "vbr", "-cq", q, "-b:v", "0" };
+                // NVENC's CQ scale is finer than x264/x265 CRF: the same number gave a file bigger than the Twitch
+                // source (hevc cq 26 = 184 MB from 166 MB, where x265 crf 26 = about 50 MB). Measured: hevc cq = crf + 8
+                // is about the same size as x265. h264 uses +5 (not measured, the fallback in CompressVideo covers it).
+                string cq = (quality + (encoder.StartsWith("hevc", StringComparison.Ordinal) ? 8 : 5))
+                    .ToString(CultureInfo.InvariantCulture);
+                return new[] { "-c:v", encoder, "-preset", "p5", "-rc", "vbr", "-cq", cq, "-b:v", "0" };
             }
 
             if (encoder.EndsWith("_qsv", StringComparison.Ordinal))
