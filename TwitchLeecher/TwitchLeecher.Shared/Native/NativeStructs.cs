@@ -52,7 +52,7 @@ namespace TwitchLeecher.Shared.Native
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
         public class MonitorInfoEx
         {
-            public int cbSize = Marshal.SizeOf(typeof(MonitorInfoEx));
+            public int cbSize = Marshal.SizeOf<MonitorInfoEx>();
             public Rect rcMonitor = new Rect();
             public Rect rcWork = new Rect();
             public int dwFlags = 0;

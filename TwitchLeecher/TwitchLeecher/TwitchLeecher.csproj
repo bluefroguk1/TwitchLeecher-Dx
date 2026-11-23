@@ -3,12 +3,17 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>disable</Nullable>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <RootNamespace>TwitchLeecher</RootNamespace>
         <PackageId>TwitchLeecher</PackageId>
         <LangVersion>14</LangVersion>
+    </PropertyGroup>
+
+    <!-- Native AOT for Windows publishes: faster start-up, less memory, no .NET runtime to install.
+         Linux publishes are unchanged for now. -->
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
