@@ -1006,7 +1006,8 @@ namespace TwitchLeecher.Services.Services
                 webClient.AddQuery("player_backend", "mediaplayer");
                 webClient.AddQuery("playlist_include_framerate", "true");
                 webClient.AddQuery("supported_codecs", "av1,h265,h264");
-                webClient.AddQuery("token", vodAuthInfo.Token);
+                // the token is stored URL-escaped; AddQuery escapes every value itself, so hand it over unescaped once
+                webClient.AddQuery("token", Uri.UnescapeDataString(vodAuthInfo.Token));
                 webClient.AddQuery("sig", vodAuthInfo.Signature);
 
                 string playlist = webClient.DownloadString(string.Format(PLAYLISTS_URL, vodId));
