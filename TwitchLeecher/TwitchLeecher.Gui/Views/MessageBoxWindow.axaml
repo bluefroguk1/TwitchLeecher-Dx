@@ -8,9 +8,8 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="TwitchLeecher.Gui.Views.MessageBoxWindow"
         x:DataType="viewModels:MessageBoxViewModel"
-        Title="Twitch-Leecher DX"
-        TransparencyLevelHint="AcrylicBlur"
-        ExtendClientAreaToDecorationsHint="True"
+        Title="Twitch Leecher DX"
+        WindowDecorations="BorderOnly"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Width="450"
@@ -18,30 +17,15 @@
     <Design.DataContext>
         <viewModels:MessageBoxViewModel />
     </Design.DataContext>
-    <!-- The content covers the system title bar, so the whole dialog is the drag handle. -->
-    <Border Padding="20" BorderThickness="1" views:WindowDrag.IsHandle="True">
-        <Border.Background>
-            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                <GradientStop Color="{DynamicResource WindowBackgroundGradientTopColor}" Offset="0" />
-                <GradientStop Color="{DynamicResource WindowBackgroundGradientBottomColor}" Offset="1" />
-            </LinearGradientBrush>
-        </Border.Background>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Border Grid.Row="0" Padding="0,0,0,10" Margin="0,0,0,10" BorderThickness="0,0,0,1">
-                <TextBlock Text="{Binding Caption}" FontWeight="Bold" />
-            </Border>
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
+    <!-- No system title bar: one plain card with the app name on top. The whole card is the drag handle. -->
+    <Border Padding="24,20,24,20" BorderThickness="1"
+            BorderBrush="{DynamicResource DividerBrush}"
+            Background="{DynamicResource PanelBackgroundBrush}"
+            views:WindowDrag.IsHandle="True">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <TextBlock Grid.Row="0" Text="Twitch Leecher DX" FontWeight="Bold" FontSize="15"
+                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,14" />
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,14,*">
                 <avalonia:Icon Value="{Binding MainIcon}" Grid.Column="0" HorizontalAlignment="Left"
                                VerticalAlignment="Center"
                                FontSize="32" />
@@ -50,7 +34,7 @@
                                TextAlignment="Left" VerticalAlignment="Center" />
                 </ScrollViewer>
             </Grid>
-            <Border Grid.Row="3" Padding="0,10,0,0" Margin="0,10,0,0" BorderThickness="0,1,0,0">
+            <Border Grid.Row="2" Margin="0,18,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Margin="0,0,3,0" Command="{Binding YesCommand}" Width="80"
                             IsVisible="{Binding YesButtonVisible}">
