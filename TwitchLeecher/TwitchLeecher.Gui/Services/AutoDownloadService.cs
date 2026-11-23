@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Avalonia.Threading;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
@@ -434,7 +435,7 @@ namespace TwitchLeecher.Gui.Services
             {
                 if (File.Exists(SearchesFile))
                 {
-                    SearchesData data = JsonSerializer.Deserialize<SearchesData>(File.ReadAllText(SearchesFile));
+                    SearchesData data = JsonSerializer.Deserialize(File.ReadAllText(SearchesFile), WatchedSearchesJson.Default.SearchesData);
 
                     if (data != null)
                     {
@@ -522,7 +523,7 @@ namespace TwitchLeecher.Gui.Services
 
                 // write then rename, so a crash mid-save never leaves a half-written file
                 string tempFile = SearchesFile + ".tmp";
-                File.WriteAllText(tempFile, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(tempFile, JsonSerializer.Serialize(data, WatchedSearchesJson.Default.SearchesData));
                 File.Move(tempFile, SearchesFile, true);
             }
             catch (Exception ex)
@@ -539,7 +540,7 @@ namespace TwitchLeecher.Gui.Services
             {
                 if (File.Exists(SeenFile))
                 {
-                    return JsonSerializer.Deserialize<Dictionary<string, HashSet<string>>>(File.ReadAllText(SeenFile))
+                    return JsonSerializer.Deserialize(File.ReadAllText(SeenFile), WatchedSearchesJson.Default.DictionaryStringHashSetString)
                            ?? new Dictionary<string, HashSet<string>>();
                 }
             }
@@ -556,7 +557,7 @@ namespace TwitchLeecher.Gui.Services
         private void SaveSeen()
         {
             Directory.CreateDirectory(AppDataFolder);
-            File.WriteAllText(SeenFile, JsonSerializer.Serialize(_seen));
+            File.WriteAllText(SeenFile, JsonSerializer.Serialize(_seen, WatchedSearchesJson.Default.DictionaryStringHashSetString));
         }
 
         // One tab-separated line per event; ReadActivity parses it back for the Recent activity list.
@@ -586,7 +587,7 @@ namespace TwitchLeecher.Gui.Services
 
         #region Nested Types
 
-        private class SearchesData
+        internal class SearchesData
         {
             public bool Enabled { get; set; }
 
@@ -596,5 +597,13 @@ namespace TwitchLeecher.Gui.Services
         }
 
         #endregion Nested Types
+    }
+
+    // Compile-time JSON code for the two files above; WriteIndented keeps searches.json readable.
+    [JsonSourceGenerationOptions(WriteIndented = true)]
+    [JsonSerializable(typeof(AutoDownloadService.SearchesData))]
+    [JsonSerializable(typeof(Dictionary<string, HashSet<string>>))]
+    internal partial class WatchedSearchesJson : JsonSerializerContext
+    {
     }
 }

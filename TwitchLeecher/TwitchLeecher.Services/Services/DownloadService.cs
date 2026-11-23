@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using TwitchLeecher.Core.Enums;
@@ -971,25 +973,24 @@ namespace TwitchLeecher.Services.Services
             {
                 TwitchVideo video = downloadParams.Video;
 
-                var info = new
+                var info = new JsonObject
                 {
-                    title = video.Title,
-                    channel = video.Channel,
-                    id = video.Id,
-                    url = video.Url?.ToString(),
-                    recordedDate = video.RecordedDate.ToString("o"),
-                    length = video.Length.ToString(@"hh\:mm\:ss"),
-                    lengthSeconds = (int)video.Length.TotalSeconds,
-                    views = video.Views,
-                    quality = downloadParams.SelectedQuality.DisplayString,
-                    cropStart = downloadParams.CropStart ? downloadParams.CropStartTime.ToString(@"hh\:mm\:ss") : null,
-                    cropEnd = downloadParams.CropEnd ? downloadParams.CropEndTime.ToString(@"hh\:mm\:ss") : null,
-                    downloadedLength = downloadParams.CroppedLength.ToString(@"hh\:mm\:ss"),
-                    videoFile = Path.GetFileName(outputFile)
+                    ["title"] = video.Title,
+                    ["channel"] = video.Channel,
+                    ["id"] = video.Id,
+                    ["url"] = video.Url?.ToString(),
+                    ["recordedDate"] = video.RecordedDate.ToString("o"),
+                    ["length"] = video.Length.ToString(@"hh\:mm\:ss"),
+                    ["lengthSeconds"] = (int)video.Length.TotalSeconds,
+                    ["views"] = video.Views,
+                    ["quality"] = downloadParams.SelectedQuality.DisplayString,
+                    ["cropStart"] = downloadParams.CropStart ? downloadParams.CropStartTime.ToString(@"hh\:mm\:ss") : null,
+                    ["cropEnd"] = downloadParams.CropEnd ? downloadParams.CropEndTime.ToString(@"hh\:mm\:ss") : null,
+                    ["downloadedLength"] = downloadParams.CroppedLength.ToString(@"hh\:mm\:ss"),
+                    ["videoFile"] = Path.GetFileName(outputFile)
                 };
 
-                File.WriteAllText(infoFile, System.Text.Json.JsonSerializer.Serialize(info,
-                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(infoFile, info.ToJsonString(IndentedJson));
 
                 log(" done!");
             }
@@ -1002,36 +1003,39 @@ namespace TwitchLeecher.Services.Services
         }
 
         // Raw chat for other tools: offsets are seconds from the start of the downloaded part, like the other formats
+        private static readonly JsonSerializerOptions IndentedJson = new JsonSerializerOptions { WriteIndented = true };
+
         private static string ChatJson(DownloadParameters downloadParams, List<TwitchChatMessage> messages,
             TimeSpan from, TimeSpan to)
         {
             TwitchVideo video = downloadParams.Video;
 
-            var chat = new
+            var chat = new JsonObject
             {
-                video = new
+                ["video"] = new JsonObject
                 {
-                    id = video.Id,
-                    title = video.Title,
-                    channel = video.Channel,
-                    cropStart = from.ToDaylessString(),
-                    cropEnd = to.ToDaylessString()
+                    ["id"] = video.Id,
+                    ["title"] = video.Title,
+                    ["channel"] = video.Channel,
+                    ["cropStart"] = from.ToDaylessString(),
+                    ["cropEnd"] = to.ToDaylessString()
                 },
-                messages = messages.Select(m => new
+                ["messages"] = new JsonArray(messages.Select(m => (JsonNode)new JsonObject
                 {
-                    offsetSeconds = Math.Round((m.Offset - from).TotalSeconds, 3),
-                    timestamp = (m.Offset - from).ToDaylessString(),
-                    name = m.Name,
-                    color = m.Color,
-                    text = m.Text,
-                    fragments = m.Fragments?.Select(f => f.EmoteId == null
-                        ? (object)new { text = f.Text }
-                        : new { text = f.Text, emoteId = f.EmoteId })
-                })
+                    ["offsetSeconds"] = Math.Round((m.Offset - from).TotalSeconds, 3),
+                    ["timestamp"] = (m.Offset - from).ToDaylessString(),
+                    ["name"] = m.Name,
+                    ["color"] = m.Color,
+                    ["text"] = m.Text,
+                    ["fragments"] = m.Fragments == null
+                        ? null
+                        : new JsonArray(m.Fragments.Select(f => (JsonNode)(f.EmoteId == null
+                            ? new JsonObject { ["text"] = f.Text }
+                            : new JsonObject { ["text"] = f.Text, ["emoteId"] = f.EmoteId })).ToArray())
+                }).ToArray())
             };
 
-            return System.Text.Json.JsonSerializer.Serialize(chat,
-                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            return chat.ToJsonString(IndentedJson);
         }
 
         // Downloads each distinct emote once as a data: URI so the HTML works offline; failed emotes are left out
