@@ -1,7 +1,6 @@
 ﻿using System.Windows.Input;
 using Avalonia;
 using CommunityToolkit.Mvvm.Input;
-using ReactiveUI;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.Types;
@@ -173,7 +172,7 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 if (_undoCommand == null)
                 {
-                    _undoCommand = ReactiveCommand.CreateFromTask(async () => Undo());
+                    _undoCommand = DelegateCommand.FromAsyncHandler(Undo);
                 }
 
                 return _undoCommand;
@@ -186,7 +185,7 @@ namespace TwitchLeecher.Gui.ViewModels
             {
                 if (_defaultsCommand == null)
                 {
-                    _defaultsCommand = ReactiveCommand.CreateFromTask(async () => Defaults());
+                    _defaultsCommand = DelegateCommand.FromAsyncHandler(Defaults);
                 }
 
                 return _defaultsCommand;

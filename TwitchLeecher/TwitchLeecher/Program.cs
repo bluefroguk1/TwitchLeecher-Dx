@@ -2,7 +2,6 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Avalonia.ReactiveUI;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using TwitchLeecher;
@@ -36,7 +35,6 @@ class Program
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .UseReactiveUI()
             .LogToTrace();
     }
 
