@@ -2,6 +2,17 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## NEXT PC RUN (2026-11-24): the .NET 11 + Avalonia 12.2.0 branch
+
+A separate branch, **not** `final`: `upgrade/net11-avalonia12.2` (2fb84f7, CI green on Windows and Linux). It needs the **.NET 11 SDK** on the PC (`dotnet --list-sdks` should show 11.0.x; if not, ask the user to install it from Microsoft's .NET download page).
+```
+git fetch origin
+git checkout upgrade/net11-avalonia12.2
+Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force
+dotnet build TwitchLeecher\TwitchLeecher.sln -c Release
+```
+The build output is now `bin\Release\net11.0`: the helper script finds it by itself. Check the title still says 4.0, then do the **whole automated run in 1b (R1–R16)**, plus chat as JSON and text, and the update check. This branch changes the framework and the UI library, so look especially at: styled controls (date picker, calendar, toggle switch, combo boxes, scroll bars), the DataGrid on the Log page and Log › Copy, the tray, the sign-in web view, and the What's new card. Report in a "Results (date)" table as before. **Afterwards switch back:** `git checkout final` and rebuild, so the next test isn't run on the upgrade by mistake.
+
 ## MAC, 2026-11-24: branches reviewed, submission plan
 
 - **The submission plan and a readiness table for every PR are at the top of `.claude/pr-drafts/README.md`.** Order: all PRs at the developer's pace, then an optional .NET 11 + Avalonia 12.2.0 upgrade on its own branch (kept out of `final`), then the "4.0 release" PR (version bump + What's new card).

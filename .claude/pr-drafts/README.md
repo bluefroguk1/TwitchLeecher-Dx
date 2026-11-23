@@ -1,5 +1,13 @@
 # PR submission guide
 
+## .NET 11 + Avalonia 12.2.0: built 2026-11-24 on its own branch
+
+- **`upgrade/net11-avalonia12.2`** (2fb84f7) = `final` + one commit: net11.0, Avalonia 12.2.0 (DataGrid/WebView stay on 12.1.2, as no 12.2 is out), DI and ProtectedData 11.0.0, CI on the .NET 11 SDK, and the old test scripts' `bin\Release\net11.0` paths. **Not in `final`**, by the user's choice, so it can't delay anything.
+- CI is green on Windows (including the native AOT build) and Linux, with the same warnings as `final`.
+- Body: `bodies/upgrade-net11-avalonia12.2.md`. Step 2 of the submission plan: offer it **after** everything else has merged, re-cut on master then.
+- **To keep it current:** when `final` changes, rebase this branch on it (`git rebase origin/final`). The only conflicts would be in csproj or `build.yml` version lines.
+- **Needs the PC:** the full automated run (handoff 1b) on this branch. It changes the framework and the UI library, so everything is in scope.
+
 ## Mac tidy-up 2026-11-24 (sessions, worktrees, local branches)
 
 - **21 finished Claude Code sessions for this project were archived** (reversible from the app's Archived list). Only this session and "Thread tracking mod" stay open.
