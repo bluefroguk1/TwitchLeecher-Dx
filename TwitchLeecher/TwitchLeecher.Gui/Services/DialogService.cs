@@ -1,4 +1,5 @@
-﻿using Ninject;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Controls;
@@ -16,7 +17,7 @@ namespace TwitchLeecher.Gui.Services
     {
         #region Fields
 
-        private readonly IKernel _kernel;
+        private readonly IServiceProvider _services;
         private readonly ILogService _logService;
 
         private bool _busy;
@@ -25,9 +26,9 @@ namespace TwitchLeecher.Gui.Services
 
         #region Constructor
 
-        public DialogService(IKernel kernel, ILogService logService)
+        public DialogService(IServiceProvider services, ILogService logService)
         {
-            _kernel = kernel;
+            _services = services;
             _logService = logService;
         }
 
@@ -50,7 +51,7 @@ namespace TwitchLeecher.Gui.Services
             var result =
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    MainWindow owner = _kernel.Get<MainWindow>();
+                    MainWindow owner = _services.GetRequiredService<MainWindow>();
 
                     // centre over the main window; when it is minimised or hidden, centre on its screen instead
                     if (!owner.IsVisible || owner.WindowState == WindowState.Minimized)
@@ -76,7 +77,7 @@ namespace TwitchLeecher.Gui.Services
 
         public async void ShowFolderBrowserDialog(string folder, Action<bool, string> dialogCompleteCallback)
         {
-            var window = _kernel.Get<MainWindow>();
+            var window = _services.GetRequiredService<MainWindow>();
             var picker = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 AllowMultiple = false
@@ -140,7 +141,7 @@ namespace TwitchLeecher.Gui.Services
         public async void ShowFileBrowserDialog(CommonFileDialogFilter filter, string folder,
             Action<bool, string> dialogCompleteCallback)
         {
-            var window = _kernel.Get<MainWindow>();
+            var window = _services.GetRequiredService<MainWindow>();
             var result = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 AllowMultiple = false,
@@ -163,8 +164,8 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowUpdateInfoDialog(UpdateInfo updateInfo)
         {
-            UpdateInfoViewModel model = _kernel.Get<UpdateInfoViewModel>();
-            var mainWindow = _kernel.Get<MainWindow>();
+            UpdateInfoViewModel model = _services.GetRequiredService<UpdateInfoViewModel>();
+            var mainWindow = _services.GetRequiredService<MainWindow>();
             model.UpdateInfo = updateInfo;
 
             UpdateInfoView view = new UpdateInfoView
@@ -182,8 +183,8 @@ namespace TwitchLeecher.Gui.Services
                 return null;
             }
 
-            var window = new TwitchSignInWindow(signIn, subOnly, _kernel.Get<IFolderService>().GetAppDataFolder());
-            await window.ShowDialog(_kernel.Get<MainWindow>());
+            var window = new TwitchSignInWindow(signIn, subOnly, _services.GetRequiredService<IFolderService>().GetAppDataFolder());
+            await window.ShowDialog(_services.GetRequiredService<MainWindow>());
             return window.Result;
         }
 
@@ -198,7 +199,7 @@ namespace TwitchLeecher.Gui.Services
             {
                 _busy = busy;
 
-                var window = _kernel.Get<MainWindow>();
+                var window = _services.GetRequiredService<MainWindow>();
                 window.Cursor = busy ? new Cursor(StandardCursorType.Wait) : Cursor.Default;
                 if (_busy)
                 {

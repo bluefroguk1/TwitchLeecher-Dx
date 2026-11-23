@@ -1,28 +1,28 @@
-﻿using Ninject.Modules;
+﻿using Microsoft.Extensions.DependencyInjection;
 using TwitchLeecher.Services.Interfaces;
 using TwitchLeecher.Services.Services;
 
 namespace TwitchLeecher.Services.Modules
 {
-    public class ServiceModule : NinjectModule
+    public static class ServiceModule
     {
         #region Methods
 
-        public override void Load()
+        public static void Load(IServiceCollection services)
         {
-            Bind<IApiService>().To<ApiService>().InSingletonScope();
-            Bind<IAuthService>().To<AuthService>().InSingletonScope();
-            Bind<IDownloadService>().To<DownloadService>().InSingletonScope();
-            Bind<IFilenameService>().To<FilenameService>().InSingletonScope();
-            Bind<IFolderService>().To<FolderService>().InSingletonScope();
-            Bind<ILogService>().To<LogService>().InSingletonScope();
-            Bind<IPreferencesService>().To<PreferencesService>().InSingletonScope();
-            Bind<IQuickDownloadService>().To<QuickDownloadService>().InSingletonScope();
-            Bind<IProcessingService>().To<ProcessingService>().InSingletonScope();
-            Bind<IRuntimeDataService>().To<RuntimeDataService>().InSingletonScope();
-            Bind<IUpdateService>().To<UpdateService>().InSingletonScope();
-            Bind<IAuthListener>().To<AuthListener>().InSingletonScope();
-            Bind<IThemeService>().To<ThemeService>().InSingletonScope();
+            services.AddSingleton<IApiService, ApiService>();
+            services.AddSingleton<IAuthService, AuthService>();
+            services.AddSingleton<IDownloadService, DownloadService>();
+            services.AddSingleton<IFilenameService, FilenameService>();
+            services.AddSingleton<IFolderService, FolderService>();
+            services.AddSingleton<ILogService, LogService>();
+            services.AddSingleton<IPreferencesService, PreferencesService>();
+            services.AddSingleton<IQuickDownloadService, QuickDownloadService>();
+            services.AddSingleton<IProcessingService, ProcessingService>();
+            services.AddSingleton<IRuntimeDataService, RuntimeDataService>();
+            services.AddSingleton<IUpdateService, UpdateService>();
+            services.AddSingleton<IAuthListener, AuthListener>();
+            services.AddSingleton<IThemeService, ThemeService>();
         }
 
         #endregion Methods

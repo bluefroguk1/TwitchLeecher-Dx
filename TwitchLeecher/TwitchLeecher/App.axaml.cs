@@ -7,7 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Ninject;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Gui.Modules;
@@ -25,7 +25,7 @@ public partial class App : Application
 {
     private readonly Mutex _singletonMutex;
 
-    private IKernel _kernel;
+    private IServiceProvider _services;
     private Dictionary<string, ResourceDictionary> _themes;
     private ResourceDictionary _sharedResources;
 
@@ -56,57 +56,58 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    private IKernel CreateKernel()
+    private IServiceProvider CreateServices()
     {
-        IKernel kernel = new StandardKernel();
+        var services = new ServiceCollection();
 
-        RegisterTypes(kernel);
-        LoadModules(kernel);
+        RegisterTypes(services);
+        LoadModules(services);
 
-        return kernel;
+        // ValidateOnBuild: a missing registration fails at start-up, not when a page first opens
+        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }
 
-    private void RegisterTypes(IKernel kernel)
+    private void RegisterTypes(IServiceCollection services)
     {
-        kernel.Bind<MainWindow>().ToSelf().InSingletonScope();
-        kernel.Bind<MainWindowVM>().ToSelf().InSingletonScope();
-        kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
-        kernel.Bind<IDesktopNotificationService>().To<DesktopNotificationService>().InSingletonScope();
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainWindowVM>();
+        services.AddSingleton<IEventAggregator, EventAggregator>();
+        services.AddSingleton<IDesktopNotificationService, DesktopNotificationService>();
     }
 
-    private void LoadModules(IKernel kernel)
+    private void LoadModules(IServiceCollection services)
     {
-        kernel.Load<GuiModule>();
-        kernel.Load<ServiceModule>();
+        GuiModule.Load(services);
+        ServiceModule.Load(services);
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        _kernel = CreateKernel();
+        _services = CreateServices();
 
         _sharedResources = (ResourceDictionary)Resources["Shared"];
         _themes.Add("New", (ResourceDictionary)Resources["New"]);
         _themes.Add("Original", (ResourceDictionary)Resources["Original"]);
         _themes.Add("Coyote", (ResourceDictionary)Resources["Coyote"]);
-        var themeService = _kernel.Get<IThemeService>();
+        var themeService = _services.GetRequiredService<IThemeService>();
         themeService.StyleChanged += (sender, args) => { SetTheme(themeService.GetTheme()); };
-        var preferencesService = _kernel.Get<IPreferencesService>();
+        var preferencesService = _services.GetRequiredService<IPreferencesService>();
         SetTheme(string.IsNullOrEmpty(preferencesService.CurrentPreferences.Theme)
             ? "New"
             : preferencesService.CurrentPreferences.Theme);
 
         // re-sync at start-up in case the exe moved
         SyncAutoStart(preferencesService);
-        _kernel.Get<IEventAggregator>().GetEvent<PreferencesSavedEvent>()
+        _services.GetRequiredService<IEventAggregator>().GetEvent<PreferencesSavedEvent>()
             .Subscribe(() => SyncAutoStart(preferencesService), true);
 
         // on Windows this registers the toast identity (AUMID); it must happen before any window is created
-        _kernel.Get<IDesktopNotificationService>();
+        _services.GetRequiredService<IDesktopNotificationService>();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.Exit += OnExit;
-            MainWindow mainWindow = _kernel.Get<MainWindow>();
+            MainWindow mainWindow = _services.GetRequiredService<MainWindow>();
 
             if (Array.Exists(desktop.Args ?? [], arg => arg == AutoStart.MinimizedArg))
             {
@@ -140,15 +141,15 @@ public partial class App : Application
         {
             TrayIcon icon = TrayIcon.GetIcons(this)?.FirstOrDefault();
 
-            if (icon == null || _kernel == null)
+            if (icon == null || _services == null)
             {
                 return;
             }
 
-            var downloads = _kernel.Get<TwitchLeecher.Services.Interfaces.IDownloadService>().Downloads.ToList();
+            var downloads = _services.GetRequiredService<TwitchLeecher.Services.Interfaces.IDownloadService>().Downloads.ToList();
             var active = downloads.Where(d => d.IsDownloading).ToList();
             int paused = downloads.Count(d => d.IsPaused);
-            var watched = _kernel.Get<TwitchLeecher.Gui.Interfaces.IAutoDownloadService>();
+            var watched = _services.GetRequiredService<TwitchLeecher.Gui.Interfaces.IAutoDownloadService>();
             int searches = watched.Enabled ? watched.Searches.Count(w => w.Active) : 0;
 
             string detail;
@@ -179,9 +180,9 @@ public partial class App : Application
         }
     }
 
-    private void TrayIcon_OnClicked(object sender, EventArgs e) => _kernel.Get<MainWindow>().BringToFront();
+    private void TrayIcon_OnClicked(object sender, EventArgs e) => _services.GetRequiredService<MainWindow>().BringToFront();
 
-    private void TrayOpen_OnClick(object sender, EventArgs e) => _kernel.Get<MainWindow>().BringToFront();
+    private void TrayOpen_OnClick(object sender, EventArgs e) => _services.GetRequiredService<MainWindow>().BringToFront();
 
     private void SyncAutoStart(IPreferencesService preferencesService)
     {
@@ -191,7 +192,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            _kernel.Get<ILogService>().LogException(ex);
+            _services.GetRequiredService<ILogService>().LogException(ex);
         }
     }
 
