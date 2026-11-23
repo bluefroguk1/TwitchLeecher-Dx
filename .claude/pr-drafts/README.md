@@ -12,6 +12,8 @@
 - **Desktop notifications are not a requirement** (user): `pr/desktop-notifications` stays on hold.
 - **`final` = `final-next`**, `preview` rebuilt from it, and the #104 comment updated with the new build link and the code-quality and issue PRs.
 - Testing sections of the bodies are updated for everything checked in this round.
+- **#104 comment updated** (2026-11-23): new preview build, run 45195138459 (artifacts until 2026-12-07; Windows is the native AOT build), plus #85, the code-quality PRs, the CLI (#36) and fewer pop-ups.
+- **Branches tidied** (2026-11-23). The fork keeps `master`, `final`, `preview`, the `pr/*` branches, the 16 `*-pr` branches behind #104-#119, and the unsubmitted work not in `final` (`add-unit-tests`, `improve-error-logging`, `replace-webclient`, `refactor-results-viewmodel`, `claude/refactor-shared-styles-35c0a9`, `tray-tooltip-events`, `claude/fix-slow-downloads-15ccca`, `deps-security-notifications`). The other 41 working branches (including `combined`, `combined-all`, `final-next` and the `claude/*` UI branches) moved to hidden refs `refs/archive/<name>`. Get them back with `git fetch origin 'refs/archive/*:refs/archive/*'`, then `git branch <name> refs/archive/<name>`.
 
 ## Submission plan (2026-11-20, after the combined-all test round)
 
@@ -27,8 +29,8 @@
 6. **Hold:** `desktop-notifications` (toasts never confirmed on Windows), `fix-slow-downloads` (no measured gain), `login-page-and-icon` (superseded).
 
 **Refresh each wave just before sending.** The `pr/*` branches were cut before the last PC session. Waves 2–3 are missing up to 35 tested tweaks from `combined-all`, for example the results pane, toolbar staging, date picker, watched-search rows and header order. Waves 1 and 5 are unaffected.
-- Rebuild each branch from its synced `claude/*` working branch with `make_pr.sh`.
-- Then diff its files against `final`. The Settings avatar/Twitch logo, the "Download schedule" wording and the tray tooltip exist only in `combined-all`/`final`.
+- Rebuild each branch from `final` (the tested code; the old `claude/*` working branches are in `refs/archive/`, and some are behind `final`).
+- Diff its files against `final`. The Settings avatar/Twitch logo, the "Download schedule" wording and the tray tooltip exist only in `combined-all`/`final`.
 - Rebase onto upstream `master` as it stands at that moment, and update the Testing section of each body.
 
 **`preview` branch (public face):** one clean commit on `master` with `final`'s code, minus `.claude/` and `test-scripts/`, with no AI lines. The #104 comment links it. When `final` changes, rebuild it: start a worktree on `origin/master`, run `git read-tree -u --reset origin/final`, `git rm -r --cached` the notes and scripts, commit, then `git push --force-with-lease origin preview`.

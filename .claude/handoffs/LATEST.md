@@ -1,6 +1,6 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. `final-next` is the same branch now. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. `final-next` has been archived; `final` is current. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
 ## CURRENT STATE (2026-11-23, after the PC test round)
 
@@ -8,6 +8,7 @@ Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show or
 - The three PC tweaks that only lived on `preview` (pop-ups removed, quick-download message box, Default quality on one line) were added to `final-next` (user: keep all three). CI green.
 - **`final` = `final-next`** (fast-forwarded), and **`preview` was rebuilt** from it. To use it on the PC: `git fetch origin; git checkout final; git pull`, then rebuild (`dotnet build`), or download the `final` CI artifact.
 - PR branches carry the fixes (see `.claude/pr-drafts/README.md` "Status 2026-11-23"), bodies' Testing sections are updated, and the #104 comment points at the new preview build.
+- **Branches tidied:** `final-next`, `combined`, `combined-all` and 38 other working branches moved to `refs/archive/<name>` on the fork (see the PR guide's Status section). Use **`final`** from now on.
 - **No PC test is pending.** The next thing is the upstream submission waves in the PR guide.
 
 The test round below is kept as the record of what was checked.
