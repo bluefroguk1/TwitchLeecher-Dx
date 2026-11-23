@@ -12,6 +12,9 @@ namespace TwitchLeecher.Core.Models
     {
         private static readonly ImmutableHashSet<string> SupportedConversionFormats = ImmutableHashSet.Create(".mp4", ".mkv");
 
+        // without conversion the file is Twitch's own stream: .ts for older VODs, fragmented MP4 for newer ones
+        private static readonly ImmutableHashSet<string> SupportedNoConversionFormats = ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase, ".ts", ".mp4");
+
         #region Fields
 
         private readonly TwitchVideo _video;
@@ -292,9 +295,9 @@ namespace TwitchLeecher.Core.Models
                 {
                     AddError(currentProperty, "Please specify a filename!");
                 }
-                else if (_disableConversion && !_filename.EndsWith(".ts", StringComparison.OrdinalIgnoreCase))
+                else if (_disableConversion && !SupportedNoConversionFormats.Contains(Path.GetExtension(_filename)))
                 {
-                    AddError(currentProperty, "Filename must end with '.ts'!");
+                    AddError(currentProperty, $"Filename must end with one of the supported formats: {string.Join(", ", SupportedNoConversionFormats)}");
                 }
                 else if (!_disableConversion && !SupportedConversionFormats.Contains(Path.GetExtension(_filename)))
                 {

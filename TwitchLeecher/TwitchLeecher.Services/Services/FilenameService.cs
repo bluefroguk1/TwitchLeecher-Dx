@@ -88,13 +88,16 @@ namespace TwitchLeecher.Services.Services
                 return filename;
             }
 
-            if (disableConversion && !filename.EndsWith(".ts"))
+            if (disableConversion)
             {
-                return filename + ".ts";
-            }
-            else if (disableConversion && (filename.EndsWith(".mp4") || filename.EndsWith(".mkv")))
-            {
-                return Path.ChangeExtension(filename, ".ts");
+                // .ts by default; .mp4 stays, for Twitch's newer VODs whose stream is MP4. (Before, ".mp4" became
+                // "name.mp4.ts", because the branch that swapped the extension could never be reached.)
+                if (filename.EndsWith(".ts") || filename.EndsWith(".mp4"))
+                {
+                    return filename;
+                }
+
+                return filename.EndsWith(".mkv") ? Path.ChangeExtension(filename, ".ts") : filename + ".ts";
             }
             else if (!disableConversion && (!filename.EndsWith(".mp4") && !filename.EndsWith(".mkv")))
             {
