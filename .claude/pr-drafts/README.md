@@ -1,6 +1,23 @@
 # PR submission guide
 
-## Developer review, 2026-11-23 (evening)
+## Wave 1 SENT 2026-11-23 (user: open it now that the developer is responding)
+
+Rebased onto the new master (24cab52) and each one CI-green on Windows and Linux, separately and all seven stacked. The three dependency PRs apply in any order: the Tmds.DBus.Protocol pin now sits in its own ItemGroup above the PropertyGroups, so it no longer touches the lines the other two change.
+
+| PR | Branch |
+|---|---|
+| #121 | `pr/fix-single-instance-pipe` |
+| #122 | `pr/ui-draggable-dialogs` |
+| #123 | `pr/deps-patch-updates` |
+| #124 | `pr/deps-remove-unused` |
+| #125 | `pr/ci-build` |
+| #126 | `pr/deps-security-pin` |
+| #127 | `pr/feature-85-open-folder` (closes #85) |
+
+New issue #120 (crop time boxes cut off) was closed by its reporter as a duplicate of #103. #104 already fixes it (time boxes widened 50 to 80, format "00"). Not yet said on #120 or in #104's description; waiting for the user's OK.
+
+**Next:** Wave 2 (UI refresh foundation) once the open PRs #104-#109 and #121-#127 are mostly dealt with. Rebuild `final` and the Wave 2/3 branches on the new master first, including the #107 JObject and #109 setting changes.
+
 
 - **Merged:** #110-#119 (10 of 16). The developer is happy to merge despite style differences and plans a rewrite later (#119). On #110 they may later move ffmpeg into the installer only.
 - **Asked and done** (rebased onto the new master, CI green on Windows and Linux, replies posted):
@@ -9,7 +26,7 @@
   - #108 (approved, "LGTM"): rebased. Its own scroll-restore code was dropped because #113's `ScrollPositionRestorer` covers it. The title is now "Quick download and multi-select download (#96)".
   - #109: new setting `DownloadKeepTsOnFailure`, Settings > Download > "Keep the unconverted .ts if conversion fails". It's on by default (XML `KeepTsOnFailure`). Since #111, the streamed path re-joins the chunks into the `.ts`. The setting itself hasn't been run on Windows yet.
 - **Not yet in `final`:** the #107 `JObject` change and the #109 setting. Port them when `final` is next rebuilt on the new master.
-- **Wave conditions now met:** the developer has responded (Wave 1), and at least half of #104-#119 are merged (Wave 2). The user had said to wait until 2026-12-04; ask again before sending.
+- **Wave conditions now met:** the developer has responded (Wave 1, sent, see above), and at least half of #104-#119 are merged (Wave 2).
 
 
 - **`final-next` passed the Windows test round** (checks 1-13 in the handoff), with these fixes made on the PC and now in the PR branches:
