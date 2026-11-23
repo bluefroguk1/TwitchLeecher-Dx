@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Text.Json.Nodes;
 using System;
 using System.Globalization;
 using System.Net;
@@ -31,9 +31,9 @@ namespace TwitchLeecher.Services.Services
 
                     string result = webClient.DownloadString(ReleasesApiUrl);
 
-                    JToken releasesJson = JToken.Parse(result);
+                    JsonNode releasesJson = JsonNodeExtensions.Parse(result);
 
-                    foreach (JToken releaseJson in releasesJson)
+                    foreach (JsonNode releaseJson in releasesJson.AsArray())
                     {
                         bool draft = releaseJson.Value<bool>("draft");
                         bool prerelease = releaseJson.Value<bool>("prerelease");
