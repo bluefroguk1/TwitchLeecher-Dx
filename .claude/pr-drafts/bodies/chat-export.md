@@ -16,4 +16,4 @@ Until those are merged this PR also shows their changes; please review the last 
 
 ## Testing
 
-Not yet tested on Windows.
+Tested on Windows 11 (2026-11-23), in the combined build: a cropped VOD with chat saved as HTML with emote pictures (44 emotes in a 20-minute sample), as JSON (messages with offsets, names, text and fragments) and as text.

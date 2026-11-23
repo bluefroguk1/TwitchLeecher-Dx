@@ -21,4 +21,4 @@ Until those are merged this PR also shows their changes; please review the last 
 
 ## Testing
 
-Not yet tested on Windows.
+Tested on Windows 11 (2026-11-23), in the combined build: log out, then sign in again in the in-app window; the account shows in Settings and searches and downloads work with the new token.

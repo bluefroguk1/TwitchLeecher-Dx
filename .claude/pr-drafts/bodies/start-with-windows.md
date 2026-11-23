@@ -13,4 +13,4 @@ Until those are merged this PR also shows their changes; please review the last 
 
 ## Testing
 
-Not yet tested on Windows.
+Tested on Windows 11 (2026-11-23), in the combined build: starting with `--minimized` (what the Windows start-up entry uses) opens straight to the tray with no window, and the window opens from the tray icon.
