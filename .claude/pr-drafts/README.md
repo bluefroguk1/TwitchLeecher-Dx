@@ -1,5 +1,15 @@
 # PR submission guide
 
+## Mac tidy-up 2026-11-24 (sessions, worktrees, local branches)
+
+- **21 finished Claude Code sessions for this project were archived** (reversible from the app's Archived list). Only this session and "Thread tracking mod" stay open.
+- **29 leftover worktrees were removed.** Only `.claude/worktrees/final-next` (this session's working copy) is left.
+- **Local branches are down to `master` and `final`.**
+- **Nothing was lost.** Work that existed only locally went to hidden refs on the fork first:
+  - `refs/archive/session-*`: the staged changes in the search-sidebar and tray worktrees, and two unpushed early commits (dark inputs, header).
+  - `refs/archive/old-local/*`: 38 old local copies of `pr/*`, `preview` and two `claude/*` branches, from before this week's rebuilds.
+  - Get any of them back with `git fetch origin 'refs/archive/*:refs/archive/*'`.
+
 ## #128 OPENED 2026-11-24: check for updates fixed (user asked to send it straight away)
 
 Since the Avalonia rewrite (5b972e0, 2023), `UpdateService` asked for the releases of `schneidermanuel/TwitchLeecher.Old-dx` (404, hidden by its `catch`), so the app never showed an update. **`pr/fix-update-check`** (c455dbc, on master, CI green, AI check clean) is open as **#128**. The same fix is in `final`. Copies of 3.9.1 and earlier keep asking the old address, so they will never hear about 4.0. When `pr/replace-webclient` is next rebased it will conflict on the User-Agent line in `UpdateService`; keep `"TwitchLeecher-Dx"`.
