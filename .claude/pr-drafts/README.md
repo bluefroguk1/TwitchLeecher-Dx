@@ -1,5 +1,26 @@
 # PR submission guide
 
+## SUBMISSION PLAN AND READINESS (2026-11-24, user's plan)
+
+**Order (the user's plan):**
+1. **Every feature and fix PR, at a cadence agreed with the developer.** Small PRs or about 6 bundles: ask him (offered on #104 and by email; no answer yet). **Do not open anything without the user saying so.**
+2. **Once those are merged: an optional upgrade PR for .NET 11 and Avalonia 12.2.0.** It is kept on **its own branch, outside `final` and the PR set**, so it never delays testing or the other PRs (user). .NET 11 is STS, but STS now has 24 months of support, so it ends around the same time as .NET 10 LTS (Nov 2028). Avalonia 12.2.0 came out 2026-11-23. Build it when the merges are close.
+3. **Last: the "4.0 release" PR: the version bump plus the What's new card.** The card only shows on a version jump and its text must match what merged, so they go together; offer `release-notes-4.0.md` with it. So the developer can release before or after the optional upgrade, as he likes.
+
+**Readiness of the `pr/*` branches (checked 2026-11-24):** all 35 sit on upstream master 24cab52, none has AI or TwitchDownloader references, and every one has a description in `bodies/`.
+
+| State | Branches |
+|---|---|
+| **Open upstream** (rebased 2026-11-23, mergeable) | #104–#109, Wave 1 #121–#127 |
+| **Ready to open as they are** (cut this week from tested code, PC-tested) | `replace-ninject`, `remove-reactiveui`, `replace-icon-pack`, `native-aot`, `avalonia-12`, `feature-cli`, `replace-webclient` (#31), `system-text-json` (on #31), `fix-mp4-unconverted` |
+| **Need a refresh from `final` before sending** (cut before the last PC rounds; tested tweaks since) | Wave 2: `ui-theme-keys`, `ui-dark-inputs`, `ui-header-nav`, `ui-search-sidebar`, `ui-downloads-queue`, `in-app-signin`. Wave 3: `ui-results-toolbar`, `ui-download-dialog`, `ui-settings-sections`, `theme-coyote`, `chat-export`, `compress-video`, `tray`, `start-with-windows`, `watched-searches`, `download-schedule`, `perf-downloads-idle`, `perf-result-badges`, `perf-parallel-chat`; and the base `_after-open-prs(-theme)`, which still holds #104–#109 as they were before the review changes |
+| **Held** | `desktop-notifications` (not a requirement) |
+| **Not cut yet** | `remove-popups` (touches about 15 branches), the What's new card (needs the icon control, the theme colours, Avalonia 12 and the dialog helper merged first): both go with step 3 or just before it |
+
+**Known gaps between `final` and the Wave 2/3 branches** (carry these over at the refresh): calendar future days dimmed (`ui-dark-inputs`); results toolbar sizing without the opening animation and the results-pane loading state (`ui-results-toolbar` / `ui-search-sidebar`); Pause all greyed out when nothing can pause (`ui-downloads-queue`); the frameless message box (needs the theme colours and Avalonia 12); AOT-safe JSON for watched searches, VOD info and chat (only in `final`); and the tweaks listed under "Status 2026-11-23" below. **How to refresh depends on the developer's answer:** bundles are cut straight from `final` by area; small PRs are rebuilt from `final` one wave at a time and CI-checked.
+
+**Testing lines:** updated from the PC runs for chat export, in-app sign-in and start with Windows (2026-11-24). Still "not yet tested" because nothing specific was recorded: `download-schedule`, the three `perf-*`, `deps-patch-updates`/`deps-remove-unused` (final runs Avalonia 12, not 11.3.23). **Open upstream #121 says "not yet tested"**, but the second-launch check passed in the 2026-11-23 round: updating that open PR's text needs the user's OK.
+
 ## Check 2026-11-23 (evening): issues, frameworks, optimisations
 
 **Upstream:** master has not moved (24cab52), and all 13 open PRs can merge. The developer added a thank-you on #104 (16:25, before the email): since moving to Avalonia he has only kept the app working and fixed critical bugs. No reply yet on bigger versus small PRs.
