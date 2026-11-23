@@ -558,7 +558,7 @@ namespace TwitchLeecher.Services.Services
                 return "Disk error: " + inner.Message;
             }
 
-            if ((inner is WebException || inner is System.Net.Http.HttpRequestException) && stage != "Network error")
+            if (inner is HttpRequestException && stage != "Network error")
             {
                 return stage + " (network error)";
             }
@@ -624,7 +624,7 @@ namespace TwitchLeecher.Services.Services
             log(Environment.NewLine + Environment.NewLine + "Playlist url for selected quality '" +
                 quality.DisplayString + "' is '" + playlistUrl + "'");
 
-            using (WebClient webClient = new WebClient())
+            using (HttpRequestClient webClient = new HttpRequestClient())
             {
                 log(Environment.NewLine + Environment.NewLine + "Retrieving playlist...");
                 string playlistStr = webClient.DownloadString(playlistUrl);
@@ -890,7 +890,7 @@ namespace TwitchLeecher.Services.Services
 
             try
             {
-                using (WebClient webClient = new WebClient())
+                using (HttpRequestClient webClient = new HttpRequestClient())
                 {
                     webClient.DownloadFile(clipUrl, partFile);
                 }
@@ -1057,7 +1057,7 @@ namespace TwitchLeecher.Services.Services
 
             log(Environment.NewLine + "Embedding " + ids.Count + " emotes...");
 
-            using (WebClient webClient = new WebClient())
+            using (HttpRequestClient webClient = new HttpRequestClient())
             {
                 foreach (string id in ids)
                 {
@@ -1067,10 +1067,10 @@ namespace TwitchLeecher.Services.Services
                     {
                         string base64 = Convert.ToBase64String(webClient.DownloadData(ChatHtmlWriter.EmoteUrl(id)));
                         // animated emotes come back as GIF, so keep the server's type
-                        string type = webClient.ResponseHeaders?[HttpResponseHeader.ContentType] ?? "image/png";
+                        string type = webClient.GetResponseHeader("Content-Type") ?? "image/png";
                         sources[id] = "data:" + type + ";base64," + base64;
                     }
-                    catch (WebException ex)
+                    catch (HttpRequestException ex)
                     {
                         log(Environment.NewLine + "Emote " + id + " could not be downloaded: " + ex.Message);
                     }
