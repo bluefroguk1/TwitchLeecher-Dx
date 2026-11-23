@@ -1,6 +1,6 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs, both passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
 ## DONE (PC, 2026-11-23 late): the .mp4 file-name check passed (`final` 3607502, built 4.0.0)
 
@@ -27,10 +27,10 @@ Report as before. Add files by name, not `.claude` as a whole.
 ## STATUS IN ONE GLANCE (PC, end of 2026-11-23)
 
 - **Nothing is waiting on the PC** (the .mp4 file-name check at the top also passed). Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
-- **`final` is the tested version** (latest code commit: the What's new card centring, 4c024ad; System.Text.Json is df8f791). Local `final` and `origin/final` match.
+- **`final` is the tested version.** Everything in it has been run on the PC: the What's new card and its centring (4c024ad), the #31 HttpClient token fix (68c68bd), the System.Text.Json swap (df8f791) and the `.mp4` file-name change (c6e6684). The PC checked it at 3607502; later commits only touched notes and PR text. Local `final` and `origin/final` match.
 - **Open items, none urgent:** emote pictures are now confirmed; still not run on the PC are the Windows toast notifications (not a requirement) and the ffmpeg-failure half of the #109 check.
-- **`preview` is behind `final`.** It was rebuilt at 9a08fcf, before the #31 token fix, the card centring and the System.Text.Json swap. If the developer is pointed at a `preview` build again, rebuild it from `final` first (recipe in `.claude/pr-drafts/README.md`) and ask the user before changing the #104 comment's build link.
-- **No PR is open for #31, the card or the JSON swap.** The user said to leave #31 queued (last wave). Do not open any PR without the user saying so.
+- **`preview` is behind `final`.** It was rebuilt at 9a08fcf, before the #31 token fix, the card centring, the System.Text.Json swap and the `.mp4` change. If the developer is pointed at a `preview` build again, rebuild it from `final` first (recipe in `.claude/pr-drafts/README.md`) and ask the user before changing the #104 comment's build link.
+- **No PR is open for #31, the card, the JSON swap or the `.mp4` change (`pr/fix-mp4-unconverted`, ready on the fork).** The user said to leave #31 queued (last wave). Do not open any PR without the user saying so.
 - **Repo hygiene.** `.claude/handoff-nudge-state.json` is a local counter file, not part of the project: do not `git add -A .claude` (it was committed once by mistake in 47e8c2c and untracked again in 4dca59e; it is now in the local `.git/info/exclude`). Add files by name.
 
 ## START HERE ON THE PC (updated 2026-11-23 evening, Mac)
