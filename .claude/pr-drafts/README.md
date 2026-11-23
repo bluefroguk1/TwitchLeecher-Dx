@@ -23,6 +23,13 @@
 
 **Worth doing next (ask the user):** 1) ~~#31~~ DONE, see below; 2) Newtonsoft stable pin, or System.Text.Json in its place (user asked; recommended as its own PR after #31); 3) Avalonia 12.2 after about 2026-12-07.
 
+## Next: Newtonsoft -> System.Text.Json (decided 2026-11-23, waiting for the #31 PC test)
+
+The user said: do the swap **after the #31 test passes**. No stable-pin PR in the meantime.
+- **Scope:** the ~50 `JObject`/`JToken`/`JArray` reads in 2 files become `JsonNode` reads, with a small helper for the `SelectToken("$.a.b")` paths. Then remove the Newtonsoft.Json package reference.
+- **Watch for:** numbers sent as strings, missing versus null fields, and `Value<T>` on absent keys. Every Twitch response goes through this (search, video info, playlists, clips, chat, sign-in).
+- **Deliver as:** `pr/system-text-json` on master (code-quality wave, CI) and in `final`. Then rerun the automated PC run (handoff 1b, steps R1–R5 and R7) plus chat export as JSON and text.
+
 ## #31 WebClient -> HttpClient (built 2026-11-23)
 
 - **`pr/replace-webclient`** (2aa3ec8, on master, one commit, CI green, body `bodies/replace-webclient.md`):

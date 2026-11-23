@@ -124,6 +124,8 @@ Report back; if it passes, the #109 description's Testing line can be updated.
 
 ### 4. What's next (nothing to send now)
 
+- **Queued, after the #31 results:** swap Newtonsoft.Json for the built-in System.Text.Json (user decision, 2026-11-23). It is built on the Mac; the PC then reruns R1–R5 and R7 of the automated run. Details are in the PR guide.
+
 - **Issues, frameworks and optimisations were checked on 2026-11-23:** see the PR guide, "Check 2026-11-23 (evening)". Open candidates: #31 WebClient -> HttpClient, the Newtonsoft stable pin, and Avalonia 12.2 after about 2026-12-07.
 - `preview` was rebuilt from `final` (9a08fcf), kept at version 3.9.1 so the What's New card stays hidden for the developer.
 
