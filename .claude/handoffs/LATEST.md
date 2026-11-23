@@ -1,6 +1,15 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-23 (evening) on the Mac; PC test run results added 2026-11-23 (late) on the PC**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs, both passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+
+## STATUS IN ONE GLANCE (PC, end of 2026-11-23)
+
+- **Nothing is waiting on the PC.** Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
+- **`final` is the tested version** (latest code commit: the What's new card centring, 4c024ad; System.Text.Json is df8f791). Local `final` and `origin/final` match.
+- **Open items, none urgent:** emote pictures are now confirmed; still not run on the PC are the Windows toast notifications (not a requirement) and the ffmpeg-failure half of the #109 check.
+- **`preview` is behind `final`.** It was rebuilt at 9a08fcf, before the #31 token fix, the card centring and the System.Text.Json swap. If the developer is pointed at a `preview` build again, rebuild it from `final` first (recipe in `.claude/pr-drafts/README.md`) and ask the user before changing the #104 comment's build link.
+- **No PR is open for #31, the card or the JSON swap.** The user said to leave #31 queued (last wave). Do not open any PR without the user saying so.
+- **Repo hygiene.** `.claude/handoff-nudge-state.json` is a local counter file, not part of the project: do not `git add -A .claude` (it was committed once by mistake in 47e8c2c and untracked again in 4dca59e; it is now in the local `.git/info/exclude`). Add files by name.
 
 ## START HERE ON THE PC (updated 2026-11-23 evening, Mac)
 
@@ -194,10 +203,10 @@ The #109 setting has only been built on CI, not run by a person. In the `final` 
 
 - **Decided 2026-11-23 (user): leave the #31 PR queued.** `pr/replace-webclient` (5658660) already has the token fix. No PR is open for it, and it goes in the last wave (code quality) when the user says so. Its Testing text is up to date (emotes and the update check were run in the System.Text.Json run).
 - **Emote pictures in HTML chat: confirmed on the PC 2026-11-23** (see 1a: 44 emote images in a 20-minute sample).
-- **The Newtonsoft to System.Text.Json swap:** when it reaches `final`, rerun R1-R5 and R7 on the PC.
+- **The Newtonsoft to System.Text.Json swap: tested on the PC 2026-11-23 (see 1a), passed.** Its PR text (`bodies/system-text-json.md`) says what was run. No PR is open for it either.
 - **Not run on the PC:** the Windows toast notifications (not a requirement), and the ffmpeg-failure part of the #109 check.
 
-- **Queued, after the #31 results:** swap Newtonsoft.Json for the built-in System.Text.Json (user decision, 2026-11-23). It is built on the Mac; the PC then reruns R1–R5 and R7 of the automated run. Details are in the PR guide.
+- **Done:** the Newtonsoft.Json to System.Text.Json swap (user decision, 2026-11-23): built on the Mac, tested on the PC. Details are in the PR guide.
 
 - **Issues, frameworks and optimisations were checked on 2026-11-23:** see the PR guide, "Check 2026-11-23 (evening)". Open candidates: #31 WebClient -> HttpClient, the Newtonsoft stable pin, and Avalonia 12.2 after about 2026-12-07.
 - `preview` was rebuilt from `final` (9a08fcf), kept at version 3.9.1 so the What's New card stays hidden for the developer.
