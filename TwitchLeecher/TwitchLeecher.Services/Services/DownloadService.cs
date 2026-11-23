@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TwitchLeecher.Core.Enums;
@@ -428,7 +429,7 @@ namespace TwitchLeecher.Services.Services
             log(Environment.NewLine + Environment.NewLine + "Playlist url for selected quality '" +
                 quality.DisplayString + "' is '" + playlistUrl + "'");
 
-            using (WebClient webClient = new WebClient())
+            using (HttpRequestClient webClient = new HttpRequestClient())
             {
                 log(Environment.NewLine + Environment.NewLine + "Retrieving playlist...");
                 string playlistStr = webClient.DownloadString(playlistUrl);
@@ -518,7 +519,8 @@ namespace TwitchLeecher.Services.Services
             TwitchPlaylist vodPlaylist,
             CancellationToken cancellationToken)
         {
-            var warnings = new List<string>();
+            // chunks finish on several threads at once
+            var warnings = new ConcurrentBag<string>();
             int partsCount = vodPlaylist.Count;
             int maxConnectionCount = _preferencesService.CurrentPreferences.MaxConnectionCount;
 
@@ -539,64 +541,81 @@ namespace TwitchLeecher.Services.Services
 
             long completedPartDownloads = 0;
 
-            Parallel.ForEach(vodPlaylist,
-                new ParallelOptions() { MaxDegreeOfParallelism = maxConnectionCount - 1 },
-                (part, loopState) =>
-                {
-                    int retryCounter = 0;
-
-                    bool success = false;
-
-                    do
+            try
+            {
+                Parallel.ForEach(vodPlaylist,
+                    new ParallelOptions()
                     {
-                        try
-                        {
-                            using (var downloadClient = new WebClient())
-                            {
-                                byte[] bytes = downloadClient.DownloadData(part.RemoteFile);
-
-                                FileSystem.DeleteFile(part.LocalFile);
-
-                                File.WriteAllBytes(part.LocalFile, bytes);
-
-                                long completed = Interlocked.Increment(ref completedPartDownloads);
-
-                                setProgress((double)completed / partsCount * 100);
-
-                                success = true;
-                            }
-                        }
-                        catch (WebException ex)
-                        {
-                            if (ex.Status == WebExceptionStatus.ProtocolError)
-                            {
-                                warnings.Add("Video contains missing frames");
-                                log($"{Environment.NewLine}File '{part.RemoteFile}' is not available, skipping");
-
-                                long completed = Interlocked.Increment(ref completedPartDownloads);
-
-                                setProgress((double)completed / partsCount * 100);
-
-                                success = true;
-                                continue;
-                            }
-
-                            if (retryCounter < DOWNLOAD_RETRIES)
-                            {
-                                retryCounter++;
-                                log(Environment.NewLine + Environment.NewLine + "Downloading file '" + part.RemoteFile +
-                                    "' failed! Trying again in " + DOWNLOAD_RETRY_TIME + "s");
-                                log(Environment.NewLine + ex);
-                                Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
-                            }
-                        }
-                    } while (!success);
-
-                    if (cancellationToken.IsCancellationRequested)
+                        MaxDegreeOfParallelism = Math.Max(1, maxConnectionCount - 1),
+                        CancellationToken = cancellationToken
+                    },
+                    (part, loopState) =>
                     {
-                        loopState.Stop();
-                    }
-                });
+                        int retryCounter = 0;
+
+                        bool success = false;
+
+                        do
+                        {
+                            try
+                            {
+                                using (var downloadClient = new HttpRequestClient())
+                                {
+                                    // the token aborts requests in flight, so Cancel doesn't wait for them
+                                    byte[] bytes = downloadClient.DownloadData(part.RemoteFile, cancellationToken);
+
+                                    // write then rename, so a chunk file on disk is always complete
+                                    string partFile = part.LocalFile + ".part";
+                                    File.WriteAllBytes(partFile, bytes);
+                                    File.Move(partFile, part.LocalFile, true);
+
+                                    long completed = Interlocked.Increment(ref completedPartDownloads);
+
+                                    setProgress((double)completed / partsCount * 100);
+
+                                    success = true;
+                                }
+                            }
+                            catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
+                                                       ex is HttpRequestException or IOException)
+                            {
+                                if (ex is HttpRequestException { StatusCode: not null })
+                                {
+                                    warnings.Add("Video contains missing frames");
+                                    log($"{Environment.NewLine}File '{part.RemoteFile}' is not available, skipping");
+
+                                    long completed = Interlocked.Increment(ref completedPartDownloads);
+
+                                    setProgress((double)completed / partsCount * 100);
+
+                                    success = true;
+                                    continue;
+                                }
+
+                                if (retryCounter < DOWNLOAD_RETRIES)
+                                {
+                                    retryCounter++;
+                                    log(Environment.NewLine + Environment.NewLine + "Downloading file '" + part.RemoteFile +
+                                        "' failed! Trying again in " + DOWNLOAD_RETRY_TIME + "s");
+                                    log(Environment.NewLine + ex);
+                                    Thread.Sleep(DOWNLOAD_RETRY_TIME * 1000);
+                                }
+                                else
+                                {
+                                    // out of retries: fail the download instead of retrying this chunk forever
+                                    throw;
+                                }
+                            }
+                        } while (!success);
+                    });
+            }
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested &&
+                                       ex is OperationCanceledException or AggregateException)
+            {
+                // a request aborted by Cancel: report it as cancelled below, not as an error
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             setProgress(100);
 
@@ -612,7 +631,7 @@ namespace TwitchLeecher.Services.Services
             {
                 try
                 {
-                    using (var downloadClient = new WebClient())
+                    using (var downloadClient = new HttpRequestClient())
                     {
                         byte[] bytes = downloadClient.DownloadData(initSegment.RemoteFile);
 
@@ -623,7 +642,7 @@ namespace TwitchLeecher.Services.Services
 
                     return;
                 }
-                catch (WebException ex)
+                catch (HttpRequestException ex)
                 {
                     if (retryCounter >= DOWNLOAD_RETRIES)
                     {

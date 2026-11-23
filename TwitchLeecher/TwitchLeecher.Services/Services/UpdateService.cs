@@ -25,9 +25,9 @@ namespace TwitchLeecher.Services.Services
         {
             try
             {
-                using (WebClient webClient = new WebClient() { Encoding = Encoding.UTF8 })
+                using (HttpRequestClient webClient = new HttpRequestClient())
                 {
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "TwitchLeecher.Old");
+                    webClient.AddHeader("User-Agent", "TwitchLeecher.Old");
 
                     string result = webClient.DownloadString(ReleasesApiUrl);
 
