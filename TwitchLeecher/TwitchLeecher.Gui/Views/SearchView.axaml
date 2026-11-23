@@ -277,6 +277,7 @@
                                              IsTextCompletionEnabled="True" />
                         </Grid>
                         <StackPanel IsVisible="{Binding HasFavChannels}">
+                            <TextBlock Classes="label" Text="FAVOURITES" Margin="0,10,0,6" />
                             <ItemsControl ItemsSource="{Binding FavChannels}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
