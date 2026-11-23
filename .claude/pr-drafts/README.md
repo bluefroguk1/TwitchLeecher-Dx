@@ -1,5 +1,9 @@
 # PR submission guide
 
+## Release notes draft (2026-11-23)
+
+`release-notes-4.0.md` is a working draft of the 4.0 release notes in the developer's own template. **Whenever a PR merges or is declined, update it:** tick or remove its line using the map at the bottom. If he releases the merged PRs first (for example as 3.10), move those lines out. Offer it to him only when the last wave is in, and only with the user's OK.
+
 ## "What's new" card (built 2026-11-23, in `final`, not yet a PR branch)
 
 A one-time card on the first run of a new feature release after an upgrade. The design and wording were approved by the user (mockup Option A). Seen on the PC 2026-11-23: looks right. It goes **last**, after the other PRs: its eight items must match what actually merged, and the version number is the developer's call. When cutting `pr/whats-new` from `final`, leave out the 4.0.0 version bump (`GlobalAssemblyInfo.cs`, `TwitchLeecher.csproj` FileVersion), so it shows once he sets the version. Body to write then.
