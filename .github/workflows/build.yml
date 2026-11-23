@@ -58,6 +58,26 @@ jobs:
         if: runner.os == 'Windows'
         run: if (-not (Test-Path publish/ffmpeg.exe)) { throw 'ffmpeg.exe missing from publish output' }
 
+      # Start the published app and check it is still running after 20 seconds: catches start-up crashes
+      # (a missing dependency, or code a trimmed/native build can't run). Linux runs it on a virtual display.
+      - name: Start-up check (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $p = Start-Process -FilePath publish/TwitchLeecher.exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($p.HasExited) { throw "TwitchLeecher exited during start-up (exit code $($p.ExitCode))" }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Start-up check (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y -qq xvfb > /dev/null
+          xvfb-run -a ./publish/TwitchLeecher > startup.log 2>&1 &
+          pid=$!
+          sleep 20
+          if ! kill -0 $pid 2>/dev/null; then cat startup.log; echo "TwitchLeecher exited during start-up"; exit 1; fi
+          kill $pid
+
       - name: Artifact name from branch
         shell: bash
         env:
