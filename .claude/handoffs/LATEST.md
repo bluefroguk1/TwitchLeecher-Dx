@@ -19,7 +19,7 @@ Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show or
 | 5 | **Avalonia 12.1.6** (DataGrid 12.1.2, progress ring 0.11.0, `Avalonia.Diagnostics` dropped, clipboard `using`) | Styled controls (date picker, calendar, toggle switch, combo box, scroll bars), header, tray, the DataGrid, the clipboard (Log › Copy) | cd7ad5b |
 | 6 | **CI start-up check:** CI now launches the published app (Linux under a virtual display) and fails if it exits within 20 s | — | 9c8a28d |
 
-**CI:** `final-next` 9c8a28d, run **45169606631**, is green. The native Windows exe publishes and starts, and Linux builds and starts. Only 5 AOT warnings are left, from Newtonsoft.Json, System.Linq.Expressions and Microsoft.CSharp. **None of this has been run by a person.**
+**CI:** every `final-next` build is green (latest checked: cfbb67f, run 45171096420, which includes #85). The native Windows exe publishes and starts, and Linux builds and starts. Only 5 AOT warnings are left, from Newtonsoft.Json, System.Linq.Expressions and Microsoft.CSharp. **None of this has been run by a person.**
 
 ### 1. Two builds, because AOT only exists in the published exe
 
@@ -28,7 +28,7 @@ Updated **2026-11-23 on the Mac**. Read this file from **`final`**: `git show or
 Close every copy first: `Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force`.
 
 - **A. JIT build (normal):** `git fetch origin; git checkout final-next; git pull`, then `& 'C:\Program Files\dotnet\dotnet.exe' build TwitchLeecher\TwitchLeecher\TwitchLeecher.csproj -c Release`, then run `TwitchLeecher\TwitchLeecher\bin\Release\net10.0\TwitchLeecher.exe`. The test scripts use this one.
-- **B. AOT build:** GitHub → Actions → run 45169606631 → Artifacts → `TwitchLeecher-final-next-win-x64`. Unzip it into its own folder, e.g. `C:\TL-aot\`, and run `TwitchLeecher.exe`. Check it's native: the folder has no `TwitchLeecher.dll`, and Task Manager shows no ".NET Host".
+- **B. AOT build:** GitHub → Actions → the **latest "Build" run on `final-next`** → Artifacts → `TwitchLeecher-final-next-win-x64` (artifacts are kept 14 days; push any commit to get a fresh one). Unzip it into its own folder, e.g. `C:\TL-aot\`, and run `TwitchLeecher.exe`. Check it's native: the folder has no `TwitchLeecher.dll`, and Task Manager shows no ".NET Host".
 - **Traps:**
   - Switching branches doesn't rebuild the exe (`bin\` isn't tracked).
   - A copy in the tray swallows the next launch. If the app looks old, it is old.
