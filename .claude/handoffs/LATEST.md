@@ -407,6 +407,7 @@ Do 1–12 on **build A** first, then repeat 1, 4, 5, 7, 8, 9, 10 and 11 on **bui
 |---|---|
 | `master` | Synced with upstream (24cab52, includes #110–#119). |
 | `final` | **Your working version.** Everything tested, plus the new master, plus the #107/#109 review changes. Holds this handoff, `.claude/pr-drafts/`, `.claude/tools/` and `test-scripts/`. |
+| `upgrade/net11-avalonia12.2` | **Optional upgrade, not in `final`.** `final` (b4226ab) + the .NET 11 / Avalonia 12.2.0 commit + the `OnSignedIn` fix (ab41308). Tested on the PC 2026-11-23/24 (all of R1-R16 passed after the fix). Needs the .NET 11 SDK (installed on the PC). Offer it after everything else has merged. |
 | `preview` | One clean commit on `master` with `final`'s code (no notes, scripts or AI lines). Linked from the #104 comment. Rebuild it whenever `final` changes. |
 | `*-pr` (16) | Heads of upstream PRs #104–#119. #110–#119 are merged; #104–#109 are open and rebased. |
 | `pr/*` (35) | Clean PR branches, all on the new master. Wave 1 is open upstream as #121–#127. `pr/_after-open-prs`/`-theme` are the stand-in base for Wave 3 (master + #104–#109 as they were before the review changes). |
