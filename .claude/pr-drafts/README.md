@@ -1,8 +1,9 @@
-# PR submission guide
+﻿# PR submission guide
 
 ## .NET 11 + Avalonia 12.2.0: built 2026-11-24 on its own branch
 
-- **`upgrade/net11-avalonia12.2`** (2fb84f7) = `final` + one commit: net11.0, Avalonia 12.2.0 (DataGrid/WebView stay on 12.1.2, as no 12.2 is out), DI and ProtectedData 11.0.0, CI on the .NET 11 SDK, and the old test scripts' `bin\Release\net11.0` paths. **Not in `final`**, by the user's choice, so it can't delay anything.
+- **`upgrade/net11-avalonia12.2`** (ab41308, was 2fb84f7) = `final` (b4226ab) + two commits. The first: net11.0, Avalonia 12.2.0 (DataGrid/WebView stay on 12.1.2, as no 12.2 is out), DI and ProtectedData 11.0.0, CI on the .NET 11 SDK, and the old test scripts' `bin\Release\net11.0` paths. **Not in `final`**, by the user's choice, so it can't delay anything. The second commit (ab41308) is a one-condition code fix found by the PC run: on Avalonia 12.2 the main window's `Loaded` event runs while the window is still hidden, so the start-up token check raised the sign-in event and `MainWindow.OnSignedIn` showed a window that should stay in the tray (`--minimized`, the Windows startup entry). It now only acts when `IsVisible`. When re-cutting this PR on master, keep both commits' changes in the one upgrade commit.
+- **PC run 2026-11-23:** the whole automated run passed on this branch except the minimised start, which is the bug fixed by ab41308 (re-checked afterwards). See the top of `.claude/handoffs/LATEST.md`.
 - CI is green on Windows (including the native AOT build) and Linux, with the same warnings as `final`.
 - Body: `bodies/upgrade-net11-avalonia12.2.md`. Step 2 of the submission plan: offer it **after** everything else has merged, re-cut on master then.
 - **To keep it current:** when `final` changes, rebase this branch on it (`git rebase origin/final`). The only conflicts would be in csproj or `build.yml` version lines.
@@ -95,7 +96,7 @@ Since the Avalonia rewrite (5b972e0, 2023), `UpdateService` asked for the releas
 
 ## "What's new" card (built 2026-11-23, in `final`, not yet a PR branch)
 
-A one-time card on the first run of a new feature release after an upgrade. The design and wording were approved by the user (mockup Option A). Seen on the PC 2026-11-23: looks right. It goes **last**, after the other PRs: its eight items must match what actually merged, and the version number is the developer's call. When cutting `pr/whats-new` from `final`, leave out the 4.0.0 version bump (`GlobalAssemblyInfo.cs`, `TwitchLeecher.csproj` FileVersion), so it shows once he sets the version. Body to write then.
+A one-time card on the first run of a new feature release after an upgrade. The design and wording were approved by the user (mockup Option A). Seen on the PC 2026-11-23: looks right; it is centred on the main window and stays centred when that window moves (4c024ad), and it appears only once the window is shown, also after a minimised start. It goes **last**, after the other PRs: its eight items must match what actually merged, and the version number is the developer's call. When cutting `pr/whats-new` from `final`, leave out the 4.0.0 version bump (`GlobalAssemblyInfo.cs`, `TwitchLeecher.csproj` FileVersion), so it shows once he sets the version. Body to write then.
 
 ## Email sent to the developer, 2026-11-23
 
