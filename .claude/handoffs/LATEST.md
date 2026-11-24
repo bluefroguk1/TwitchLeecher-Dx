@@ -6,7 +6,15 @@ Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (lat
 
 Run on `upgrade/net11-avalonia12.2` at 7ce4d3f (= `final` b4226ab plus one commit; the hash in the instructions below, 2fb84f7, is an earlier version of it). The .NET 11 SDK (11.0.100) was installed on the PC with winget; the build had 0 errors and 18 warnings, version 4.0.0, Avalonia 12.2.0. `Backup`/`Restore` worked and the sign-in survived. Afterwards the PC went back to `final` and rebuilt it (the `net11.0` output folders were deleted so the helper cannot pick them up).
 
-**Result: everything passes except R14. Do not merge the upgrade until R14 is fixed.**
+**Result: everything passed except R14, and R14 is now FIXED on the branch (2026-11-24, PC): `upgrade/net11-avalonia12.2` is at ab41308 (one commit on top of 7ce4d3f), pushed to the fork.**
+
+**The R14 cause and fix.** On Avalonia 12.2 / .NET 11 the main window's `Loaded` event runs while the window is still hidden (a `--minimized` start). `MainWindowVM.Loaded()` then runs the start-up token check, which publishes the sign-in event (`SubOnlyAuthChangedEvent`), and `MainWindow.OnSignedIn` called `BringToFront()`, which shows the window. (On `final`, `Loaded` only fires once the window is really shown, so this never happened.) Found with a stack trace of who called `BringToFront`. The fix is one condition in `MainWindow.OnSignedIn`: `if (signedIn && IsVisible)`, so a sign-in event no longer pops up a window that is hidden in the tray. It does not change `final`.
+
+**Verified after the fix (PC):** a `--minimized` start stays hidden (no window handle after 35 s, process responsive); the What's new card (with an older saved version) does **not** appear while hidden and appears once the window is opened (by launching the app a second time, which wakes the running window); opening the window from the tray icon also works; the sign-in still worked afterwards (`tl search` returns videos). The rest of R1-R16 was not repeated, because the change only touches that handler.
+
+**Tip for the tray test.** The overflow panel changes order between runs: **hover the first-slot icon and check its tooltip** before clicking. In this session an earlier click landed on another program's icon (SMTC Bridge), which looked like a failure. Also, if a process seems to vanish, check `Get-Process TwitchLeecher` before assuming a crash (no crash event was recorded).
+
+**Still to decide (Mac):** whether to merge the upgrade branch into the plan as the optional step after the other PRs, as in `.claude/pr-drafts/README.md`.
 
 | Step | Result | Evidence |
 |---|---|---|
@@ -77,7 +85,7 @@ Report as before. Add files by name, not `.claude` as a whole.
 
 ## STATUS IN ONE GLANCE (PC, end of 2026-11-23)
 
-- **The .NET 11 + Avalonia 12.2.0 branch has one open problem (R14: `--minimized` shows the window); see the section at the top. Otherwise nothing is waiting on the PC** (the .mp4 file-name check also passed). Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
+- **The .NET 11 + Avalonia 12.2.0 branch had one problem (R14: `--minimized` showed the window); it is fixed on the branch (ab41308), see the section at the top. Nothing is waiting on the PC** (the .mp4 file-name check also passed). Both automated PC runs are done and passed: the first (What's new card, #31 HttpClient, #109 setting, CLI) found and fixed one bug, and the second (System.Text.Json swap) passed with no fixes. Results are in 1a and 1b below.
 - **`final` is the tested version.** Everything in it has been run on the PC: the What's new card and its centring (4c024ad), the #31 HttpClient token fix (68c68bd), the System.Text.Json swap (df8f791) and the `.mp4` file-name change (c6e6684). The PC checked it at 3607502; later commits only touched notes and PR text. Local `final` and `origin/final` match.
 - **Open items, none urgent:** emote pictures are now confirmed; still not run on the PC are the Windows toast notifications (not a requirement) and the ffmpeg-failure half of the #109 check.
 - **`preview` is behind `final`.** It was rebuilt at 9a08fcf, before the #31 token fix, the card centring, the System.Text.Json swap and the `.mp4` change. If the developer is pointed at a `preview` build again, rebuild it from `final` first (recipe in `.claude/pr-drafts/README.md`) and ask the user before changing the #104 comment's build link.
