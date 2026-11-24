@@ -144,7 +144,10 @@ namespace TwitchLeecher.Gui.Views
 
         private void OnSignedIn(bool signedIn)
         {
-            if (signedIn)
+            // Only when the window is already on screen (the login happened in the browser, so pull the app back in
+            // front). The token check at start-up also ends up here; it must not pop up a window that is hidden in the
+            // tray (a start with --minimized, as the Windows startup entry does).
+            if (signedIn && IsVisible)
             {
                 BringToFront();
             }
