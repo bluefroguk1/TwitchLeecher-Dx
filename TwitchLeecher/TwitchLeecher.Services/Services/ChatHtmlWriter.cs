@@ -10,7 +10,6 @@ using TwitchLeecher.Shared.Extensions;
 namespace TwitchLeecher.Services.Services
 {
     // Renders VOD chat as one self-contained HTML page. Chat is untrusted: every name, text and emote id is encoded.
-    // shortcut: only Twitch emotes are shown; 7TV/BTTV/FFZ need each provider's channel emote set and word matching.
     internal static class ChatHtmlWriter
     {
         private static readonly Regex HexColor = new Regex("^#[0-9A-Fa-f]{6}$");
@@ -29,8 +28,9 @@ namespace TwitchLeecher.Services.Services
 
         // emoteSources maps emote id -> img src. Null links every emote to the CDN;
         // an id missing from the map (failed download) falls back to the :code: text.
+        // thirdPartyEmotes maps a BTTV/FFZ/7TV emote code -> img src; matching words in the text become images.
         public static string Write(string title, IEnumerable<TwitchChatMessage> messages, TimeSpan from,
-            IReadOnlyDictionary<string, string> emoteSources)
+            IReadOnlyDictionary<string, string> emoteSources, IReadOnlyDictionary<string, string> thirdPartyEmotes = null)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -55,13 +55,28 @@ namespace TwitchLeecher.Services.Services
 
                     if (f.EmoteId == null)
                     {
-                        sb.Append(WebUtility.HtmlEncode(f.Text));
+                        string[] words = f.Text.Split(' ');
+
+                        for (int i = 0; i < words.Length; i++)
+                        {
+                            if (i > 0)
+                            {
+                                sb.Append(' ');
+                            }
+
+                            if (thirdPartyEmotes != null && thirdPartyEmotes.TryGetValue(words[i], out string tp))
+                            {
+                                AppendImg(sb, tp, words[i]);
+                            }
+                            else
+                            {
+                                sb.Append(WebUtility.HtmlEncode(words[i]));
+                            }
+                        }
                     }
                     else if (emoteSources == null || emoteSources.TryGetValue(f.EmoteId, out src))
                     {
-                        string code = WebUtility.HtmlEncode(f.Text);
-                        sb.Append("<img src=\"").Append(WebUtility.HtmlEncode(src ?? EmoteUrl(f.EmoteId)))
-                            .Append("\" alt=\"").Append(code).Append("\" title=\"").Append(code).Append("\">");
+                        AppendImg(sb, src ?? EmoteUrl(f.EmoteId), f.Text);
                     }
                     else
                     {
@@ -73,6 +88,13 @@ namespace TwitchLeecher.Services.Services
             }
 
             return sb.Append("</body></html>\n").ToString();
+        }
+
+        private static void AppendImg(StringBuilder sb, string src, string code)
+        {
+            string alt = WebUtility.HtmlEncode(code);
+            sb.Append("<img src=\"").Append(WebUtility.HtmlEncode(src))
+                .Append("\" alt=\"").Append(alt).Append("\" title=\"").Append(alt).Append("\">");
         }
 
         // Returns "#RRGGBB" readable on the dark background: the user's colour (or a stable palette pick), lightened if too dark

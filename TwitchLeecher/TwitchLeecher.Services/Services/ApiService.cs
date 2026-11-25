@@ -1167,6 +1167,89 @@ namespace TwitchLeecher.Services.Services
             return chapters;
         }
 
+        // Global emote sets first, then the channel's own, which win on a clash. Each of the six lists is optional:
+        // one that fails, or a channel a provider doesn't know (404), is simply skipped.
+        public Dictionary<string, string> GetThirdPartyEmotes(string channel)
+        {
+            var emotes = new Dictionary<string, string>(StringComparer.Ordinal);
+            string channelId = string.IsNullOrWhiteSpace(channel) ? null : GetChannelIdByName(channel);
+
+            void Put(string code, string url)
+            {
+                if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(url))
+                {
+                    emotes[code] = url.StartsWith("//") ? "https:" + url : url;
+                }
+            }
+
+            void Bttv(JsonNode list)
+            {
+                foreach (JsonNode e in list as JsonArray ?? new JsonArray())
+                {
+                    Put(e.Value<string>("code"), "https://cdn.betterttv.net/emote/" + e.Value<string>("id") + "/2x");
+                }
+            }
+
+            void Ffz(JsonNode sets, JsonNode only)
+            {
+                HashSet<string> wanted = only is JsonArray ids ? ids.Select(i => i.Value<string>()).ToHashSet() : null;
+
+                foreach (KeyValuePair<string, JsonNode> set in sets as JsonObject ?? new JsonObject())
+                {
+                    if (wanted != null && !wanted.Contains(set.Key))
+                    {
+                        continue;
+                    }
+
+                    foreach (JsonNode e in set.Value?["emoticons"] as JsonArray ?? new JsonArray())
+                    {
+                        Put(e.Value<string>("name"), e["urls"]?.Value<string>("2") ?? e["urls"]?.Value<string>("1"));
+                    }
+                }
+            }
+
+            void SevenTv(JsonNode list)
+            {
+                foreach (JsonNode e in list as JsonArray ?? new JsonArray())
+                {
+                    string host = e.SelectToken("$.data.host.url")?.Value<string>();
+                    Put(e.Value<string>("name"), host == null ? null : host + "/2x.webp");
+                }
+            }
+
+            void Read(string url, Action<JsonNode> read)
+            {
+                try
+                {
+                    using (HttpRequestClient client = new HttpRequestClient())
+                    {
+                        read(JsonNodeExtensions.Parse(client.DownloadString(url)));
+                    }
+                }
+                catch (Exception)
+                {
+                    // optional extras: a missing or broken list just means fewer emotes
+                }
+            }
+
+            Read("https://api.frankerfacez.com/v1/set/global", d => Ffz(d["sets"], d["default_sets"]));
+            Read("https://api.betterttv.net/3/cached/emotes/global", Bttv);
+            Read("https://7tv.io/v3/emote-sets/global", d => SevenTv(d["emotes"]));
+
+            if (channelId != null)
+            {
+                Read("https://api.frankerfacez.com/v1/room/id/" + channelId, d => Ffz(d["sets"], null));
+                Read("https://api.betterttv.net/3/cached/users/twitch/" + channelId, d =>
+                {
+                    Bttv(d["channelEmotes"]);
+                    Bttv(d["sharedEmotes"]);
+                });
+                Read("https://7tv.io/v3/users/twitch/" + channelId, d => SevenTv(d.SelectToken("$.emote_set.emotes")));
+            }
+
+            return emotes;
+        }
+
         public List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to,
             Action<TimeSpan> onPage)
         {

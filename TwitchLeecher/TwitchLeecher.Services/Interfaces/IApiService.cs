@@ -29,6 +29,9 @@ namespace TwitchLeecher.Services.Interfaces
         // the stream's game changes; empty when it stayed on one game
         List<(TimeSpan Start, string Game)> GetChapters(string vodId);
 
+        // BTTV, FFZ and 7TV emotes for a channel: code -> image URL
+        Dictionary<string, string> GetThirdPartyEmotes(string channel);
+
         List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to, Action<TimeSpan> onPage);
 
         bool ChannelExists(string channel);

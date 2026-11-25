@@ -966,12 +966,13 @@ namespace TwitchLeecher.Services.Services
                 }
                 else if (html)
                 {
-                    Dictionary<string, string> emoteSources = downloadParams.ChatFormat == ChatFormat.HtmlEmbedded
-                        ? DownloadEmotes(messages, log, cancellationToken)
-                        : null;
+                    bool embed = downloadParams.ChatFormat == ChatFormat.HtmlEmbedded;
+                    Dictionary<string, string> emoteSources = embed ? DownloadEmotes(messages, log, cancellationToken) : null;
+                    Dictionary<string, string> thirdParty =
+                        GetThirdPartyEmotes(downloadParams.Video.Channel, messages, embed, log, cancellationToken);
 
                     File.WriteAllText(chatFile,
-                        ChatHtmlWriter.Write(downloadParams.Video.Title, messages, from, emoteSources));
+                        ChatHtmlWriter.Write(downloadParams.Video.Title, messages, from, emoteSources, thirdParty));
                 }
                 else
                 {
@@ -1102,6 +1103,60 @@ namespace TwitchLeecher.Services.Services
             }
 
             return sources;
+        }
+
+        // The BTTV/FFZ/7TV emotes this chat uses (code -> img src), embedded as data: URIs like the Twitch ones when asked.
+        // A failed list or image just leaves those words as text.
+        private Dictionary<string, string> GetThirdPartyEmotes(string channel, List<TwitchChatMessage> messages, bool embed,
+            Action<string> log, CancellationToken cancellationToken)
+        {
+            Dictionary<string, string> all;
+
+            try
+            {
+                all = _apiService.GetThirdPartyEmotes(channel);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // the chat matters more than its extra emotes
+                log(Environment.NewLine + "BTTV/FFZ/7TV emotes left out: " + ex.Message);
+                return null;
+            }
+
+            Dictionary<string, string> used = messages
+                .SelectMany(m => m.Fragments ?? Enumerable.Empty<TwitchChatFragment>())
+                .Where(f => f.EmoteId == null)
+                .SelectMany(f => f.Text.Split(' '))
+                .Where(all.ContainsKey)
+                .Distinct()
+                .ToDictionary(code => code, code => all[code]);
+
+            log(Environment.NewLine + "BTTV/FFZ/7TV emotes: " + all.Count + " for this channel, " + used.Count + " used in the chat");
+
+            if (embed)
+            {
+                using (HttpRequestClient client = new HttpRequestClient())
+                {
+                    foreach (string code in used.Keys.ToList())
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        try
+                        {
+                            byte[] data = client.DownloadData(used[code], cancellationToken);
+                            string type = client.GetResponseHeader("Content-Type") ?? "image/webp";
+                            used[code] = "data:" + type + ";base64," + Convert.ToBase64String(data);
+                        }
+                        catch (HttpRequestException ex)
+                        {
+                            log(Environment.NewLine + "Emote " + code + " could not be downloaded: " + ex.Message);
+                            used.Remove(code);
+                        }
+                    }
+                }
+            }
+
+            return used;
         }
 
         private void CleanUp(string directory, Action<string> log)
