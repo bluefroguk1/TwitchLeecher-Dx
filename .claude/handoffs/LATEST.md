@@ -4,7 +4,13 @@ Updated **2026-11-25 (evening) on the Mac: five features merged into `final`; ne
 
 ## NEXT PC RUN (2026-11-25, evening): everything on merged `final`
 
-**What changed on the Mac:** all five feature branches passed, so they are **merged into `final`** (efcba94, CI green on Windows and Linux) together with your three script fixes. The feature branches are deleted (archived on the fork). The upgrade branch is rebased onto it (a1dd0f2). This run checks that the merges work together. No new app code beyond the merges.
+**What changed on the Mac:** all five feature branches passed, so they are **merged into `final`** (efcba94, CI green on Windows and Linux) together with your three script fixes. The feature branches are deleted (archived on the fork). The upgrade branch is rebased onto it (a1dd0f2). This run checks that the merges work together.
+
+**Your second merge (eea9309):** you merged the five branches into `final` again on the PC, then merged that with the Mac's. That is fine: the code came out the same apart from four dropped blank lines, now put back. Next time, `git pull` first: they were already in `final`.
+
+**Code review fixes since (ab9b5a5), so this run checks them too:**
+- **Speed limit:** each chunk waited its full share *after* it had already downloaded, so a 2 MB/s limit gave about 1.6 MB/s. The wait now counts from when the chunk started. In `test-speed-limit.ps1`, the limited rate should be **closer to 2 than last time's 1.6** (start-up and conversion are inside the timing, so a little under 2 is normal). Report the number.
+- **Chat extras:** the channel's BTTV/FFZ/7TV emotes, badges and cheers were looked up by the streamer's display name, which fails when it isn't their login name (for example Japanese or Korean names). They now come from the VOD's owner. Worth one extra run of `test-third-party-emotes.ps1` on a channel with a non-Latin display name if you know one; channel emotes should show up.
 
 **Setup** (first fix PATH, see the gotcha below):
 ```
