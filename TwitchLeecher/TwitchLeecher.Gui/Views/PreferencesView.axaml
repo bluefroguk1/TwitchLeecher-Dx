@@ -609,6 +609,18 @@
                                     <TextBlock Classes="sub" Text="Saved as a .ts file next to where the mp4 would have gone" />
                                 </StackPanel>
                             </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatBadges}">
+                                <StackPanel>
+                                    <TextBlock Text="Saved chat: include badges" />
+                                    <TextBlock Classes="sub" Text="Subscriber, moderator, VIP and other badges next to names (web page and JSON chat)" />
+                                </StackPanel>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatHighResEmotes}">
+                                <StackPanel>
+                                    <TextBlock Text="Saved chat: high-resolution emotes" />
+                                    <TextBlock Classes="sub" Text="Sharper emotes and badges when zoomed in; chat files with emotes embedded get bigger" />
+                                </StackPanel>
+                            </CheckBox>
                         </StackPanel>
 
                         <StackPanel Classes="field">

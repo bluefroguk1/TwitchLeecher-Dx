@@ -960,19 +960,22 @@ namespace TwitchLeecher.Services.Services
                         }
                     });
 
+                Preferences prefs = _preferencesService.CurrentPreferences;
+
                 if (format == ChatFormat.Json)
                 {
-                    File.WriteAllText(chatFile, ChatJson(downloadParams, messages, from, to));
+                    File.WriteAllText(chatFile, ChatJson(downloadParams, messages, from, to, prefs.DownloadChatBadges));
                 }
                 else if (html)
                 {
                     bool embed = downloadParams.ChatFormat == ChatFormat.HtmlEmbedded;
-                    Dictionary<string, string> emoteSources = embed ? DownloadEmotes(messages, log, cancellationToken) : null;
-                    Dictionary<string, string> thirdParty =
-                        GetThirdPartyEmotes(downloadParams.Video.Channel, messages, embed, log, cancellationToken);
+                    bool highRes = prefs.DownloadChatHighResEmotes;
+                    Dictionary<string, string> emoteSources = embed ? DownloadEmotes(messages, log, cancellationToken, highRes) : null;
+                    ChatExtras extras = GetChatExtras(downloadParams.Video.Channel, messages, embed, prefs.DownloadChatBadges,
+                        highRes, log, cancellationToken);
 
                     File.WriteAllText(chatFile,
-                        ChatHtmlWriter.Write(downloadParams.Video.Title, messages, from, emoteSources, thirdParty));
+                        ChatHtmlWriter.Write(downloadParams.Video.Title, messages, from, emoteSources, extras, highRes));
                 }
                 else
                 {
@@ -1040,7 +1043,7 @@ namespace TwitchLeecher.Services.Services
         private static readonly JsonSerializerOptions IndentedJson = new JsonSerializerOptions { WriteIndented = true };
 
         private static string ChatJson(DownloadParameters downloadParams, List<TwitchChatMessage> messages,
-            TimeSpan from, TimeSpan to)
+            TimeSpan from, TimeSpan to, bool badges)
         {
             TwitchVideo video = downloadParams.Video;
 
@@ -1061,6 +1064,9 @@ namespace TwitchLeecher.Services.Services
                     ["name"] = m.Name,
                     ["color"] = m.Color,
                     ["text"] = m.Text,
+                    ["badges"] = badges && m.Badges != null
+                        ? new JsonArray(m.Badges.Select(badge => (JsonNode)badge).ToArray())
+                        : null,
                     ["fragments"] = m.Fragments == null
                         ? null
                         : new JsonArray(m.Fragments.Select(f => (JsonNode)(f.EmoteId == null
@@ -1074,7 +1080,7 @@ namespace TwitchLeecher.Services.Services
 
         // Downloads each distinct emote once as a data: URI so the HTML works offline; failed emotes are left out
         private static Dictionary<string, string> DownloadEmotes(List<TwitchChatMessage> messages, Action<string> log,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken, bool highRes)
         {
             Dictionary<string, string> sources = new Dictionary<string, string>();
             HashSet<string> ids = new HashSet<string>(messages.SelectMany(m => m.Fragments)
@@ -1090,7 +1096,7 @@ namespace TwitchLeecher.Services.Services
 
                     try
                     {
-                        string base64 = Convert.ToBase64String(webClient.DownloadData(ChatHtmlWriter.EmoteUrl(id)));
+                        string base64 = Convert.ToBase64String(webClient.DownloadData(ChatHtmlWriter.EmoteUrl(id, highRes)));
                         // animated emotes come back as GIF, so keep the server's type
                         string type = webClient.GetResponseHeader("Content-Type") ?? "image/png";
                         sources[id] = "data:" + type + ";base64," + base64;
@@ -1105,52 +1111,124 @@ namespace TwitchLeecher.Services.Services
             return sources;
         }
 
-        // The BTTV/FFZ/7TV emotes this chat uses (code -> img src), embedded as data: URIs like the Twitch ones when asked.
-        // A failed list or image just leaves those words as text.
-        private Dictionary<string, string> GetThirdPartyEmotes(string channel, List<TwitchChatMessage> messages, bool embed,
-            Action<string> log, CancellationToken cancellationToken)
+        // The BTTV/FFZ/7TV emotes, badges and cheermotes this chat uses, embedded as data: URIs like the Twitch emotes
+        // when asked. Extras are optional: a failed list or image just leaves those words as text, never loses the chat.
+        private ChatExtras GetChatExtras(string channel, List<TwitchChatMessage> messages, bool embed, bool badges,
+            bool highRes, Action<string> log, CancellationToken cancellationToken)
         {
-            Dictionary<string, string> all;
+            ChatExtras all;
 
             try
             {
-                all = _apiService.GetThirdPartyEmotes(channel);
+                all = _apiService.GetChatExtras(channel, highRes);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                // the chat matters more than its extra emotes
-                log(Environment.NewLine + "BTTV/FFZ/7TV emotes left out: " + ex.Message);
+                // the chat matters more than its extra images
+                log(Environment.NewLine + "Chat badges and BTTV/FFZ/7TV emotes left out: " + ex.Message);
                 return null;
             }
 
-            Dictionary<string, string> used = messages
+            List<string> words = messages
                 .SelectMany(m => m.Fragments ?? Enumerable.Empty<TwitchChatFragment>())
                 .Where(f => f.EmoteId == null)
                 .SelectMany(f => f.Text.Split(' '))
-                .Where(all.ContainsKey)
                 .Distinct()
-                .ToDictionary(code => code, code => all[code]);
+                .ToList();
 
-            log(Environment.NewLine + "BTTV/FFZ/7TV emotes: " + all.Count + " for this channel, " + used.Count + " used in the chat");
+            ChatExtras used = new ChatExtras();
+
+            foreach (string word in words)
+            {
+                if (all.Emotes.TryGetValue(word, out ChatImage emote))
+                {
+                    used.Emotes[word] = emote;
+                }
+            }
+
+            if (badges)
+            {
+                foreach (string badge in messages.SelectMany(m => m.Badges ?? Enumerable.Empty<string>()).Distinct())
+                {
+                    if (all.Badges.TryGetValue(badge, out ChatImage image))
+                    {
+                        used.Badges[badge] = image;
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<string, List<CheerTier>> cheer in all.Cheermotes)
+            {
+                used.Cheermotes[cheer.Key] = cheer.Value;
+            }
+
+            log(Environment.NewLine + "BTTV/FFZ/7TV emotes: " + all.Emotes.Count + " for this channel, " + used.Emotes.Count +
+                " used in the chat; badges shown: " + used.Badges.Count);
 
             if (embed)
             {
                 using (HttpRequestClient client = new HttpRequestClient())
                 {
-                    foreach (string code in used.Keys.ToList())
+                    string Embed(string url)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
                         try
                         {
-                            byte[] data = client.DownloadData(used[code], cancellationToken);
-                            string type = client.GetResponseHeader("Content-Type") ?? "image/webp";
-                            used[code] = "data:" + type + ";base64," + Convert.ToBase64String(data);
+                            byte[] data = client.DownloadData(url, cancellationToken);
+                            string type = client.GetResponseHeader("Content-Type") ?? "image/png";
+                            return "data:" + type + ";base64," + Convert.ToBase64String(data);
                         }
                         catch (HttpRequestException ex)
                         {
-                            log(Environment.NewLine + "Emote " + code + " could not be downloaded: " + ex.Message);
-                            used.Remove(code);
+                            log(Environment.NewLine + "Image " + url + " could not be downloaded: " + ex.Message);
+                            return null;
+                        }
+                    }
+
+                    foreach (string code in used.Emotes.Keys.ToList())
+                    {
+                        string data = Embed(used.Emotes[code].Src);
+
+                        if (data == null)
+                        {
+                            used.Emotes.Remove(code);
+                        }
+                        else
+                        {
+                            used.Emotes[code] = used.Emotes[code] with { Src = data };
+                        }
+                    }
+
+                    foreach (string badge in used.Badges.Keys.ToList())
+                    {
+                        string data = Embed(used.Badges[badge].Src);
+
+                        if (data == null)
+                        {
+                            used.Badges.Remove(badge);
+                        }
+                        else
+                        {
+                            used.Badges[badge] = used.Badges[badge] with { Src = data };
+                        }
+                    }
+
+                    // only the cheer tiers that appear: each word like "Cheer100" picks the highest tier at or below it
+                    foreach (string word in words)
+                    {
+                        System.Text.RegularExpressions.Match cheer = System.Text.RegularExpressions.Regex.Match(word, "^([A-Za-z]+)([0-9]+)$");
+
+                        if (cheer.Success && used.Cheermotes.TryGetValue(cheer.Groups[1].Value, out List<CheerTier> tiers) &&
+                            int.TryParse(cheer.Groups[2].Value, out int bits))
+                        {
+                            int index = tiers.FindLastIndex(t => t.Bits <= bits);
+
+                            if (index >= 0 && !tiers[index].Src.StartsWith("data:"))
+                            {
+                                string data = Embed(tiers[index].Src);
+                                tiers[index] = tiers[index] with { Src = data ?? tiers[index].Src };
+                            }
                         }
                     }
                 }

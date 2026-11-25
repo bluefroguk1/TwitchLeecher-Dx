@@ -1167,18 +1167,24 @@ namespace TwitchLeecher.Services.Services
             return chapters;
         }
 
-        // Global emote sets first, then the channel's own, which win on a clash. Each of the six lists is optional:
-        // one that fails, or a channel a provider doesn't know (404), is simply skipped.
-        public Dictionary<string, string> GetThirdPartyEmotes(string channel)
+        // BTTV's few overlay ("zero-width") emotes aren't marked in its data; chat apps keep this list
+        private static readonly HashSet<string> BttvOverlays = new HashSet<string>(StringComparer.Ordinal)
         {
-            var emotes = new Dictionary<string, string>(StringComparer.Ordinal);
+            "SoSnowy", "IceCold", "SantaHat", "TopHat", "ReinDeer", "CandyCane", "cvMask", "cvHazmat"
+        };
+
+        // Global lists first, then the channel's own, which win on a clash. Every list is optional: one that fails,
+        // or a channel a provider doesn't know (404), is simply skipped.
+        public ChatExtras GetChatExtras(string channel, bool highRes)
+        {
+            ChatExtras extras = new ChatExtras();
             string channelId = string.IsNullOrWhiteSpace(channel) ? null : GetChannelIdByName(channel);
 
-            void Put(string code, string url)
+            void Put(string code, string url, bool overlay)
             {
                 if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(url))
                 {
-                    emotes[code] = url.StartsWith("//") ? "https:" + url : url;
+                    extras.Emotes[code] = new ChatImage(url.StartsWith("//") ? "https:" + url : url, overlay);
                 }
             }
 
@@ -1186,13 +1192,20 @@ namespace TwitchLeecher.Services.Services
             {
                 foreach (JsonNode e in list as JsonArray ?? new JsonArray())
                 {
-                    Put(e.Value<string>("code"), "https://cdn.betterttv.net/emote/" + e.Value<string>("id") + "/2x");
+                    // "modifier" entries (c!, h!, ...) are typed commands, not pictures
+                    if (!e.Value<bool>("modifier"))
+                    {
+                        string code = e.Value<string>("code");
+                        Put(code, "https://cdn.betterttv.net/emote/" + e.Value<string>("id") + (highRes ? "/3x" : "/2x"),
+                            BttvOverlays.Contains(code ?? ""));
+                    }
                 }
             }
 
             void Ffz(JsonNode sets, JsonNode only)
             {
                 HashSet<string> wanted = only is JsonArray ids ? ids.Select(i => i.Value<string>()).ToHashSet() : null;
+                string size = highRes ? "4" : "2";
 
                 foreach (KeyValuePair<string, JsonNode> set in sets as JsonObject ?? new JsonObject())
                 {
@@ -1203,7 +1216,10 @@ namespace TwitchLeecher.Services.Services
 
                     foreach (JsonNode e in set.Value?["emoticons"] as JsonArray ?? new JsonArray())
                     {
-                        Put(e.Value<string>("name"), e["urls"]?.Value<string>("2") ?? e["urls"]?.Value<string>("1"));
+                        // animated emotes list their moving images separately; fall back to smaller sizes
+                        JsonNode urls = e["animated"] as JsonObject ?? e["urls"];
+                        string url = urls?.Value<string>(size) ?? urls?.Value<string>("2") ?? urls?.Value<string>("1");
+                        Put(e.Value<string>("name"), url, e.Value<bool>("modifier"));
                     }
                 }
             }
@@ -1213,7 +1229,54 @@ namespace TwitchLeecher.Services.Services
                 foreach (JsonNode e in list as JsonArray ?? new JsonArray())
                 {
                     string host = e.SelectToken("$.data.host.url")?.Value<string>();
-                    Put(e.Value<string>("name"), host == null ? null : host + "/2x.webp");
+                    // flag 1 on the set's entry marks a zero-width emote
+                    Put(e.Value<string>("name"), host == null ? null : host + (highRes ? "/4x.webp" : "/2x.webp"),
+                        (e.Value<int>("flags") & 1) != 0);
+                }
+            }
+
+            void Badges(JsonNode list)
+            {
+                foreach (JsonNode badge in list as JsonArray ?? new JsonArray())
+                {
+                    string url = badge.Value<string>("imageURL");
+
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        extras.Badges[badge.Value<string>("setID") + "/" + badge.Value<string>("version")] =
+                            new ChatImage(url, Title: badge.Value<string>("title"));
+                    }
+                }
+            }
+
+            void Cheers(JsonNode groups, JsonNode colors)
+            {
+                List<(int Bits, string Color)> palette = (colors as JsonArray ?? new JsonArray())
+                    .Select(c => (c.Value<int>("bits"), c.Value<string>("color"))).OrderBy(c => c.Item1).ToList();
+
+                foreach (JsonNode group in groups as JsonArray ?? new JsonArray())
+                {
+                    string template = group.Value<string>("templateURL");
+
+                    foreach (JsonNode node in group["nodes"] as JsonArray ?? new JsonArray())
+                    {
+                        string prefix = node.Value<string>("prefix");
+
+                        if (string.IsNullOrEmpty(template) || string.IsNullOrEmpty(prefix))
+                        {
+                            continue;
+                        }
+
+                        extras.Cheermotes[prefix] = (node["tiers"] as JsonArray ?? new JsonArray())
+                            .Select(t => t.Value<int>("bits"))
+                            .OrderBy(bits => bits)
+                            .Select(bits => new CheerTier(bits,
+                                template.Replace("PREFIX", prefix.ToLowerInvariant()).Replace("BACKGROUND", "dark")
+                                    .Replace("ANIMATION", "animated").Replace("TIER", bits.ToString(CultureInfo.InvariantCulture))
+                                    .Replace("SCALE", highRes ? "4" : "2").Replace("EXTENSION", "gif"),
+                                palette.LastOrDefault(c => c.Bits <= bits).Color))
+                            .ToList();
+                    }
                 }
             }
 
@@ -1228,15 +1291,36 @@ namespace TwitchLeecher.Services.Services
                 }
                 catch (Exception)
                 {
-                    // optional extras: a missing or broken list just means fewer emotes
+                    // optional extras: a missing or broken list just means fewer images
                 }
             }
+
+            void ReadGql(string query, Action<JsonNode> read)
+            {
+                try
+                {
+                    using (HttpRequestClient client = CreateGqlWebClient())
+                    {
+                        string request = new JsonObject { ["query"] = query }.ToJsonString();
+                        read(JsonNodeExtensions.ParseObject(client.UploadString(GQL_URL, request))["data"]);
+                    }
+                }
+                catch (Exception)
+                {
+                    // as above
+                }
+            }
+
+            string badgeSize = highRes ? "QUADRUPLE" : "DOUBLE";
 
             Read("https://api.frankerfacez.com/v1/set/global", d => Ffz(d["sets"], d["default_sets"]));
             Read("https://api.betterttv.net/3/cached/emotes/global", Bttv);
             Read("https://7tv.io/v3/emote-sets/global", d => SevenTv(d["emotes"]));
+            ReadGql("query{badges{setID version title imageURL(size:" + badgeSize + ")}}", d => Badges(d["badges"]));
+            ReadGql("query{cheerConfig{displayConfig{colors{bits color}} groups{templateURL nodes{prefix tiers{bits}}}}}",
+                d => Cheers(d.SelectToken("$.cheerConfig.groups"), d.SelectToken("$.cheerConfig.displayConfig.colors")));
 
-            if (channelId != null)
+            if (channelId != null && channelId.All(char.IsAsciiDigit))
             {
                 Read("https://api.frankerfacez.com/v1/room/id/" + channelId, d => Ffz(d["sets"], null));
                 Read("https://api.betterttv.net/3/cached/users/twitch/" + channelId, d =>
@@ -1245,9 +1329,13 @@ namespace TwitchLeecher.Services.Services
                     Bttv(d["sharedEmotes"]);
                 });
                 Read("https://7tv.io/v3/users/twitch/" + channelId, d => SevenTv(d.SelectToken("$.emote_set.emotes")));
+                ReadGql("query{user(id:\"" + channelId + "\"){broadcastBadges{setID version title imageURL(size:" + badgeSize + ")}}}",
+                    d => Badges(d.SelectToken("$.user.broadcastBadges")));
+                ReadGql("query{cheerConfig{displayConfig{colors{bits color}}} user(id:\"" + channelId + "\"){cheer{cheerGroups{templateURL nodes{prefix tiers{bits}}}}}}",
+                    d => Cheers(d.SelectToken("$.user.cheer.cheerGroups"), d.SelectToken("$.cheerConfig.displayConfig.colors")));
             }
 
-            return emotes;
+            return extras;
         }
 
         public List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to,
@@ -1379,8 +1467,11 @@ namespace TwitchLeecher.Services.Services
 
                         string text = string.Concat(fragments.Select(f => f.Text));
                         string color = node["message"].Value<string>("userColor");
+                        List<string> badges = (node["message"]["userBadges"] as JsonArray ?? new JsonArray())
+                            .Select(badge => badge.Value<string>("setID") + "/" + badge.Value<string>("version"))
+                            .ToList();
 
-                        messages.Add(new TwitchChatMessage(offset, name, text, color, fragments));
+                        messages.Add(new TwitchChatMessage(offset, name, text, color, fragments, badges));
                         added++;
                     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,16 +22,20 @@ namespace TwitchLeecher.Services.Services
             "#DAA520", "#D2691E", "#5F9EA0", "#1E90FF", "#FF69B4", "#8A2BE2", "#00FF7F"
         };
 
-        public static string EmoteUrl(string emoteId)
+        // highRes: Twitch's largest size (3.0), for sharp emotes when zoomed in; 2.0 otherwise
+        public static string EmoteUrl(string emoteId, bool highRes = false)
         {
-            return "https://static-cdn.jtvnw.net/emoticons/v2/" + Uri.EscapeDataString(emoteId) + "/default/dark/2.0";
+            return "https://static-cdn.jtvnw.net/emoticons/v2/" + Uri.EscapeDataString(emoteId) + "/default/dark/" +
+                   (highRes ? "3.0" : "2.0");
         }
 
-        // emoteSources maps emote id -> img src. Null links every emote to the CDN;
+        private static readonly Regex Cheer = new Regex("^([A-Za-z]+)([0-9]+)$");
+
+        // emoteSources maps a Twitch emote id -> img src. Null links every emote to the CDN;
         // an id missing from the map (failed download) falls back to the :code: text.
-        // thirdPartyEmotes maps a BTTV/FFZ/7TV emote code -> img src; matching words in the text become images.
+        // extras (may be null): BTTV/FFZ/7TV emotes, badges and cheermotes, already filtered to what is shown.
         public static string Write(string title, IEnumerable<TwitchChatMessage> messages, TimeSpan from,
-            IReadOnlyDictionary<string, string> emoteSources, IReadOnlyDictionary<string, string> thirdPartyEmotes = null)
+            IReadOnlyDictionary<string, string> emoteSources, ChatExtras extras = null, bool highRes = false)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -41,13 +46,38 @@ namespace TwitchLeecher.Services.Services
                 .Append(".t{color:#adadb8;font-variant-numeric:tabular-nums;margin-right:6px}\n")
                 .Append(".n{font-weight:600}\n")
                 .Append("img{height:28px;vertical-align:middle;margin:-4px 0}\n")
+                // an emote and the zero-width emotes drawn over it share one box
+                .Append(".e{position:relative;display:inline-block}\n")
+                .Append(".e .z{position:absolute;left:50%;top:0;transform:translateX(-50%)}\n")
+                .Append(".g{height:18px;margin:0 3px 0 0}\n")
+                .Append(".b{font-weight:700;margin-left:2px}\n")
                 .Append("</style></head><body>\n");
 
             foreach (TwitchChatMessage m in messages)
             {
-                sb.Append("<p><span class=\"t\">[").Append((m.Offset - from).ToDaylessString()).Append("]</span>")
-                    .Append("<span class=\"n\" style=\"color:").Append(ReadableColor(m.Color, m.Name)).Append("\">")
+                sb.Append("<p><span class=\"t\">[").Append((m.Offset - from).ToDaylessString()).Append("]</span>");
+
+                foreach (string badge in m.Badges ?? Array.Empty<string>())
+                {
+                    if (extras != null && extras.Badges.TryGetValue(badge, out ChatImage image))
+                    {
+                        AppendImg(sb, image.Src, image.Title ?? badge, "g");
+                    }
+                }
+
+                sb.Append("<span class=\"n\" style=\"color:").Append(ReadableColor(m.Color, m.Name)).Append("\">")
                     .Append(WebUtility.HtmlEncode(m.Name)).Append("</span>: ");
+
+                // where the last emote's box ends, so a zero-width emote right after it can go inside; -1 = no emote just before
+                int emoteEnd = -1;
+
+                void Emote(string src, string code)
+                {
+                    sb.Append("<span class=\"e\">");
+                    AppendImg(sb, src, code);
+                    sb.Append("</span>");
+                    emoteEnd = sb.Length;
+                }
 
                 foreach (TwitchChatFragment f in m.Fragments)
                 {
@@ -59,28 +89,59 @@ namespace TwitchLeecher.Services.Services
 
                         for (int i = 0; i < words.Length; i++)
                         {
+                            string word = words[i];
+                            ChatImage tp = null;
+                            Match cheer = Cheer.Match(word);
+
+                            if (extras != null && extras.Emotes.TryGetValue(word, out tp) && tp.Overlay && emoteEnd >= 0)
+                            {
+                                // on top of the emote before: drop the space and put it inside that emote's box
+                                sb.Length = emoteEnd;
+                                string overlay = Img(tp.Src, word, "z");
+                                sb.Insert(emoteEnd - "</span>".Length, overlay);
+                                emoteEnd += overlay.Length;
+                                continue;
+                            }
+
                             if (i > 0)
                             {
                                 sb.Append(' ');
                             }
 
-                            if (thirdPartyEmotes != null && thirdPartyEmotes.TryGetValue(words[i], out string tp))
+                            if (tp != null)
                             {
-                                AppendImg(sb, tp, words[i]);
+                                Emote(tp.Src, word);
+                            }
+                            else if (cheer.Success && extras != null &&
+                                     extras.Cheermotes.TryGetValue(cheer.Groups[1].Value, out List<CheerTier> tiers) &&
+                                     int.TryParse(cheer.Groups[2].Value, out int bits) &&
+                                     tiers.LastOrDefault(t => t.Bits <= bits) is CheerTier tier)
+                            {
+                                AppendImg(sb, tier.Src, word);
+                                sb.Append("<span class=\"b\" style=\"color:")
+                                    .Append(HexColor.IsMatch(tier.Color ?? "") ? tier.Color : "#efeff1").Append("\">")
+                                    .Append(bits.ToString(CultureInfo.InvariantCulture)).Append("</span>");
+                                emoteEnd = -1;
                             }
                             else
                             {
-                                sb.Append(WebUtility.HtmlEncode(words[i]));
+                                sb.Append(WebUtility.HtmlEncode(word));
+
+                                if (word.Length > 0)
+                                {
+                                    emoteEnd = -1;
+                                }
                             }
                         }
                     }
                     else if (emoteSources == null || emoteSources.TryGetValue(f.EmoteId, out src))
                     {
-                        AppendImg(sb, src ?? EmoteUrl(f.EmoteId), f.Text);
+                        Emote(src ?? EmoteUrl(f.EmoteId, highRes), f.Text);
                     }
                     else
                     {
                         sb.Append(WebUtility.HtmlEncode(":" + f.Text + ":"));
+                        emoteEnd = -1;
                     }
                 }
 
@@ -90,11 +151,16 @@ namespace TwitchLeecher.Services.Services
             return sb.Append("</body></html>\n").ToString();
         }
 
-        private static void AppendImg(StringBuilder sb, string src, string code)
+        private static void AppendImg(StringBuilder sb, string src, string title, string cssClass = null)
         {
-            string alt = WebUtility.HtmlEncode(code);
-            sb.Append("<img src=\"").Append(WebUtility.HtmlEncode(src))
-                .Append("\" alt=\"").Append(alt).Append("\" title=\"").Append(alt).Append("\">");
+            sb.Append(Img(src, title, cssClass));
+        }
+
+        private static string Img(string src, string title, string cssClass = null)
+        {
+            string alt = WebUtility.HtmlEncode(title);
+            return "<img" + (cssClass == null ? "" : " class=\"" + cssClass + "\"") + " src=\"" + WebUtility.HtmlEncode(src) +
+                   "\" alt=\"" + alt + "\" title=\"" + alt + "\">";
         }
 
         // Returns "#RRGGBB" readable on the dark background: the user's colour (or a stable palette pick), lightened if too dark

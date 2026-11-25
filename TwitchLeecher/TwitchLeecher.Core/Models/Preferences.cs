@@ -74,6 +74,10 @@ namespace TwitchLeecher.Core.Models
 
         private bool _downloadKeepTsOnFailure;
 
+        private bool _downloadChatBadges;
+
+        private bool _downloadChatHighResEmotes;
+
         private bool _downloadDisableConversion;
 
         private bool _downloadQuickDownload;
@@ -277,6 +281,20 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _downloadKeepTsOnFailure; }
             set { SetProperty(ref _downloadKeepTsOnFailure, value); }
+        }
+
+        // saved chat (HTML and JSON) includes each sender's badges
+        public bool DownloadChatBadges
+        {
+            get { return _downloadChatBadges; }
+            set { SetProperty(ref _downloadChatBadges, value); }
+        }
+
+        // saved HTML chat uses the largest emote and badge images: sharper when zoomed in, bigger files
+        public bool DownloadChatHighResEmotes
+        {
+            get { return _downloadChatHighResEmotes; }
+            set { SetProperty(ref _downloadChatHighResEmotes, value); }
         }
 
         public bool DownloadRemoveCompleted
@@ -576,6 +594,8 @@ namespace TwitchLeecher.Core.Models
                 DownloadSubfoldersForFav = DownloadSubfoldersForFav,
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadKeepTsOnFailure = DownloadKeepTsOnFailure,
+                DownloadChatBadges = DownloadChatBadges,
+                DownloadChatHighResEmotes = DownloadChatHighResEmotes,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
                 ScheduleEnabled = ScheduleEnabled,
