@@ -2,6 +2,11 @@
 
 Updated **2026-11-25 (evening) on the Mac: five features merged into `final`; next PC run is the full check on merged `final`**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## PARKED IDEAS FOR THE MAC (added 2026-11-25; don't act on them until the user says so, e.g. after usage limits reset)
+
+1. **Translations.** How easy is it to add translations or translation files? Look at how UI text is held today (hard-coded in `.axaml` and view models, or in resources), what Avalonia offers (`.resx` + `x:Static`, or a resource dictionary per language), how big the job is, and whether it would suit a PR to the developer. Report only; no code.
+2. **The broken "Check for updates" in released versions (3.9.1 and earlier).** They ask GitHub's API for the releases of `schneidermanuel/TwitchLeecher.Old-dx`, a repository that doesn't exist (fixed for the future in #128, but old copies keep asking there). Question: can the developer make that address work, so existing users hear about 4.0? For example by creating a repository with that name under his account and publishing a release in it that points to the real download, or by renaming a repository so GitHub redirects. Check exactly which URL and fields the old `UpdateService` reads (tag name format, version compare, which link it opens), whether GitHub's API follows repository-rename redirects for that call, and what he would need to do. If it works, draft a short suggestion for him (the user decides whether to send it).
+
 ## NEXT PC RUN (2026-11-25, evening): everything on merged `final`
 
 **What changed on the Mac:** all five feature branches passed, so they are **merged into `final`** (efcba94, CI green on Windows and Linux) together with your three script fixes. The feature branches are deleted (archived on the fork). The upgrade branch is rebased onto it (a1dd0f2). This run checks that the merges work together.
