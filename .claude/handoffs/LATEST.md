@@ -2,6 +2,24 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## PC RESULTS (DONE 2026-11-25, on the PC): chapters check and all five feature-branch checks PASS
+
+Run in the order of the sections below. Build: .NET SDK 10.0.404 (x64). **PowerShell gotcha:** the 32-bit `dotnet` (`C:\Program Files (x86)\dotnet`) is first on PATH and has no SDKs, so `dotnet build` says "No .NET SDKs were found". Run `$env:Path = "C:\Program Files\dotnet;" + $env:Path` first. A first run of the chapters check against that stale build gave 6 of 7 failed; after a real build it passed.
+
+| Branch / script | Result | Notes |
+|---|---|---|
+| `final`: `test-video-metadata.ps1` | PASS 10/10 | VOD 2928816203, chapters Special Events -> QSMP at 60 s |
+| `feature/tl-info-chat`: `test-tl-info-chat.ps1` | PASS 22/22 | Script fix: the recorded-date check passed a DateTime where a bool was needed (b9881b7) |
+| `feature/chat-real-time`: `test-chat-real-time.ps1` | PASS 6/6 | Settings file put back |
+| `feature/third-party-emotes`: `test-third-party-emotes.ps1 -Channel xqc` | PASS 6/6 | Script fix: the "image per emote word" bound now allows 2% more than the text count (5518 vs 5482 on the first run) |
+| `feature/third-party-emotes`: `test-chat-extras.ps1 -Channel xqc` | 9/10, the 10th explained | "High-res Twitch emotes at 3.0" was 843 vs 838 at 2.0: the sampled VOD was **still being recorded**, so each download had more chat (7068, 7079, 7107 messages). Same 94 emotes, none at the wrong size. Script fix: allow up to 5% more. **Not rerun in full after the fix.** No cheers in the sample, so cheermotes were **not checked**. 62 overlay emotes were checked and fine |
+| `feature/speed-limit`: `test-speed-limit.ps1` | PASS 3/3 | 1.6 MB/s limited to 2, 6.39 MB/s unlimited |
+| `feature/free-space-check`: `test-free-space.ps1` | PASS 5/5 | Script fixes: `--quality source` does not exist on every VOD, so it now uses the top listed quality; and the exit code is read reliably (`$p.Handle`). Stopped itself with "Free space on C:\: about 18.97 GB needed, 15.36 GB free" and wrote 0 MB |
+
+The three script-fix commits are **pushed**: tl-info-chat b9881b7, third-party-emotes a8bd83b, free-space-check ba6b93d. No app code changed. The PC is back on `final`, rebuilt.
+
+**Still open:** rerun `test-chat-extras.ps1` on a channel whose latest VOD is finished (and ideally has cheers) to confirm the high-res check and cover cheermotes. By hand, not done: branch 2's and 4's new Settings rows in all three themes, and branch 3's `.chat.html` in a browser (do the emotes show, do animated ones move). Note: tests run headless through `tl.exe`, so no app window opens.
+
 ## NEXT PC RUN, PART 2 (2026-11-25): five feature branches, each with its own automated check
 
 Five more ideas, each on **its own branch from `final`** (not in `final` until they pass). Every one has a no-click check script that uses the shared `test-scripts\tl-test-lib.ps1`. Do **part 1 below first** (the chapters check on `final`), then these. For each branch, in this order:
