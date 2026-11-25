@@ -615,6 +615,18 @@
                                     <TextBlock Classes="sub" Text="Date and time of day, instead of the time into the video" />
                                 </StackPanel>
                             </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatBadges}">
+                                <StackPanel>
+                                    <TextBlock Text="Saved chat: include badges" />
+                                    <TextBlock Classes="sub" Text="Subscriber, moderator, VIP and other badges next to names (web page and JSON chat)" />
+                                </StackPanel>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatHighResEmotes}">
+                                <StackPanel>
+                                    <TextBlock Text="Saved chat: high-resolution emotes" />
+                                    <TextBlock Classes="sub" Text="Sharper emotes and badges when zoomed in; chat files with emotes embedded get bigger" />
+                                </StackPanel>
+                            </CheckBox>
                         </StackPanel>
 
                         <StackPanel Classes="field">
