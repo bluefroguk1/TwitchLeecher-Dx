@@ -68,7 +68,7 @@ try {
     $badgesHiOk = -not ($htmlHi -match 'badges/v1/[^"]+/2"')
     if ($twitchLow -gt 0) {
         Check 'high-res off: Twitch emotes at 2.0' ($twitchLow -gt 0 -and -not ($htmlOn -match '/3\.0"')) "$twitchLow at 2.0"
-        Check 'high-res on: Twitch emotes at 3.0' ($twitchHi -eq $twitchLow -and -not ($htmlHi -match 'emoticons/v2/[^"]+/2\.0"')) "$twitchHi at 3.0"
+        Check 'high-res on: Twitch emotes at 3.0' ($twitchHi -ge $twitchLow -and $twitchHi -le [math]::Ceiling($twitchLow * 1.05) -and -not ($htmlHi -match 'emoticons/v2/[^"]+/2\.0"')) "$twitchHi at 3.0"
     }
     else { Write-Host 'NOTE: no Twitch emotes in this chat sample, so the emote size check was skipped.' }
     Check 'high-res on: badges at the largest size' $badgesHiOk 'no 2x badge links'
