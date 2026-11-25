@@ -1,5 +1,15 @@
 ﻿# PR submission guide
 
+## Five more ideas, each on its own branch (built 2026-11-25; not in `final` until the PC passes them)
+
+All are written from scratch (no other project's code or name), CI-green on Windows and Linux, add no new warnings, and each has a no-click PC check using `test-scripts/tl-test-lib.ps1` (now on `final`).
+- **`feature/tl-info-chat`** (2542f12): `tl info` prints JSON (details, qualities, chapters); `tl download --chat text|html|html-emotes|json`. README updated. Check: `test-tl-info-chat.ps1`.
+- **`feature/chat-real-time`** (07f0c39, on tl-info-chat): `Preferences.DownloadChatRealTime` (`Download/ChatRealTime` in config.xml), Settings checkbox; `.chat.txt` gets `[yyyy-MM-dd HH:mm:ss]` = the VOD start + the message offset. Check: `test-chat-real-time.ps1`.
+- **`feature/third-party-emotes`** (a2a984c, on tl-info-chat): `ApiService.GetThirdPartyEmotes` (FFZ, BTTV, 7TV: global sets, then the channel's own; any failing list is skipped); `ChatHtmlWriter` turns matching words into images; html-emotes embeds the used ones as data URIs. A failure never loses the chat. Check: `test-third-party-emotes.ps1`.
+- **`feature/speed-limit`** (e026ba5): `Preferences.DownloadMaxSpeed` (MB/s, 0 = off; `Download/MaxSpeed`), Settings field next to Max connections; `SpeedLimiter` (shared, so all downloads together) waits after each chunk. Cancel and Pause still work at once. Check: `test-speed-limit.ps1`.
+- **`feature/free-space-check`** (9fecaa2): `DownloadParameters.EstimatedSizeBytes`; `DownloadService.CheckFreeSpace` before any chunk: the temp drive needs the estimate, the output drive needs it again (twice on one drive). It uses the most specific mounted drive (Linux-safe), and an unknown size or drive passes. Check: `test-free-space.ps1`.
+- **When they pass:** merge each into `final` (2 and 3 bring 1 with them), then cut PR branches on master at the refresh, like the others. Their PR order follows their bases: tl-info-chat with or after the CLI PR; speed-limit and free-space-check after the Downloads page PR (they touch its chunk loop).
+
 ## Video details and game chapters (built 2026-11-25, idea from comparing another downloader)
 
 - **In `final`** (8db5f7d, CI green): `VideoMetadata.Build` writes an FFMETADATA1 file (title, artist = channel, date, comment = VOD link, a chapter per game, cut and shifted to the crop). `ApiService.GetChapters` uses the web player's persisted query `VideoPlayer_ChapterSelectButtonVideo` (anonymous; empty when the stream stayed on one game). `ProcessingService` adds it as a second ffmpeg input (`-map_metadata 1 -map_chapters 1`) on both the streamed and the merged-file paths. Failures leave the details out and never fail the download.

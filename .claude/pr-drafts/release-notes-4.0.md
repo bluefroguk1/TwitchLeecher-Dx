@@ -78,6 +78,7 @@ Nothing below this comment block is sent as-is without the user's OK.
 **Full Changelog**: https://github.com/schneidermanuel/TwitchLeecher-Dx/compare/v3.9.1...v4.0.0
 
 <!--
+Pending branches, add their lines when merged: tl info and --chat; chat text real-time timestamps; BTTV/FFZ/7TV emotes in HTML chat; max download speed; free-space check.
 Map: line -> PR (x = merged upstream)
 [x] ffmpeg 9.0.2 -> #110 | [x] streamed into ffmpeg -> #111 | [x] stay on search -> #112 | [x] scroll position -> #113
 [x] perf (rate limit, log, thumbnails) -> #114 #115 #116 | [x] VOD info -> #117 | [x] favourites default -> #118 | [x] size estimate -> #119

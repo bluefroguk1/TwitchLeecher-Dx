@@ -2,6 +2,30 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## NEXT PC RUN, PART 2 (2026-11-25): five feature branches, each with its own automated check
+
+Five more ideas, each on **its own branch from `final`** (not in `final` until they pass). Every one has a no-click check script that uses the shared `test-scripts\tl-test-lib.ps1`. Do **part 1 below first** (the chapters check on `final`), then these. For each branch, in this order:
+```
+git fetch origin
+git checkout <branch>
+git pull
+Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force
+dotnet build TwitchLeecher\TwitchLeecher.sln -c Release
+powershell -ExecutionPolicy Bypass -File test-scripts\<script>
+```
+
+| # | Branch | What it adds | Script | Notes |
+|---|---|---|---|---|
+| 1 | `feature/tl-info-chat` | `tl info <vod>` (JSON: details, qualities, chapters) and `tl download --chat text\|html\|html-emotes\|json` | `test-tl-info-chat.ps1` | 2 and 3 are built on this branch |
+| 2 | `feature/chat-real-time` | Settings › Download: "Chat as text: show the time each message was sent" | `test-chat-real-time.ps1` | **Close the app first**: it switches the setting in `config.xml` and always puts it back |
+| 3 | `feature/third-party-emotes` | BTTV, FFZ and 7TV emotes in HTML chat (linked, or embedded with html-emotes) | `test-third-party-emotes.ps1 -Channel <a big channel you know>` | Twitch's own channel may have no BTTV/FFZ/7TV emotes in its chat; the script then says it can't run |
+| 4 | `feature/speed-limit` | Settings › Download: "Max download speed (MB/s)", for all downloads together, 0 = no limit | `test-speed-limit.ps1` | Close the app first (same `config.xml` handling). About 200 MB |
+| 5 | `feature/free-space-check` | A download stops early with "Not enough free space on X:" when a drive can't hold it | `test-free-space.ps1` (or `-OutDir <folder on a nearly full USB stick>`) | The "too big" part only runs if a drive is small enough; otherwise it is skipped, not failed. A 60 s watchdog kills it if the check didn't stop it |
+
+Exit code 0 means all passed, 1 means a check failed, 2 means it couldn't run (the message says why). **All five scripts were written on the Mac and have never run.** Fix script problems in the script (on its branch), commit, and say so. Don't change app code during the run: report app failures with the table and the download log (`tl` prints it on failure). Report one table per branch under this heading. Afterwards: `git checkout final` and rebuild.
+
+Also worth a look by hand while on each branch: branch 2's and 4's new Settings rows (readable in all three themes), and branch 3's `.chat.html` in a browser (the emotes show, and animated ones move).
+
 ## NEXT PC RUN (2026-11-25): video details and game chapters on `final`, automated
 
 Downloaded VODs now carry their title, channel, date and VOD link, plus **a chapter per game the streamer played**. VLC, Plex and Jellyfin show these. Chapters are cut to a cropped download. Clips and "keep the original stream" downloads skip it, because they don't go through ffmpeg.
