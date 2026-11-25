@@ -7,7 +7,26 @@ Updated **2026-11-25 (evening) on the Mac: five features merged into `final`; ne
 1. **Translations.** How easy is it to add translations or translation files? Look at how UI text is held today (hard-coded in `.axaml` and view models, or in resources), what Avalonia offers (`.resx` + `x:Static`, or a resource dictionary per language), how big the job is, and whether it would suit a PR to the developer. Report only; no code.
 2. **The broken "Check for updates" in released versions (3.9.1 and earlier).** They ask GitHub's API for the releases of `schneidermanuel/TwitchLeecher.Old-dx`, a repository that doesn't exist (fixed for the future in #128, but old copies keep asking there). Question: can the developer make that address work, so existing users hear about 4.0? For example by creating a repository with that name under his account and publishing a release in it that points to the real download, or by renaming a repository so GitHub redirects. Check exactly which URL and fields the old `UpdateService` reads (tag name format, version compare, which link it opens), whether GitHub's API follows repository-rename redirects for that call, and what he would need to do. If it works, draft a short suggestion for him (the user decides whether to send it).
 
-## NEXT PC RUN (2026-11-25, evening): everything on merged `final`
+## PC RESULTS, merged `final` 532662e (DONE 2026-11-25, evening, on the PC): ALL PASS
+
+Rebuilt (0 errors) and run on the PC after `git pull`. My own local merges were redundant with the Mac's (never pushed; kept as local branches `backup/pc-*`).
+
+| # | Script | Result |
+|---|---|---|
+| 1 | `test-video-metadata.ps1` | PASS 10/10 |
+| 2 | `test-tl-info-chat.ps1` | PASS 22/22 |
+| 3 | `test-chat-real-time.ps1` | PASS 6/6 |
+| 4 | `test-third-party-emotes.ps1 -Channel xqc` | PASS 6/6 |
+| 5 | `test-chat-extras.ps1 -Channel kaicenat` | PASS 9/9 (no cheers in that sample) |
+| 5 | `test-chat-extras.ps1 -Channel jynxzi` | **PASS 10/10, 17 cheermotes shown with their amount** |
+| 6 | `test-speed-limit.ps1` | PASS 3/3: **1.75 MB/s limited to 2** (was 1.6 before the review fix), 6.12 MB/s unlimited |
+| 7 | `test-free-space.ps1` | PASS 5/5 |
+
+**Script fix (on `final`):** the "high-res on: Twitch emotes at 3.0" check compared counts exactly; the chat of a still-recording VOD changes by a few messages between downloads, so it now allows a 5% difference either way and still requires no emote left at 2.0. Not run: the non-Latin display-name channel check (no such channel known) and the by-hand items below.
+
+**By hand, still not done:** the four new Settings rows in all three themes; a `.chat.html` in a browser (emotes, animation, badges, overlays, cheers).
+
+## DONE (results above): PC RUN on merged `final` (2026-11-25, evening)
 
 **What changed on the Mac:** all five feature branches passed, so they are **merged into `final`** (efcba94, CI green on Windows and Linux) together with your three script fixes. The feature branches are deleted (archived on the fork). The upgrade branch is rebased onto it (a1dd0f2). This run checks that the merges work together.
 
