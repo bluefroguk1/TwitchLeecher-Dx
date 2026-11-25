@@ -35,6 +35,9 @@ namespace TwitchLeecher.Services.Services
         // one shared client so segment downloads reuse connections instead of a new TLS handshake per chunk
         private static readonly HttpClient _httpClient = new HttpClient();
 
+        // shared, so the limit in Settings covers all downloads together
+        private static readonly SpeedLimiter _speedLimiter = new SpeedLimiter();
+
         #endregion Constants
 
         #region Fields
@@ -795,6 +798,8 @@ namespace TwitchLeecher.Services.Services
                             // the token aborts requests that are in flight, so cancel and pause don't wait for them
                             byte[] bytes = _httpClient.GetByteArrayAsync(part.RemoteFile, cancellationToken)
                                 .GetAwaiter().GetResult();
+
+                            _speedLimiter.Wait(bytes.Length, _preferencesService.CurrentPreferences.DownloadMaxSpeed, cancellationToken);
 
                             // Write then rename, so a chunk file on disk is always complete (resume trusts it).
                             string partFile = part.LocalFile + ".part";

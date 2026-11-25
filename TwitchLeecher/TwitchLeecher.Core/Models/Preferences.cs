@@ -74,6 +74,8 @@ namespace TwitchLeecher.Core.Models
 
         private bool _downloadKeepTsOnFailure;
 
+        private int _downloadMaxSpeed;
+
         private bool _downloadDisableConversion;
 
         private bool _downloadQuickDownload;
@@ -277,6 +279,13 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _downloadKeepTsOnFailure; }
             set { SetProperty(ref _downloadKeepTsOnFailure, value); }
+        }
+
+        // MB/s for all downloads together; 0 = no limit
+        public int DownloadMaxSpeed
+        {
+            get { return _downloadMaxSpeed; }
+            set { SetProperty(ref _downloadMaxSpeed, value); }
         }
 
         public bool DownloadRemoveCompleted
@@ -576,6 +585,7 @@ namespace TwitchLeecher.Core.Models
                 DownloadSubfoldersForFav = DownloadSubfoldersForFav,
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadKeepTsOnFailure = DownloadKeepTsOnFailure,
+                DownloadMaxSpeed = DownloadMaxSpeed,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
                 ScheduleEnabled = ScheduleEnabled,
