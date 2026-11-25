@@ -66,8 +66,11 @@ Twitch Leecher comes with a small command-line tool, `tl` (`tl.exe` on Windows),
 ```
 tl search <channel> [--type broadcast|highlight|upload] [--last <n>]
 tl qualities <vod url or id>
-tl download <vod url or id> [--quality <q>] [--from <time>] [--to <time>] [--out <folder>] [--name <file name>]
+tl info <vod url or id>
+tl download <vod url or id> [--quality <q>] [--from <time>] [--to <time>] [--out <folder>] [--name <file name>] [--chat <format>]
 ```
+
+`tl info` prints the video's details, qualities and game chapters as JSON.
 
 **Examples**
 
@@ -85,6 +88,7 @@ tl download 123456789 --quality 1080p60 --from 1:00:00 --to 1:30:00
 | `--from` / `--to` | Crop, as `h:mm:ss`, `m:ss` or seconds | the whole video |
 | `--out` | Folder to save to | the download folder in Settings |
 | `--name` | File name | the file name pattern in Settings |
+| `--chat` | Also save the chat: `text`, `html`, `html-emotes` (emotes embedded) or `json` | no chat |
 
 Downloads show their progress, and Ctrl+C cancels. `tl --help` shows all of this.
 
