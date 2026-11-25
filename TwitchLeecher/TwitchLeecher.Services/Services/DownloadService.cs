@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -975,8 +976,12 @@ namespace TwitchLeecher.Services.Services
                 }
                 else
                 {
+                    // real time: the VOD's start (already local time) plus the message's offset into the VOD
+                    bool realTime = _preferencesService.CurrentPreferences.DownloadChatRealTime;
                     File.WriteAllLines(chatFile, messages.Select(m =>
-                        "[" + (m.Offset - from).ToDaylessString() + "] " + m.Name + ": " + m.Text));
+                        "[" + (realTime
+                            ? (downloadParams.Video.RecordedDate + m.Offset).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                            : (m.Offset - from).ToDaylessString()) + "] " + m.Name + ": " + m.Text));
                 }
 
                 log(" done! (" + messages.Count + " messages)");

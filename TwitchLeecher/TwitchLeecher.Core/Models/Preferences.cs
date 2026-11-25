@@ -74,6 +74,8 @@ namespace TwitchLeecher.Core.Models
 
         private bool _downloadKeepTsOnFailure;
 
+        private bool _downloadChatRealTime;
+
         private bool _downloadDisableConversion;
 
         private bool _downloadQuickDownload;
@@ -277,6 +279,13 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _downloadKeepTsOnFailure; }
             set { SetProperty(ref _downloadKeepTsOnFailure, value); }
+        }
+
+        // .chat.txt timestamps: the time of day each message was sent, instead of the time into the video
+        public bool DownloadChatRealTime
+        {
+            get { return _downloadChatRealTime; }
+            set { SetProperty(ref _downloadChatRealTime, value); }
         }
 
         public bool DownloadRemoveCompleted
@@ -576,6 +585,7 @@ namespace TwitchLeecher.Core.Models
                 DownloadSubfoldersForFav = DownloadSubfoldersForFav,
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadKeepTsOnFailure = DownloadKeepTsOnFailure,
+                DownloadChatRealTime = DownloadChatRealTime,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
                 ScheduleEnabled = ScheduleEnabled,
