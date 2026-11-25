@@ -78,6 +78,7 @@ namespace TwitchLeecher.Core.Models
         private bool _downloadChatBadges;
 
         private bool _downloadChatHighResEmotes;
+        private int _downloadMaxSpeed;
 
         private bool _downloadDisableConversion;
 
@@ -303,6 +304,13 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _downloadChatHighResEmotes; }
             set { SetProperty(ref _downloadChatHighResEmotes, value); }
+        }
+
+        // MB/s for all downloads together; 0 = no limit
+        public int DownloadMaxSpeed
+        {
+            get { return _downloadMaxSpeed; }
+            set { SetProperty(ref _downloadMaxSpeed, value); }
         }
 
         public bool DownloadRemoveCompleted
@@ -605,6 +613,7 @@ namespace TwitchLeecher.Core.Models
                 DownloadChatRealTime = DownloadChatRealTime,
                 DownloadChatBadges = DownloadChatBadges,
                 DownloadChatHighResEmotes = DownloadChatHighResEmotes,
+                DownloadMaxSpeed = DownloadMaxSpeed,
                 DownloadDisableConversion = DownloadDisableConversion,
                 DownloadQuickDownload = DownloadQuickDownload,
                 ScheduleEnabled = ScheduleEnabled,
