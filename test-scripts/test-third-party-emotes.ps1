@@ -29,7 +29,8 @@ function Try-Get([string]$url) { try { Invoke-RestMethod -Uri $url } catch { $nu
 $channelId = (Gql @{ query = 'query{user(login:"' + $Channel + '"){id}}' }).data.user.id
 $ffz = Try-Get 'https://api.frankerfacez.com/v1/set/global'
 if ($ffz) { foreach ($id in $ffz.default_sets) { foreach ($e in $ffz.sets."$id".emoticons) { [void]$codes.Add($e.name) } } }
-foreach ($e in @(Try-Get 'https://api.betterttv.net/3/cached/emotes/global')) { if ($e) { [void]$codes.Add($e.code) } }
+# BTTV "modifier" entries (c!, h!, ...) are typed commands, which the app leaves as text
+foreach ($e in @(Try-Get 'https://api.betterttv.net/3/cached/emotes/global')) { if ($e -and -not $e.modifier) { [void]$codes.Add($e.code) } }
 foreach ($e in @((Try-Get 'https://7tv.io/v3/emote-sets/global').emotes)) { if ($e) { [void]$codes.Add($e.name) } }
 if ($channelId) {
     $room = Try-Get "https://api.frankerfacez.com/v1/room/id/$channelId"
@@ -61,7 +62,8 @@ try {
     }
     if ($expected -eq 0) { Write-Host "CANNOT RUN: the sampled $Minutes minutes of chat use no BTTV/FFZ/7TV emotes. Try -Channel <a busier channel> or -Minutes 30."; exit 2 }
 
-    $linked = ([regex]::Matches($files['html'], "<img src=""https://($hosts)")).Count
+    # overlay (zero-width) emotes carry class="z"
+    $linked = ([regex]::Matches($files['html'], "<img (class=""z"" )?src=""https://($hosts)")).Count
     # a word that is also a Twitch emote shows as the Twitch one, so allow a few fewer
     Check 'html: an image per third-party emote word' ($linked -le $expected -and $linked -ge [math]::Floor($expected * 0.9)) "$linked images, $expected emote words in the text chat"
 
