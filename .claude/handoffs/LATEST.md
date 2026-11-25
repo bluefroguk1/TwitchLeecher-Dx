@@ -1,6 +1,39 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-25 (evening) on the Mac: five features merged into `final`; next PC run is the full check on merged `final`**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+
+## NEXT PC RUN (2026-11-25, evening): everything on merged `final`
+
+**What changed on the Mac:** all five feature branches passed, so they are **merged into `final`** (efcba94, CI green on Windows and Linux) together with your three script fixes. The feature branches are deleted (archived on the fork). The upgrade branch is rebased onto it (a1dd0f2). This run checks that the merges work together. No new app code beyond the merges.
+
+**Setup** (first fix PATH, see the gotcha below):
+```
+$env:Path = "C:\Program Files\dotnet;" + $env:Path
+git fetch origin
+git checkout final
+git pull
+Get-Process TwitchLeecher -ErrorAction SilentlyContinue | Stop-Process -Force
+dotnet build TwitchLeecher\TwitchLeecher.sln -c Release
+```
+**Close the app** before scripts 3, 5 and 6 (they switch settings in `config.xml` and put them back).
+
+| # | Script | Expect |
+|---|---|---|
+| 1 | `test-video-metadata.ps1` | 10/10 |
+| 2 | `test-tl-info-chat.ps1` | 22/22 |
+| 3 | `test-chat-real-time.ps1` | 6/6 |
+| 4 | `test-third-party-emotes.ps1 -Channel <big channel>` | 6/6 |
+| 5 | `test-chat-extras.ps1 -Channel <channel whose latest VOD is finished, ideally with cheers>` | 10/10, cheermotes checked this time |
+| 6 | `test-speed-limit.ps1` | 3/3 |
+| 7 | `test-free-space.ps1` | 5/5 |
+
+Run each with `powershell -ExecutionPolicy Bypass -File test-scripts\<script>`. For #5, a channel that was **not live** when you start avoids the "still recording" drift; a channel with lots of bits (cheers) covers cheermotes. If the sampled chat has no cheers, say so and try one more channel.
+
+**By hand (still not done):**
+- Settings › Download: the four new rows ("Chat as text: show the time each message was sent", "Saved chat: include badges", "Saved chat: high-resolution emotes", "Max download speed (MB/s)") read well in **all three themes** (Original, New, Coyote) and line up with the rows around them.
+- Open a `.chat.html` from #4 or #5 in a browser: Twitch and third-party emotes show, animated ones move, badges sit before names, overlay emotes sit on top of the emote before them, cheers show their amount.
+
+Report one table under this heading, plus the by-hand notes. Fix script problems in the script on `final`, commit by name, push, and say so. Don't change app code: report app failures with the log.
 
 ## PC RESULTS (DONE 2026-11-25, on the PC): chapters check and all five feature-branch checks PASS
 
@@ -20,7 +53,7 @@ The three script-fix commits are **pushed**: tl-info-chat b9881b7, third-party-e
 
 **Still open:** rerun `test-chat-extras.ps1` on a channel whose latest VOD is finished (and ideally has cheers) to confirm the high-res check and cover cheermotes. By hand, not done: branch 2's and 4's new Settings rows in all three themes, and branch 3's `.chat.html` in a browser (do the emotes show, do animated ones move). Note: tests run headless through `tl.exe`, so no app window opens.
 
-## NEXT PC RUN, PART 2 (2026-11-25): five feature branches, each with its own automated check
+## DONE: PC RUN PART 2 (2026-11-25): five feature branches, each with its own automated check
 
 Five more ideas, each on **its own branch from `final`** (not in `final` until they pass). Every one has a no-click check script that uses the shared `test-scripts\tl-test-lib.ps1`. Do **part 1 below first** (the chapters check on `final`), then these. For each branch, in this order:
 ```
@@ -44,7 +77,7 @@ Exit code 0 means all passed, 1 means a check failed, 2 means it couldn't run (t
 
 Also worth a look by hand while on each branch: branch 2's and 4's new Settings rows (readable in all three themes), and branch 3's `.chat.html` in a browser (the emotes show, and animated ones move).
 
-## NEXT PC RUN (2026-11-25): video details and game chapters on `final`, automated
+## DONE: PC RUN PART 1 (2026-11-25): video details and game chapters on `final`, automated
 
 Downloaded VODs now carry their title, channel, date and VOD link, plus **a chapter per game the streamer played**. VLC, Plex and Jellyfin show these. Chapters are cut to a cropped download. Clips and "keep the original stream" downloads skip it, because they don't go through ffmpeg.
 
