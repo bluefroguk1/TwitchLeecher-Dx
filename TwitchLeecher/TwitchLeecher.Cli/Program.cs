@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using TwitchLeecher.Core.Enums;
@@ -24,8 +26,9 @@ public static class Program
         Usage:
           tl search <channel> [--type broadcast|highlight|upload] [--last <n>]
           tl qualities <vod url or id>
+          tl info <vod url or id>
           tl download <vod url or id> [--quality <q>] [--from <time>] [--to <time>]
-                                      [--out <folder>] [--name <file name>]
+                                      [--out <folder>] [--name <file name>] [--chat <format>]
 
         --type     video type to list (default broadcast)
         --last     number of videos to list (default 10)
@@ -33,6 +36,9 @@ public static class Program
         --from/--to  crop, as h:mm:ss, m:ss or seconds
         --out      folder to save to (default: the download folder in Settings)
         --name     file name (default: the file name pattern in Settings)
+        --chat     also save the chat: text, html, html-emotes (emotes embedded) or json
+
+        info prints the video's details, qualities and game chapters as JSON.
 
         Uses the app's settings and Twitch sign-in: sign in once in Twitch Leecher first.
         Exit codes: 0 done, 1 failed, 2 wrong usage, 3 not signed in.
@@ -74,6 +80,7 @@ public static class Program
             {
                 "search" => Search(provider, target, options),
                 "qualities" => Qualities(provider, target),
+                "info" => Info(provider, target),
                 "download" => Download(provider, target, options),
                 _ => Usage($"Unknown command '{args[0]}'.")
             };
@@ -137,6 +144,48 @@ public static class Program
         return OK;
     }
 
+    private static int Info(IServiceProvider provider, string vod)
+    {
+        if (!TryGetVodId(vod, out string id))
+        {
+            return Usage($"'{vod}' is not a VOD URL or id.");
+        }
+
+        IApiService api = provider.GetRequiredService<IApiService>();
+        TwitchVideo video = api.Search(new SearchParameters(SearchType.Ids) { Ids = id }).FirstOrDefault();
+
+        if (video == null)
+        {
+            Console.Error.WriteLine($"VOD {id} not found.");
+            return FAILED;
+        }
+
+        TwitchVideoAuthInfo authInfo = api.GetVodAuthInfo(id);
+        // a sub-only VOD lists no qualities without a subscription
+        IEnumerable<TwitchVideoQuality> qualities = authInfo.SubOnly && !authInfo.Privileged
+            ? []
+            : api.GetPlaylistInfo(id, authInfo).Keys.OrderBy(q => q);
+
+        JsonObject info = new JsonObject
+        {
+            ["id"] = video.Id,
+            ["title"] = video.Title,
+            ["channel"] = video.Channel,
+            ["url"] = video.Url?.ToString(),
+            ["recordedDate"] = video.RecordedDate.ToString("o", CultureInfo.InvariantCulture),
+            ["lengthSeconds"] = (int)video.Length.TotalSeconds,
+            ["views"] = video.Views,
+            ["subOnly"] = authInfo.SubOnly,
+            ["qualities"] = new JsonArray(qualities.Select(q => (JsonNode)q.DisplayString).ToArray()),
+            ["chapters"] = new JsonArray(api.GetChapters(id)
+                .Select(c => (JsonNode)new JsonObject { ["startSeconds"] = (int)c.Start.TotalSeconds, ["game"] = c.Game })
+                .ToArray())
+        };
+
+        Console.WriteLine(info.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+        return OK;
+    }
+
     private static int Download(IServiceProvider provider, string vod, Dictionary<string, string> options)
     {
         if (!TryGetVodId(vod, out string id))
@@ -150,6 +199,25 @@ public static class Program
             options.TryGetValue("to", out string toStr) && !TryParseTime(toStr, out to))
         {
             return Usage("--from and --to take h:mm:ss, m:ss or seconds.");
+        }
+
+        ChatFormat? chat = null;
+
+        if (options.TryGetValue("chat", out string chatStr))
+        {
+            chat = chatStr.ToLowerInvariant() switch
+            {
+                "text" => ChatFormat.Text,
+                "html" => ChatFormat.Html,
+                "html-emotes" => ChatFormat.HtmlEmbedded,
+                "json" => ChatFormat.Json,
+                _ => null
+            };
+
+            if (chat == null)
+            {
+                return Usage("--chat takes text, html, html-emotes or json.");
+            }
         }
 
         IApiService api = provider.GetRequiredService<IApiService>();
@@ -199,7 +267,9 @@ public static class Program
             CropStart = from.HasValue,
             CropStartTime = from ?? TimeSpan.Zero,
             CropEnd = to.HasValue,
-            CropEndTime = to ?? video.Length
+            CropEndTime = to ?? video.Length,
+            DownloadChat = chat.HasValue,
+            ChatFormat = chat ?? ChatFormat.Text
         };
 
         downloadParams.Validate();
@@ -341,7 +411,7 @@ public static class Program
             return false;
         }
 
-        string[] known = ["type", "last", "quality", "from", "to", "out", "name"];
+        string[] known = ["type", "last", "quality", "from", "to", "out", "name", "chat"];
         string unknown = options.Keys.FirstOrDefault(k => !known.Contains(k, StringComparer.OrdinalIgnoreCase));
 
         if (unknown != null)
