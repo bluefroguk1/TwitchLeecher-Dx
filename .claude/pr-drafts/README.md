@@ -1,5 +1,14 @@
 ﻿# PR submission guide
 
+## Video details and game chapters (built 2026-11-25, idea from comparing another downloader)
+
+- **In `final`** (8db5f7d, CI green): `VideoMetadata.Build` writes an FFMETADATA1 file (title, artist = channel, date, comment = VOD link, a chapter per game, cut and shifted to the crop). `ApiService.GetChapters` uses the web player's persisted query `VideoPlayer_ChapterSelectButtonVideo` (anonymous; empty when the stream stayed on one game). `ProcessingService` adds it as a second ffmpeg input (`-map_metadata 1 -map_chapters 1`) on both the streamed and the merged-file paths. Failures leave the details out and never fail the download.
+- **Checked on the Mac with real ffmpeg:** escaping (`= ; # \`), three chapters on a full file, and correct trimming and shifting on a 0:12-0:25 crop.
+- **Automated PC check:** `test-scripts/test-video-metadata.ps1` (not run yet).
+- **No PR branch yet.** It uses the new JSON reader and HttpClient (`pr/system-text-json` on `pr/replace-webclient`), and touches the same `DownloadService` lines as #109, so cut it once those are in. Written from scratch: no code from other projects, and no mention of them.
+
+**Upgrade branch, after the PC run (2026-11-25):** all of R1-R16 passed except R14 (a `--minimized` start popped the window up on Avalonia 12.2). The PC fixed it in `MainWindow.OnSignedIn` (`signedIn && IsVisible`, ab41308), and the branch is rebased onto `final`. **Clean-up found:** no DataGrid is used anywhere any more, so `Avalonia.Controls.DataGrid` is an unused package (a small PR later, or fold it into the upgrade).
+
 ## .NET 11 + Avalonia 12.2.0: built 2026-11-24 on its own branch
 
 - **`upgrade/net11-avalonia12.2`** (ab41308, was 2fb84f7) = `final` (b4226ab) + two commits. The first: net11.0, Avalonia 12.2.0 (DataGrid/WebView stay on 12.1.2, as no 12.2 is out), DI and ProtectedData 11.0.0, CI on the .NET 11 SDK, and the old test scripts' `bin\Release\net11.0` paths. **Not in `final`**, by the user's choice, so it can't delay anything. The second commit (ab41308) is a one-condition code fix found by the PC run: on Avalonia 12.2 the main window's `Loaded` event runs while the window is still hidden, so the start-up token check raised the sign-in event and `MainWindow.OnSignedIn` showed a window that should stay in the tray (`--minimized`, the Windows startup entry). It now only acts when `IsVisible`. When re-cutting this PR on master, keep both commits' changes in the one upgrade commit.

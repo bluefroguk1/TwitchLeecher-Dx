@@ -2,6 +2,23 @@
 
 Updated **2026-11-23 (evening) on the Mac; PC test results added 2026-11-23 (late) on the PC (two automated runs and the .mp4 check, all passed)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
+## NEXT PC RUN (2026-11-25): video details and game chapters on `final`, automated
+
+Downloaded VODs now carry their title, channel, date and VOD link, plus **a chapter per game the streamer played**. VLC, Plex and Jellyfin show these. Chapters are cut to a cropped download. Clips and "keep the original stream" downloads skip it, because they don't go through ffmpeg.
+
+**Automated check, no clicking (about a minute):** on `final` (`git checkout final; git pull`, then a Release build), with the app signed in once:
+```
+powershell -ExecutionPolicy Bypass -File test-scripts\test-video-metadata.ps1
+```
+- It finds a public VOD with two game chapters (Twitch's own channel by default) and downloads two audio-only crops with `tl`: one across a game change, one inside a single game.
+- It reads the files back with the app's ffmpeg and checks the title, channel, date, link, chapter names and the change at about 60 s.
+- It prints a PASS/FAIL table. Exit code 0 means all passed, 1 means a check failed, 2 means it couldn't run (the message says why).
+- **The script was written on the Mac and has never run** (no PowerShell there). If it fails for a script reason, fix the script, commit it, and say so in the report.
+
+Report the table under this heading. Optional by hand: open a downloaded VOD in VLC (Playback › Chapter) and check the chapters and title.
+
+**Mac notes on the upgrade-branch run below (2026-11-25):** the R14 fix (ab41308) is reviewed and kept on the upgrade branch. The branch is rebased onto the newest `final`, so it now includes the chapters feature too. The unused DataGrid package is noted in the PR guide as a clean-up for later.
+
 ## PC RUN of the .NET 11 + Avalonia 12.2.0 branch (DONE 2026-11-23, late, on the PC): one regression found
 
 Run on `upgrade/net11-avalonia12.2` at 7ce4d3f (= `final` b4226ab plus one commit; the hash in the instructions below, 2fb84f7, is an earlier version of it). The .NET 11 SDK (11.0.100) was installed on the PC with winget; the build had 0 errors and 18 warnings, version 4.0.0, Avalonia 12.2.0. `Backup`/`Restore` worked and the sign-in survived. Afterwards the PC went back to `final` and rebuilt it (the `net11.0` output folders were deleted so the helper cannot pick them up).
