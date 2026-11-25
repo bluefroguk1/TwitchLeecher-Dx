@@ -26,6 +26,9 @@ namespace TwitchLeecher.Services.Interfaces
 
         TwitchStoryboard GetStoryboard(string vodId);
 
+        // the stream's game changes; empty when it stayed on one game
+        List<(TimeSpan Start, string Game)> GetChapters(string vodId);
+
         List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to, Action<TimeSpan> onPage);
 
         bool ChannelExists(string channel);

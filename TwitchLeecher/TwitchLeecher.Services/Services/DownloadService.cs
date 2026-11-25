@@ -287,6 +287,8 @@ namespace TwitchLeecher.Services.Services
 
                             IEnumerable<string> processingWarnings;
 
+                            string metadataFile = disableConversion ? null : WriteMetadata(log, downloadParams, tempDir);
+
                             // shortcut: crop-start needs input-side -ss, which cannot seek on a pipe, so it keeps the
                             // merged temp file; revisit if ffmpeg gains seekable stdin or crop-start moves to output -ss
                             if (!disableConversion && !cropInfo.CropStart)
@@ -295,7 +297,7 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     processingWarnings = _processingService.ConvertParts(log, setStatus, setProgress,
-                                        setIsIndeterminate, vodPlaylist, outputFile, cropInfo, cancellationToken);
+                                        setIsIndeterminate, vodPlaylist, outputFile, cropInfo, cancellationToken, metadataFile);
                                 }
                                 catch (Exception ex) when (ex is not OperationCanceledException && keepTsOnFailure)
                                 {
@@ -320,7 +322,7 @@ namespace TwitchLeecher.Services.Services
                                     try
                                     {
                                         _processingService.ConvertVideo(log, setStatus, setProgress, setIsIndeterminate,
-                                            concatFile, outputFile, cropInfo);
+                                            concatFile, outputFile, cropInfo, metadataFile);
                                     }
                                     catch (Exception) when (keepTsOnFailure && File.Exists(concatFile))
                                     {
@@ -567,6 +569,28 @@ namespace TwitchLeecher.Services.Services
         }
 
         /// <summary>Moves the joined but unconverted .ts next to the wanted output, so a failed conversion loses nothing.</summary>
+        // Title, channel, date and game chapters for the video file. It is only a nicety, so any failure just leaves it out.
+        private string WriteMetadata(Action<string> log, DownloadParameters downloadParams, string tempDir)
+        {
+            try
+            {
+                TimeSpan from = downloadParams.CropStart ? downloadParams.CropStartTime : TimeSpan.Zero;
+                TimeSpan to = downloadParams.CropEnd ? downloadParams.CropEndTime : downloadParams.Video.Length;
+                List<(TimeSpan Start, string Game)> chapters = _apiService.GetChapters(downloadParams.Video.Id);
+
+                string metadataFile = Path.Combine(tempDir, "metadata.txt");
+                File.WriteAllText(metadataFile, VideoMetadata.Build(downloadParams.Video, chapters, from, to));
+
+                log(Environment.NewLine + Environment.NewLine + "Video details prepared (" + chapters.Count + " game chapters on Twitch)");
+                return metadataFile;
+            }
+            catch (Exception ex)
+            {
+                log(Environment.NewLine + Environment.NewLine + "Video details left out: " + ex.Message);
+                return null;
+            }
+        }
+
         private static bool KeepConcatFile(string concatFile, string outputFile, Action<string> log)
         {
             try

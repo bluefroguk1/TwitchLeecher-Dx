@@ -29,6 +29,9 @@ namespace TwitchLeecher.Services.Services
 
         // persisted query the Twitch web player uses to page through VOD chat
         private const string CHAT_OPERATION = "VideoCommentsByOffsetOrCursor";
+        // persisted query the Twitch web player uses for a video's chapters (its game changes)
+        private const string CHAPTERS_OPERATION = "VideoPlayer_ChapterSelectButtonVideo";
+        private const string CHAPTERS_QUERY_HASH = "71835d5ef425e154bf282453a926d99b328cdc5e32f36d3a209d0f4778b41203";
         private const string CHAT_QUERY_HASH = "b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a";
         private const string AUTH_URL = "https://id.twitch.tv/oauth2/validate";
         private const string REVOKE_URL = "https://id.twitch.tv/oauth2/revoke";
@@ -1129,6 +1132,41 @@ namespace TwitchLeecher.Services.Services
         // Pages by time offset only: Twitch rejects cursor paging without a browser integrity token.
         // Chat pages come one at a time per position, so a long VOD means thousands of requests in a row.
         // Split the range into parallel segments (whole seconds, no overlap) and merge them in order.
+        public List<(TimeSpan Start, string Game)> GetChapters(string vodId)
+        {
+            var chapters = new List<(TimeSpan Start, string Game)>();
+
+            if (string.IsNullOrEmpty(vodId) || !vodId.All(char.IsAsciiDigit))
+            {
+                return chapters;
+            }
+
+            using (HttpRequestClient webClient = CreateGqlWebClient())
+            {
+                string request = new JsonObject
+                {
+                    ["operationName"] = CHAPTERS_OPERATION,
+                    ["variables"] = new JsonObject { ["videoID"] = vodId },
+                    ["extensions"] = new JsonObject
+                    {
+                        ["persistedQuery"] = new JsonObject { ["version"] = 1, ["sha256Hash"] = CHAPTERS_QUERY_HASH }
+                    }
+                }.ToJsonString();
+
+                JsonArray edges = JsonNodeExtensions.ParseObject(webClient.UploadString(GQL_URL, request))
+                    .SelectToken("$.data.video.moments.edges") as JsonArray;
+
+                foreach (JsonNode edge in edges ?? new JsonArray())
+                {
+                    JsonNode node = edge?["node"];
+                    string game = node.SelectToken("$.details.game.displayName")?.Value<string>() ?? node.Value<string>("description");
+                    chapters.Add((TimeSpan.FromMilliseconds(node.Value<double>("positionMilliseconds")), game ?? "Chapter"));
+                }
+            }
+
+            return chapters;
+        }
+
         public List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to,
             Action<TimeSpan> onPage)
         {

@@ -91,14 +91,14 @@ namespace TwitchLeecher.Services.Services
 
 
         public void ConvertVideo(Action<string> log, Action<string> setStatus, Action<double> setProgress,
-            Action<bool> setIsIndeterminate, string sourceFile, string outputFile, CropInfo cropInfo)
+            Action<bool> setIsIndeterminate, string sourceFile, string outputFile, CropInfo cropInfo, string metadataFile = null)
         {
-            RunFfmpeg(log, setStatus, setProgress, setIsIndeterminate, sourceFile, outputFile, cropInfo, null);
+            RunFfmpeg(log, setStatus, setProgress, setIsIndeterminate, sourceFile, outputFile, cropInfo, null, metadataFile: metadataFile);
         }
 
         public IEnumerable<string> ConvertParts(Action<string> log, Action<string> setStatus,
             Action<double> setProgress, Action<bool> setIsIndeterminate, TwitchPlaylist vodPlaylist,
-            string outputFile, CropInfo cropInfo, CancellationToken cancellationToken)
+            string outputFile, CropInfo cropInfo, CancellationToken cancellationToken, string metadataFile = null)
         {
             // Streams init segment + chunks (the exact bytes ConcatParts would write) into ffmpeg's stdin, so no
             // merged intermediate file is needed. stdin is not seekable, so the input-side -ss used for CropStart
@@ -149,7 +149,7 @@ namespace TwitchLeecher.Services.Services
                         return;
                     }
                 }
-            }, cancellationToken);
+            }, cancellationToken, metadataFile);
 
             return warnings;
         }
@@ -497,7 +497,7 @@ namespace TwitchLeecher.Services.Services
 
         private void RunFfmpeg(Action<string> log, Action<string> setStatus, Action<double> setProgress,
             Action<bool> setIsIndeterminate, string sourceFile, string outputFile, CropInfo cropInfo,
-            Action<Stream> feedStdin, CancellationToken cancellationToken = default)
+            Action<Stream> feedStdin, CancellationToken cancellationToken = default, string metadataFile = null)
         {
             bool piped = feedStdin != null;
 
@@ -530,6 +530,17 @@ namespace TwitchLeecher.Services.Services
 
             psi.ArgumentList.Add("-i");
             psi.ArgumentList.Add(piped ? "pipe:0" : sourceFile);
+
+            if (metadataFile != null)
+            {
+                // title, channel, date and chapters come from this second input; the streams still come from the first
+                psi.ArgumentList.Add("-i");
+                psi.ArgumentList.Add(metadataFile);
+                psi.ArgumentList.Add("-map_metadata");
+                psi.ArgumentList.Add("1");
+                psi.ArgumentList.Add("-map_chapters");
+                psi.ArgumentList.Add("1");
+            }
             psi.ArgumentList.Add("-analyzeduration");
             psi.ArgumentList.Add(int.MaxValue.ToString(CultureInfo.InvariantCulture));
             psi.ArgumentList.Add("-probesize");
