@@ -57,6 +57,7 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_CHATREALTIME_EL = "ChatRealTime";
         private const string DOWNLOAD_CHATBADGES_EL = "ChatBadges";
         private const string DOWNLOAD_CHATHIGHRES_EL = "ChatHighResEmotes";
+        private const string DOWNLOAD_MAXSPEED_EL = "MaxSpeed";
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
         private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
         private const string DOWNLOAD_COMPRESS_EL = "Compress";
@@ -298,6 +299,10 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadChatHighResEl = new XElement(DOWNLOAD_CHATHIGHRES_EL);
                 downloadChatHighResEl.SetValue(preferences.DownloadChatHighResEmotes);
                 downloadEl.Add(downloadChatHighResEl);
+
+                XElement downloadMaxSpeedEl = new XElement(DOWNLOAD_MAXSPEED_EL);
+                downloadMaxSpeedEl.SetValue(preferences.DownloadMaxSpeed);
+                downloadEl.Add(downloadMaxSpeedEl);
 
                 XElement downloadDisableConversionEl = new XElement(DOWNLOAD_DISABLECONVERSION_EL);
                 downloadDisableConversionEl.SetValue(preferences.DownloadDisableConversion);
@@ -773,6 +778,20 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     preferences.DownloadChatHighResEmotes = downloadChatHighResEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadMaxSpeedEl = downloadEl.Element(DOWNLOAD_MAXSPEED_EL);
+
+                            if (downloadMaxSpeedEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadMaxSpeed = Math.Max(0, downloadMaxSpeedEl.GetValueAsInt());
                                 }
                                 catch
                                 {

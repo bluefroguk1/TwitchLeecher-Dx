@@ -647,6 +647,13 @@
                             <TextBlock Classes="sub"
                                        Text="More can be faster but may crash on some networks. Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
                         </StackPanel>
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="MAX DOWNLOAD SPEED (MB/S)" />
+                            <NumericUpDown Minimum="0" Maximum="1000" Width="110" HorizontalAlignment="Left"
+                                           Value="{Binding CurrentPreferences.DownloadMaxSpeed}" />
+                            <TextBlock Classes="sub"
+                                       Text="For all downloads together, so they leave room for other things on your connection. 0 = no limit." />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
