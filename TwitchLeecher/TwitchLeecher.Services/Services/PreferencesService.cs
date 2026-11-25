@@ -55,6 +55,8 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_REMOVECOMPLETED_EL = "RemoveCompleted";
         private const string DOWNLOAD_KEEPTSONFAILURE_EL = "KeepTsOnFailure";
         private const string DOWNLOAD_CHATREALTIME_EL = "ChatRealTime";
+        private const string DOWNLOAD_CHATBADGES_EL = "ChatBadges";
+        private const string DOWNLOAD_CHATHIGHRES_EL = "ChatHighResEmotes";
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
         private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
         private const string DOWNLOAD_COMPRESS_EL = "Compress";
@@ -288,6 +290,14 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadChatRealTimeEl = new XElement(DOWNLOAD_CHATREALTIME_EL);
                 downloadChatRealTimeEl.SetValue(preferences.DownloadChatRealTime);
                 downloadEl.Add(downloadChatRealTimeEl);
+
+                XElement downloadChatBadgesEl = new XElement(DOWNLOAD_CHATBADGES_EL);
+                downloadChatBadgesEl.SetValue(preferences.DownloadChatBadges);
+                downloadEl.Add(downloadChatBadgesEl);
+
+                XElement downloadChatHighResEl = new XElement(DOWNLOAD_CHATHIGHRES_EL);
+                downloadChatHighResEl.SetValue(preferences.DownloadChatHighResEmotes);
+                downloadEl.Add(downloadChatHighResEl);
 
                 XElement downloadDisableConversionEl = new XElement(DOWNLOAD_DISABLECONVERSION_EL);
                 downloadDisableConversionEl.SetValue(preferences.DownloadDisableConversion);
@@ -742,6 +752,34 @@ namespace TwitchLeecher.Services.Services
                                 }
                             }
 
+                            XElement downloadChatBadgesEl = downloadEl.Element(DOWNLOAD_CHATBADGES_EL);
+
+                            if (downloadChatBadgesEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadChatBadges = downloadChatBadgesEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadChatHighResEl = downloadEl.Element(DOWNLOAD_CHATHIGHRES_EL);
+
+                            if (downloadChatHighResEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadChatHighResEmotes = downloadChatHighResEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
                             XElement donwloadRemoveCompletedEl = downloadEl.Element(DOWNLOAD_REMOVECOMPLETED_EL);
 
                             if (donwloadRemoveCompletedEl != null)
@@ -975,6 +1013,8 @@ namespace TwitchLeecher.Services.Services
                 DownloadDefaultQuality = Preferences.DefaultQualities.First(),
                 DownloadRemoveCompleted = false,
                 DownloadKeepTsOnFailure = true,
+                DownloadChatBadges = true,
+                DownloadChatHighResEmotes = false,
                 DownloadDisableConversion = false,
                 DownloadQuickDownload = false,
                 ScheduleEnabled = false,
