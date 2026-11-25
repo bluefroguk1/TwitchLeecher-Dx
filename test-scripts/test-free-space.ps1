@@ -50,9 +50,11 @@ try {
     else {
         New-Item -ItemType Directory -Force -Path $target | Out-Null
         $errFile = Join-Path $work 'stderr.txt'
-        $p = Start-Process -FilePath $tl -ArgumentList @('download', $long.id, '--quality', 'source', '--out', "`"$target`"", '--name', 'too-big.mp4') `
+        $eap = $ErrorActionPreference; $ErrorActionPreference = 'Continue'; $probe = (& $tl download $long.id --quality zzz --out $work 2>&1 | Out-String); $ErrorActionPreference = $eap
+        $topQ = if ($probe -match 'This VOD has: ([^\s,]+)') { $Matches[1] } else { 'source' }
+        $p = Start-Process -FilePath $tl -ArgumentList @('download', $long.id, '--quality', $topQ, '--out', "`"$target`"", '--name', 'too-big.mp4') `
             -RedirectStandardError $errFile -RedirectStandardOutput (Join-Path $work 'stdout.txt') -NoNewWindow -PassThru
-        $stopped = $p.WaitForExit(60000)
+        $null = $p.Handle; $stopped = $p.WaitForExit(60000); if ($stopped) { $p.WaitForExit() }
         if (-not $stopped) { Stop-Process -Id $p.Id -Force; Start-Sleep 2 }
         $err = Get-Content -Raw -ErrorAction SilentlyContinue $errFile
         $written = (Get-ChildItem $target -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
