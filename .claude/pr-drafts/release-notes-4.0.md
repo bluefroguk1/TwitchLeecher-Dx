@@ -22,11 +22,13 @@ Nothing below this comment block is sent as-is without the user's OK.
 * Start with Windows, minimise to the tray
 * Search and download clips (#37)
 * Save chat as a web page with emotes, or JSON (#71), and VOD details as JSON (#50)
+* Saved chat shows BetterTTV, FrankerFaceZ and 7TV emotes, badges and cheers, with an option for sharper emotes
+* Chat as text can show the time each message was sent
 * Compress videos after download, using the graphics card when available
 * Quick download and multi-select download (#96)
 * Favourites as the default search (#86), plus a favourite star on each channel
 * HEVC/AV1 qualities (#48), and an estimated download size (#35)
-* A command-line tool, `tl` (#36)
+* A command-line tool, `tl` (#36), which can also print a VOD's details and save its chat
 * Downloaded VODs carry their title, channel and date, plus a chapter for each game played
 
 **Downloads**
@@ -34,6 +36,8 @@ Nothing below this comment block is sent as-is without the user's OK.
 * Speed, time left and pause for each download
 * Keep the unconverted .ts if conversion fails, which can be turned off (#49)
 * Open folder for every download (#85)
+* An optional maximum download speed
+* Downloads stop straight away when a drive doesn't have room for them
 * With conversion off, newer VODs can be saved as .mp4 (they are MP4 inside)
 
 **Fixes**
@@ -78,7 +82,6 @@ Nothing below this comment block is sent as-is without the user's OK.
 **Full Changelog**: https://github.com/schneidermanuel/TwitchLeecher-Dx/compare/v3.9.1...v4.0.0
 
 <!--
-Pending branches, add their lines when merged: tl info and --chat; chat text real-time timestamps; BTTV/FFZ/7TV emotes, badges, overlay emotes and cheermotes in HTML chat (badges and high-res options); max download speed; free-space check.
 Map: line -> PR (x = merged upstream)
 [x] ffmpeg 9.0.2 -> #110 | [x] streamed into ffmpeg -> #111 | [x] stay on search -> #112 | [x] scroll position -> #113
 [x] perf (rate limit, log, thumbnails) -> #114 #115 #116 | [x] VOD info -> #117 | [x] favourites default -> #118 | [x] size estimate -> #119
@@ -86,5 +89,5 @@ Map: line -> PR (x = merged upstream)
 [ ] second launch -> #121 | [ ] draggable dialogs -> #122 | [ ] Avalonia 11.3.23 -> #123 | [ ] unused packages -> #124 | [ ] GitHub Actions -> #125 | [ ] DBus pin -> #126 | [ ] Open folder -> #127
 [ ] UI refresh: theme colours, dark inputs, header, search sidebar, downloads queue, in-app sign-in -> Wave 2
 [ ] results toolbar (favourite star), download dialog, settings, Coyote, chat export (HTML/JSON), compress, tray, start with Windows, watched searches, schedule, perf follow-ups -> Wave 3
-[ ] Ninject, ReactiveUI, icons, Native AOT, Avalonia 12, tl CLI -> last wave | [ ] fewer pop-ups -> remove-popups | [ ] What's new card -> whats-new | [ ] HttpClient (#31) -> replace-webclient | [ ] System.Text.Json -> system-text-json | [ ] .mp4 when unconverted -> fix-mp4-unconverted | [ ] update check -> #128 | [ ] video details and chapters -> (not cut yet)
+[ ] Ninject, ReactiveUI, icons, Native AOT, Avalonia 12, tl CLI -> last wave | [ ] fewer pop-ups -> remove-popups | [ ] What's new card -> whats-new | [ ] HttpClient (#31) -> replace-webclient | [ ] System.Text.Json -> system-text-json | [ ] .mp4 when unconverted -> fix-mp4-unconverted | [ ] update check -> #128 | [ ] video details and chapters, tl info/--chat, real-time chat, chat extras, speed limit, free-space check -> (in final, not cut yet)
 -->
