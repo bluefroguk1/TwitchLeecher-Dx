@@ -27,7 +27,7 @@ try {
     Check 'info: length' ([math]::Abs($info.lengthSeconds - $vod.lengthSeconds) -le 2) "$($info.lengthSeconds) s (Twitch says $($vod.lengthSeconds))"
     Check 'info: qualities listed' (@($info.qualities).Count -ge 1) "$(@($info.qualities) -join ', ')"
     Check 'info: game chapters' (@($info.chapters).Count -eq $pick.Edges.Count) "$(@($info.chapters).Count) chapters, Twitch has $($pick.Edges.Count)"
-    Check 'info: recorded date is a date' ($info.recordedDate -as [datetime]) "'$($info.recordedDate)'"
+    Check 'info: recorded date is a date' ([bool]($info.recordedDate -as [datetime])) "'$($info.recordedDate)'"
 
     $bad = Invoke-Tl @('info', 'not-a-vod')
     Check 'info with a bad id exits 2' ($bad.Code -eq 2) "exit $($bad.Code)"
