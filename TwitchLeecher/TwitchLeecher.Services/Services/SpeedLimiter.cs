@@ -4,13 +4,13 @@ using System.Threading;
 namespace TwitchLeecher.Services.Services
 {
     // Keeps the total download speed of all downloads together under a limit, by making each finished chunk wait
-    // until the time it would have taken at that speed. It evens out over a few chunks, not within one.
+    // until the time it would have taken at that speed, counted from when it started. It evens out over a few chunks.
     internal sealed class SpeedLimiter
     {
         private readonly object _lock = new object();
         private DateTime _free = DateTime.MinValue;
 
-        public void Wait(long bytes, int megabytesPerSecond, CancellationToken cancellationToken)
+        public void Wait(long bytes, int megabytesPerSecond, DateTime startedUtc, CancellationToken cancellationToken)
         {
             if (megabytesPerSecond <= 0 || bytes <= 0)
             {
@@ -23,10 +23,10 @@ namespace TwitchLeecher.Services.Services
             {
                 DateTime now = DateTime.UtcNow;
 
-                // time already spent idle doesn't count as credit for a burst
-                if (_free < now)
+                // the chunk's own download time counts towards its share; earlier idle time is no credit for a burst
+                if (_free < startedUtc)
                 {
-                    _free = now;
+                    _free = startedUtc;
                 }
 
                 _free += TimeSpan.FromSeconds(bytes / (megabytesPerSecond * 1024.0 * 1024.0));

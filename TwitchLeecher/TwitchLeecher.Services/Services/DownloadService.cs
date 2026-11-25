@@ -799,11 +799,12 @@ namespace TwitchLeecher.Services.Services
                     {
                         try
                         {
+                            DateTime started = DateTime.UtcNow;
                             // the token aborts requests that are in flight, so cancel and pause don't wait for them
                             byte[] bytes = _httpClient.GetByteArrayAsync(part.RemoteFile, cancellationToken)
                                 .GetAwaiter().GetResult();
 
-                            _speedLimiter.Wait(bytes.Length, _preferencesService.CurrentPreferences.DownloadMaxSpeed, cancellationToken);
+                            _speedLimiter.Wait(bytes.Length, _preferencesService.CurrentPreferences.DownloadMaxSpeed, started, cancellationToken);
 
                             // Write then rename, so a chunk file on disk is always complete (resume trusts it).
                             string partFile = part.LocalFile + ".part";
@@ -980,7 +981,7 @@ namespace TwitchLeecher.Services.Services
                     bool embed = downloadParams.ChatFormat == ChatFormat.HtmlEmbedded;
                     bool highRes = prefs.DownloadChatHighResEmotes;
                     Dictionary<string, string> emoteSources = embed ? DownloadEmotes(messages, log, cancellationToken, highRes) : null;
-                    ChatExtras extras = GetChatExtras(downloadParams.Video.Channel, messages, embed, prefs.DownloadChatBadges,
+                    ChatExtras extras = GetChatExtras(downloadParams.Video.Id, messages, embed, prefs.DownloadChatBadges,
                         highRes, log, cancellationToken);
 
                     File.WriteAllText(chatFile,
@@ -1126,14 +1127,14 @@ namespace TwitchLeecher.Services.Services
 
         // The BTTV/FFZ/7TV emotes, badges and cheermotes this chat uses, embedded as data: URIs like the Twitch emotes
         // when asked. Extras are optional: a failed list or image just leaves those words as text, never loses the chat.
-        private ChatExtras GetChatExtras(string channel, List<TwitchChatMessage> messages, bool embed, bool badges,
+        private ChatExtras GetChatExtras(string vodId, List<TwitchChatMessage> messages, bool embed, bool badges,
             bool highRes, Action<string> log, CancellationToken cancellationToken)
         {
             ChatExtras all;
 
             try
             {
-                all = _apiService.GetChatExtras(channel, highRes);
+                all = _apiService.GetChatExtras(vodId, highRes);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

@@ -291,6 +291,7 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadChatRealTimeEl = new XElement(DOWNLOAD_CHATREALTIME_EL);
                 downloadChatRealTimeEl.SetValue(preferences.DownloadChatRealTime);
                 downloadEl.Add(downloadChatRealTimeEl);
+
                 XElement downloadChatBadgesEl = new XElement(DOWNLOAD_CHATBADGES_EL);
                 downloadChatBadgesEl.SetValue(preferences.DownloadChatBadges);
                 downloadEl.Add(downloadChatBadgesEl);
@@ -298,6 +299,7 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadChatHighResEl = new XElement(DOWNLOAD_CHATHIGHRES_EL);
                 downloadChatHighResEl.SetValue(preferences.DownloadChatHighResEmotes);
                 downloadEl.Add(downloadChatHighResEl);
+
                 XElement downloadMaxSpeedEl = new XElement(DOWNLOAD_MAXSPEED_EL);
                 downloadMaxSpeedEl.SetValue(preferences.DownloadMaxSpeed);
                 downloadEl.Add(downloadMaxSpeedEl);

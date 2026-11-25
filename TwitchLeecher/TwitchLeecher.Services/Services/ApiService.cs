@@ -1175,10 +1175,10 @@ namespace TwitchLeecher.Services.Services
 
         // Global lists first, then the channel's own, which win on a clash. Every list is optional: one that fails,
         // or a channel a provider doesn't know (404), is simply skipped.
-        public ChatExtras GetChatExtras(string channel, bool highRes)
+        public ChatExtras GetChatExtras(string vodId, bool highRes)
         {
             ChatExtras extras = new ChatExtras();
-            string channelId = string.IsNullOrWhiteSpace(channel) ? null : GetChannelIdByName(channel);
+            string channelId = null;
 
             void Put(string code, string url, bool overlay)
             {
@@ -1320,7 +1320,13 @@ namespace TwitchLeecher.Services.Services
             ReadGql("query{cheerConfig{displayConfig{colors{bits color}} groups{templateURL nodes{prefix tiers{bits}}}}}",
                 d => Cheers(d.SelectToken("$.cheerConfig.groups"), d.SelectToken("$.cheerConfig.displayConfig.colors")));
 
-            if (channelId != null && channelId.All(char.IsAsciiDigit))
+            // the VOD's owner id: display names can't be looked up as logins (e.g. Japanese or Korean names)
+            if (!string.IsNullOrEmpty(vodId) && vodId.All(char.IsAsciiDigit))
+            {
+                ReadGql("query{video(id:\"" + vodId + "\"){owner{id}}}", d => channelId = d.SelectToken("$.video.owner.id")?.Value<string>());
+            }
+
+            if (!string.IsNullOrEmpty(channelId) && channelId.All(char.IsAsciiDigit))
             {
                 Read("https://api.frankerfacez.com/v1/room/id/" + channelId, d => Ffz(d["sets"], null));
                 Read("https://api.betterttv.net/3/cached/users/twitch/" + channelId, d =>

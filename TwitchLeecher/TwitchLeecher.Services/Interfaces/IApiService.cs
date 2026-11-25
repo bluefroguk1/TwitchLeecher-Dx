@@ -29,8 +29,8 @@ namespace TwitchLeecher.Services.Interfaces
         // the stream's game changes; empty when it stayed on one game
         List<(TimeSpan Start, string Game)> GetChapters(string vodId);
 
-        // BTTV/FFZ/7TV emotes, badges and cheermotes for a channel; highRes picks each provider's largest images
-        ChatExtras GetChatExtras(string channel, bool highRes);
+        // BTTV/FFZ/7TV emotes, badges and cheermotes for the VOD's channel; highRes picks each provider's largest images
+        ChatExtras GetChatExtras(string vodId, bool highRes);
 
         List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to, Action<TimeSpan> onPage);
 

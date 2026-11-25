@@ -75,9 +75,11 @@ namespace TwitchLeecher.Core.Models
         private bool _downloadKeepTsOnFailure;
 
         private bool _downloadChatRealTime;
+
         private bool _downloadChatBadges;
 
         private bool _downloadChatHighResEmotes;
+
         private int _downloadMaxSpeed;
 
         private bool _downloadDisableConversion;
