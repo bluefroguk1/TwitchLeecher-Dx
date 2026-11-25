@@ -54,6 +54,7 @@ namespace TwitchLeecher.Services.Services
         private const string DOWNLOAD_SUBFOLDERSFORFAV_EL = "SubfoldersForFav";
         private const string DOWNLOAD_REMOVECOMPLETED_EL = "RemoveCompleted";
         private const string DOWNLOAD_KEEPTSONFAILURE_EL = "KeepTsOnFailure";
+        private const string DOWNLOAD_CHATREALTIME_EL = "ChatRealTime";
         private const string DOWNLOAD_DISABLECONVERSION_EL = "DisableConversion";
         private const string DOWNLOAD_QUICKDOWNLOAD_EL = "QuickDownload";
         private const string DOWNLOAD_COMPRESS_EL = "Compress";
@@ -283,6 +284,10 @@ namespace TwitchLeecher.Services.Services
                 XElement downloadKeepTsOnFailureEl = new XElement(DOWNLOAD_KEEPTSONFAILURE_EL);
                 downloadKeepTsOnFailureEl.SetValue(preferences.DownloadKeepTsOnFailure);
                 downloadEl.Add(downloadKeepTsOnFailureEl);
+
+                XElement downloadChatRealTimeEl = new XElement(DOWNLOAD_CHATREALTIME_EL);
+                downloadChatRealTimeEl.SetValue(preferences.DownloadChatRealTime);
+                downloadEl.Add(downloadChatRealTimeEl);
 
                 XElement downloadDisableConversionEl = new XElement(DOWNLOAD_DISABLECONVERSION_EL);
                 downloadDisableConversionEl.SetValue(preferences.DownloadDisableConversion);
@@ -716,6 +721,20 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     preferences.DownloadKeepTsOnFailure = downloadKeepTsOnFailureEl.GetValueAsBool();
+                                }
+                                catch
+                                {
+                                    // Value from config file could not be loaded, use default value
+                                }
+                            }
+
+                            XElement downloadChatRealTimeEl = downloadEl.Element(DOWNLOAD_CHATREALTIME_EL);
+
+                            if (downloadChatRealTimeEl != null)
+                            {
+                                try
+                                {
+                                    preferences.DownloadChatRealTime = downloadChatRealTimeEl.GetValueAsBool();
                                 }
                                 catch
                                 {
