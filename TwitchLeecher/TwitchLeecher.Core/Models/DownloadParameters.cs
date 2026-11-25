@@ -266,18 +266,25 @@ namespace TwitchLeecher.Core.Models
         }
 
         // shortcut: BANDWIDTH is the playlist's advertised (peak) bitrate, so real files are usually somewhat smaller, and container overhead is ignored; upgrade by summing real segment sizes (HEAD requests) if accuracy matters
-        public string EstimatedSizeStr
+        public long EstimatedSizeBytes
         {
             get
             {
                 long bandwidth = _selectedQuality?.Bandwidth ?? 0;
+                return bandwidth <= 0 ? 0 : (long)(bandwidth / 8.0 * CroppedLength.TotalSeconds);
+            }
+        }
 
-                if (bandwidth <= 0)
+        public string EstimatedSizeStr
+        {
+            get
+            {
+                if (EstimatedSizeBytes <= 0)
                 {
                     return "unknown";
                 }
 
-                double bytes = bandwidth / 8.0 * CroppedLength.TotalSeconds;
+                double bytes = EstimatedSizeBytes;
                 string[] units = { "B", "KB", "MB", "GB", "TB" };
                 int unit = 0;
 

@@ -271,6 +271,9 @@ namespace TwitchLeecher.Services.Services
 
                             cancellationToken.ThrowIfCancellationRequested();
 
+                            stage = "Not enough disk space";
+                            CheckFreeSpace(log, downloadParams, tempDir, outputFile);
+
                             stage = "Network error";
                             var downloadWarnings = DownloadParts(log, setStatus, setProgress, download, vodPlaylist,
                                 cancellationToken);
@@ -1102,6 +1105,63 @@ namespace TwitchLeecher.Services.Services
             }
 
             return sources;
+        }
+
+        // Fails early, before any chunk is downloaded, when a drive can't hold the download: the chunks on the temp
+        // drive and the finished file on the output drive (twice on one drive when they share it). An unknown size passes;
+        // the estimate uses the peak bitrate, so it errs on the large side.
+        private static void CheckFreeSpace(Action<string> log, DownloadParameters downloadParams, string tempDir, string outputFile)
+        {
+            long size = downloadParams.EstimatedSizeBytes;
+            DriveInfo tempDrive = DriveOf(tempDir);
+            DriveInfo outputDrive = DriveOf(outputFile);
+
+            if (size <= 0 || tempDrive == null || outputDrive == null)
+            {
+                return;
+            }
+
+            var needed = new Dictionary<string, (DriveInfo Drive, long Bytes)>();
+            needed[tempDrive.Name] = (tempDrive, size);
+            needed[outputDrive.Name] = (outputDrive, (needed.TryGetValue(outputDrive.Name, out var already) ? already.Bytes : 0) + size);
+
+            foreach ((DriveInfo drive, long bytes) in needed.Values)
+            {
+                long free = drive.AvailableFreeSpace;
+                log(Environment.NewLine + Environment.NewLine + "Free space on " + drive.Name + ": about " + Gigabytes(bytes) +
+                    " needed, " + Gigabytes(free) + " free");
+
+                if (free < bytes)
+                {
+                    throw new ApplicationException("Not enough free space on " + drive.Name + " for this download: it needs about " +
+                                                   Gigabytes(bytes) + ", and " + Gigabytes(free) + " is free.");
+                }
+            }
+        }
+
+        // the most specific mounted drive holding the path (on Linux "/" is rarely the right answer on its own)
+        private static DriveInfo DriveOf(string path)
+        {
+            try
+            {
+                string full = Path.GetFullPath(path);
+                StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+                return DriveInfo.GetDrives()
+                    .Where(d => d.IsReady && full.StartsWith(d.RootDirectory.FullName, comparison))
+                    .OrderByDescending(d => d.RootDirectory.FullName.Length)
+                    .FirstOrDefault();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // can't tell which drive: let the download go ahead rather than block it
+                return null;
+            }
+        }
+
+        private static string Gigabytes(long bytes)
+        {
+            return (bytes / 1024.0 / 1024.0 / 1024.0).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " GB";
         }
 
         private void CleanUp(string directory, Action<string> log)
