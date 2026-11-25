@@ -1,6 +1,6 @@
 ﻿# PR submission guide
 
-## Five more features: MERGED into `final` 2026-11-25 (efcba94, CI green on Windows and Linux)
+## Five more features: MERGED into `final` 2026-11-25 (efcba94, CI green on Windows and Linux) and PC-tested on merged `final` (all 7 scripts PASS, 532662e)
 
 All passed their automated PC checks (results at the top of `.claude/handoffs/LATEST.md`), then were merged in this order: tl-info-chat, chat-real-time, third-party-emotes (with the chat extras), speed-limit, free-space-check. The settings conflicts (all four add a row next to "Keep the unconverted video") were additive and kept both sides. Each feature is wired in once in `DownloadService` (checked after the merge). The feature branches are deleted; copies are at `refs/archive/feature/*` on the fork.
 - **tl info / --chat:** `tl info <vod>` prints JSON (details, qualities, chapters); `tl download --chat text|html|html-emotes|json`. README updated.
@@ -9,7 +9,7 @@ All passed their automated PC checks (results at the top of `.claude/handoffs/LA
 - **Speed limit:** `DownloadMaxSpeed` (MB/s, 0 = off), shared `SpeedLimiter` after each chunk.
 - **Free-space check:** `DownloadParameters.EstimatedSizeBytes`; `CheckFreeSpace` before any chunk (temp + output drive, most specific mount; unknown passes).
 - **Code review 2026-11-25 (ab9b5a5):** two fixes. The speed limit counts each chunk's own download time (it undershot: 1.6 MB/s at a 2 MB/s limit), and chat extras find the channel by the VOD's owner id, not by display name (non-Latin display names found no channel emotes). Known limits, left as they are: the free-space estimate uses the peak bitrate and counts already-downloaded chunks again on a resume (both err on the safe side), and a crop from the start needs a third copy on the temp drive that it doesn't count.
-- **Still to do on the PC:** the full run of all seven scripts on merged `final`, a `test-chat-extras` rerun on a finished VOD with cheers, and the by-hand checks (handoff, top section).
+- **PC run on merged `final` (2026-11-25, evening): all PASS.** Cheermotes covered (17 shown, jynxzi), the speed-limit fix measured 1.75 MB/s at a 2 MB/s limit (1.6 before). **Still by hand only:** the four new Settings rows in all three themes, and a `.chat.html` in a browser. Not checked: a channel with a non-Latin display name.
 - **PR branches: not cut yet.** Cut them on master once their bases have merged: tl-info-chat with or after `feature-cli`; chat-real-time after `chat-export` (Wave 3); chat extras after `chat-export` and `system-text-json`; speed-limit and free-space-check after the Downloads page PR (`ui-downloads-queue`, they touch its chunk loop). Write a body in `bodies/` for each when cut.
 
 ## Video details and game chapters (built 2026-11-25, idea from comparing another downloader)
@@ -19,11 +19,11 @@ All passed their automated PC checks (results at the top of `.claude/handoffs/LA
 - **Automated PC check:** `test-scripts/test-video-metadata.ps1` PASSED 10/10 on the PC (2026-11-25).
 - **No PR branch yet.** It uses the new JSON reader and HttpClient (`pr/system-text-json` on `pr/replace-webclient`), and touches the same `DownloadService` lines as #109, so cut it once those are in. Written from scratch: no code from other projects, and no mention of them.
 
-**Upgrade branch, after the PC run (2026-11-25):** all of R1-R16 passed except R14 (a `--minimized` start popped the window up on Avalonia 12.2). The PC fixed it in `MainWindow.OnSignedIn` (`signedIn && IsVisible`, ab41308), and the branch is rebased onto `final` (now **a1dd0f2**, on efcba94, so it includes the five merged features). **Clean-up found:** no DataGrid is used anywhere any more, so `Avalonia.Controls.DataGrid` is an unused package (a small PR later, or fold it into the upgrade).
+**Upgrade branch, after the PC run (2026-11-25):** all of R1-R16 passed except R14 (a `--minimized` start popped the window up on Avalonia 12.2). The PC fixed it in `MainWindow.OnSignedIn` (`signedIn && IsVisible`, ab41308), and the branch is rebased onto `final` (now **474feb1**, on 69c9def, so it includes the five merged features and the review fixes). **Clean-up found:** no DataGrid is used anywhere any more, so `Avalonia.Controls.DataGrid` is an unused package (a small PR later, or fold it into the upgrade).
 
 ## .NET 11 + Avalonia 12.2.0: built 2026-11-24 on its own branch
 
-- **`upgrade/net11-avalonia12.2`** (a1dd0f2, rebased 2026-11-25) = `final` (efcba94) + two commits. The first: net11.0, Avalonia 12.2.0 (DataGrid/WebView stay on 12.1.2, as no 12.2 is out), DI and ProtectedData 11.0.0, CI on the .NET 11 SDK, and the old test scripts' `bin\Release\net11.0` paths. **Not in `final`**, by the user's choice, so it can't delay anything. The second commit (the R14 fix) is a one-condition code fix found by the PC run: on Avalonia 12.2 the main window's `Loaded` event runs while the window is still hidden, so the start-up token check raised the sign-in event and `MainWindow.OnSignedIn` showed a window that should stay in the tray (`--minimized`, the Windows startup entry). It now only acts when `IsVisible`. When re-cutting this PR on master, keep both commits' changes in the one upgrade commit.
+- **`upgrade/net11-avalonia12.2`** (474feb1, rebased 2026-11-25 evening) = `final` (69c9def) + two commits. The first: net11.0, Avalonia 12.2.0 (DataGrid/WebView stay on 12.1.2, as no 12.2 is out), DI and ProtectedData 11.0.0, CI on the .NET 11 SDK, and the old test scripts' `bin\Release\net11.0` paths. **Not in `final`**, by the user's choice, so it can't delay anything. The second commit (the R14 fix) is a one-condition code fix found by the PC run: on Avalonia 12.2 the main window's `Loaded` event runs while the window is still hidden, so the start-up token check raised the sign-in event and `MainWindow.OnSignedIn` showed a window that should stay in the tray (`--minimized`, the Windows startup entry). It now only acts when `IsVisible`. When re-cutting this PR on master, keep both commits' changes in the one upgrade commit.
 - **PC run 2026-11-23:** the whole automated run passed on this branch except the minimised start, which is the bug fixed by ab41308 (re-checked afterwards). See the top of `.claude/handoffs/LATEST.md`.
 - CI is green on Windows (including the native AOT build) and Linux, with the same warnings as `final`.
 - Body: `bodies/upgrade-net11-avalonia12.2.md`. Step 2 of the submission plan: offer it **after** everything else has merged, re-cut on master then.
@@ -44,7 +44,7 @@ All passed their automated PC checks (results at the top of `.claude/handoffs/LA
 
 Since the Avalonia rewrite (5b972e0, 2023), `UpdateService` asked for the releases of `schneidermanuel/TwitchLeecher.Old-dx` (404, hidden by its `catch`), so the app never showed an update. **`pr/fix-update-check`** (c455dbc, on master, CI green, AI check clean) is open as **#128**. The same fix is in `final`. Copies of 3.9.1 and earlier keep asking the old address, so they will never hear about 4.0. When `pr/replace-webclient` is next rebased it will conflict on the User-Agent line in `UpdateService`; keep `"TwitchLeecher-Dx"`.
 
-## SUBMISSION PLAN AND READINESS (2026-11-24, user's plan; checked again 2026-11-25: upstream unchanged, nothing new from the developer)
+## SUBMISSION PLAN AND READINESS (2026-11-24, user's plan; checked again 2026-11-25 evening: upstream master still 24cab52, all 14 open PRs mergeable, nothing new from the developer)
 
 **Order (the user's plan):**
 1. **Every feature and fix PR, at a cadence agreed with the developer.** Small PRs or about 6 bundles: ask him (offered on #104 and by email; no answer yet). **Do not open anything without the user saying so.**
@@ -58,7 +58,7 @@ Since the Avalonia rewrite (5b972e0, 2023), `UpdateService` asked for the releas
 | **Open upstream** (rebased 2026-11-23, mergeable) | #104–#109, Wave 1 #121–#127 |
 | **Ready to open as they are** (cut this week from tested code, PC-tested) | `replace-ninject`, `remove-reactiveui`, `replace-icon-pack`, `native-aot`, `avalonia-12`, `feature-cli`, `replace-webclient` (#31), `system-text-json` (on #31), `fix-mp4-unconverted` |
 | **Need a refresh from `final` before sending** (cut before the last PC rounds; tested tweaks since) | Wave 2: `ui-theme-keys`, `ui-dark-inputs`, `ui-header-nav`, `ui-search-sidebar`, `ui-downloads-queue`, `in-app-signin`. Wave 3: `ui-results-toolbar`, `ui-download-dialog`, `ui-settings-sections`, `theme-coyote`, `chat-export`, `compress-video`, `tray`, `start-with-windows`, `watched-searches`, `download-schedule`, `perf-downloads-idle`, `perf-result-badges`, `perf-parallel-chat`; and the base `_after-open-prs(-theme)`, which still holds #104–#109 as they were before the review changes |
-| **In `final`, no PR branch yet** (PC-tested; cut once their bases merge, see above) | video details and chapters, tl info / --chat, real-time chat, chat extras (third-party emotes, badges, cheermotes), speed limit, free-space check |
+| **In `final`, no PR branch yet** (PC-tested on merged `final`; cut once their bases merge, see above) | video details and chapters, tl info / --chat, real-time chat, chat extras (third-party emotes, badges, cheermotes), speed limit, free-space check |
 | **Last, with the version bump** | `whats-new`, `remove-popups` |
 | **Held** | `desktop-notifications` (not a requirement) |
 | **Not cut yet** | `remove-popups` (touches about 15 branches), the What's new card (needs the icon control, the theme colours, Avalonia 12 and the dialog helper merged first): both go with step 3 or just before it |

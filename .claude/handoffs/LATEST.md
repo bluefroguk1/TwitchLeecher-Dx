@@ -1,11 +1,22 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-25 (evening) on the Mac: five features merged into `final`; next PC run is the full check on merged `final`**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-25 (late) on the Mac: PC run on merged `final` all passed; only by-hand checks left for the PC**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
 ## PARKED IDEAS FOR THE MAC (added 2026-11-25; don't act on them until the user says so, e.g. after usage limits reset)
 
 1. **Translations.** How easy is it to add translations or translation files? Look at how UI text is held today (hard-coded in `.axaml` and view models, or in resources), what Avalonia offers (`.resx` + `x:Static`, or a resource dictionary per language), how big the job is, and whether it would suit a PR to the developer. Report only; no code.
 2. **The broken "Check for updates" in released versions (3.9.1 and earlier).** They ask GitHub's API for the releases of `schneidermanuel/TwitchLeecher.Old-dx`, a repository that doesn't exist (fixed for the future in #128, but old copies keep asking there). Question: can the developer make that address work, so existing users hear about 4.0? For example by creating a repository with that name under his account and publishing a release in it that points to the real download, or by renaming a repository so GitHub redirects. Check exactly which URL and fields the old `UpdateService` reads (tag name format, version compare, which link it opens), whether GitHub's API follows repository-rename redirects for that call, and what he would need to do. If it works, draft a short suggestion for him (the user decides whether to send it).
+
+## NEXT PC RUN (2026-11-25, late): by hand only, nothing automated left
+
+The Mac reviewed the results above and the script fix (kept). Nothing in the app changed since 532662e. The upgrade branch is rebased onto `final` (474feb1); no need to retest it until the merges upstream are close.
+
+When there's time, on `final` (`git pull`, Release build, open the app):
+- **Settings › Download:** the four new rows ("Chat as text: show the time each message was sent", "Saved chat: include badges", "Saved chat: high-resolution emotes", "Max download speed (MB/s)") are readable and line up, in the **Original, New and Coyote** themes.
+- **A saved chat in a browser:** download a short crop with chat as "HTML with emotes" from a busy channel with cheers (jynxzi worked), open the `.chat.html`: emotes show, animated ones move, badges sit before names, overlay emotes sit on the emote before them, cheers show their amount in colour.
+- Optional: if you come across a streamer with a non-Latin display name (Japanese, Korean), run `test-third-party-emotes.ps1 -Channel <their login>`.
+
+Report under this heading: one line per item, plus a screenshot path if anything looks wrong.
 
 ## PC RESULTS, merged `final` 532662e (DONE 2026-11-25, evening, on the PC): ALL PASS
 
