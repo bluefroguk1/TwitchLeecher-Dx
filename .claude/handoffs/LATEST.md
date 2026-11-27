@@ -1,6 +1,45 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-27 on the PC: Settings tidy-up in `final` (see the first section); earlier PC run on merged `final` all passed**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-27 on the Mac: fork review done; two features built from it, pushed to origin on their own branches, NOT compiled (no .NET SDK on the Mac), waiting for a PC run**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+
+## NEXT PC RUN (2026-11-27): two new feature branches, never compiled
+
+**Where they are** (**pushed to `origin`**, each one commit rebased onto `final` 038a3e9 after the notification removal; they touch different files except one shared line in `.claude/pr-drafts/release-notes-4.0.md`, so they merge cleanly):
+- **`feature/persist-queue`** (3571b65): the download queue survives a restart.
+- **`feature/sub-only-badge`** (36141f5): a "SUB ONLY" badge on search results.
+
+The Mac has no `dotnet`, so **neither feature has been built**. First job on the PC: `git fetch origin`, then `git checkout feature/persist-queue`, Release build, fix any compile error on the branch (they are small, expect at most typos), run the checks below. Then the same for `feature/sub-only-badge`. If both pass, merge both into `final` (and tick them in the map in `release-notes-4.0.md`).
+
+**Rules that still hold:** ideas only from other projects, so both were written from scratch; nothing from other projects is named in code or PR text. Never commit to master; no PRs, issues or comments.
+
+### A. `feature/persist-queue` (writes `downloads.json` in `%APPDATA%\Twitch Leecher DX\`)
+What changed: `DownloadService.Restore()` / `SaveQueue()` / `WriteQueue()`, new `SavedDownloadQueue.cs` (JSON, source-generated for the AOT build), `TwitchVideoDownload` takes an optional id, `MainWindowVM.ShowSearchOnStart` calls `Restore()`.
+1. **Builds** in Release, **and the AOT publish works** (the JSON uses `JsonSerializerContext`; a missing type would only show up at run time in the AOT build). Check the AOT build too, not only `dotnet build`.
+2. **Crash restore:** queue three downloads, pause the global queue first if you want them to stay queued. Wait 2 seconds, kill the process (Task Manager). Start the app, sign in state unchanged: three items appear **paused**. (No notification: desktop notifications no longer exist in `final`.) Press Resume on one: it downloads.
+3. **Chunks reused:** start a long download, pause it after a minute (Pause on the item), quit normally, restart, press Resume. The log should say it resumes ("Chunks kept from before the pause: N") and not start at 0. Check the temp folder `<DownloadTempFolder>\<id>` has the same id as in `downloads.json`.
+4. **Finished items are not restored:** let one finish and one fail; restart: neither comes back.
+5. **Logout clears it:** with items queued, log out (confirm abort), restart: queue empty, `downloads.json` has an empty list.
+6. **Corrupt file:** close the app, put `{ not json` in `downloads.json`, start: no crash, empty queue, a `downloads.json.bak` exists.
+7. **CLI doesn't touch it:** with items queued in the app (closed), run `tl download ...`; `downloads.json` must be unchanged afterwards.
+8. **Watched searches + restore:** with a watched search on, restart with restored items: no duplicates of the same VOD.
+Not expected to work (known, by design): a restored item always comes back **paused**, never running; items waiting for the schedule keep waiting.
+
+### B. `feature/sub-only-badge`
+What changed: `ApiService.IsVodLockedAsync` (reuses `GetVodAuthInfo`: `SubOnly && !Privileged`), `TwitchVideo.IsLocked` / `LockedCheck`, two badge elements in `SearchResultView.axaml` (grid and list).
+1. **Builds** (Release; AOT if you do that anyway).
+2. **Signed in without a sub-only login:** search a channel with sub-only VODs (any partner channel whose VODs are sub-only). Those cards show **SUB ONLY** (warning colour, top right on the thumbnail in grid view, in the badge group in list view); public VODs show nothing. Hover shows the tooltip.
+3. **With a sub-only login and a subscription to that channel:** the badge should **not** show on that channel's VODs. (This also confirms the call uses the sub-only token when one is stored; if the badge still shows, `CreateGqlWebClient` is not using it and the check needs that token.)
+4. **Own channel / a channel you moderate:** no badge (the privileged flag).
+5. **Load:** a 100-result search (Last 100 videos) must not hammer Twitch: badges appear a few at a time, results stay responsive, and nothing fails when you search again (cached by id).
+6. **Failure is silent:** turn the network off after a search: no errors, no badges.
+7. Look in all **three themes** plus Coyote: the badge text must be readable next to QUEUED/DOWNLOADED/LIVE/CLIP.
+
+Report under this heading: one line per item, plus a screenshot path for anything that looks wrong.
+
+### C. What the fork review found (full table kept on the Mac, not in the repo)
+8 of 80 forks had commits of their own. Already in `final`, so not ideas: retry button on failed downloads, 3 retries per chunk, multi-select/quick download, default quality, thumbnails, Highlight download, abort-on-logout prompt, overwrite prompt. Still open, in rough order of value: crop with conversion off (chunk-precise only), per-download CSV summary line, auto-split into fixed-length parts, **recording live streams** (the one big missing capability, high risk), parallel queued downloads (low value). One unconfirmed point: `final` has no filename/path-length check (a long name in a deep Windows folder could fail late in ffmpeg); worth one test on the PC with a 250-character name.
+
+**Rebase note (Mac, 2026-11-27):** `persist-queue` first used the desktop notification service for its "restored" message and the batch-finished count; `final` removed both, so the rebase dropped them (still never compiled, so watch for leftovers of `IDesktopNotificationService` and `_batchFinishedCount` first if the build fails).
 
 ## SETTINGS TIDY-UP + BRANCH UPDATES (2026-11-27, PC): in `final` (83460e5, 6953bf0), nothing left to do
 
@@ -19,7 +58,7 @@ After pulling `final` (7a25b8d) the PC re-ran all 8 automated checks (rebuilt, 0
 1. **Translations.** How easy is it to add translations or translation files? Look at how UI text is held today (hard-coded in `.axaml` and view models, or in resources), what Avalonia offers (`.resx` + `x:Static`, or a resource dictionary per language), how big the job is, and whether it would suit a PR to the developer. Report only; no code.
 2. **The broken "Check for updates" in released versions (3.9.1 and earlier).** They ask GitHub's API for the releases of `schneidermanuel/TwitchLeecher.Old-dx`, a repository that doesn't exist (fixed for the future in #128, but old copies keep asking there). Question: can the developer make that address work, so existing users hear about 4.0? For example by creating a repository with that name under his account and publishing a release in it that points to the real download, or by renaming a repository so GitHub redirects. Check exactly which URL and fields the old `UpdateService` reads (tag name format, version compare, which link it opens), whether GitHub's API follows repository-rename redirects for that call, and what he would need to do. If it works, draft a short suggestion for him (the user decides whether to send it).
 3. **Update the README.** Bring `README.md` up to date with what the app now does (new features, settings, the `tl` command-line tool, how to build), in the developer's style and without listing every change. Draft it first for the user to approve; it would go with the 4.0 PR set.
-4. **Review other forks for improvements we haven't got.** Go through the forks of the original app and of this one, most-starred first:
+4. **DONE 2026-11-27 (see "NEXT PC RUN (2026-11-27)" above).** ~~Review other forks for improvements we haven't got.~~ Go through the forks of the original app and of this one, most-starred first:
    - https://github.com/Franiac/TwitchLeecher/forks?include=active%2Carchived%2Cinactive%2Cnetwork&page=2&period=&sort_by=stargazer_counts (the user gave page 2; check page 1 too)
    - https://github.com/schneidermanuel/TwitchLeecher-Dx/forks?include=active%2Carchived%2Cinactive%2Cnetwork&page=1&period=&sort_by=stargazer_counts
 
