@@ -34,7 +34,6 @@ namespace TwitchLeecher.Services.Services
         private const string APP_TRAYPROMPTSHOWN_EL = "TrayPromptShown";
         private const string APP_STARTWITHOS_EL = "StartWithOs";
         private const string APP_STARTMINIMISED_EL = "StartMinimised";
-        private const string APP_SHOWNOTIFICATIONS_EL = "ShowNotifications";
 
         private const string SEARCH_EL = "Search";
         private const string SEARCH_FAVCHANNELS_EL = "FavChannels";
@@ -205,10 +204,6 @@ namespace TwitchLeecher.Services.Services
                 appStartMinimisedEl.SetValue(preferences.AppStartMinimised);
                 appEl.Add(appStartMinimisedEl);
 
-                XElement appShowNotificationsEl = new XElement(APP_SHOWNOTIFICATIONS_EL);
-                appShowNotificationsEl.SetValue(preferences.AppShowNotifications);
-                appEl.Add(appShowNotificationsEl);
-
                 // Search
                 RangeObservableCollection<string> favChannels = preferences.SearchFavouriteChannels;
 
@@ -276,9 +271,9 @@ namespace TwitchLeecher.Services.Services
                 downloadDefaultQualityEl.SetValue(preferences.DownloadDefaultQuality.VerticalResolution);
                 downloadEl.Add(downloadDefaultQualityEl);
 
-                XElement downloadSubfoldersForFavEl = new XElement(DOWNLOAD_SUBFOLDERSFORFAV_EL);
-                downloadSubfoldersForFavEl.SetValue(preferences.DownloadSubfoldersForFav);
-                downloadEl.Add(downloadSubfoldersForFavEl);
+                XElement downloadSubfoldersForChannelsEl = new XElement(DOWNLOAD_SUBFOLDERSFORFAV_EL);
+                downloadSubfoldersForChannelsEl.SetValue(preferences.DownloadSubfoldersForChannels);
+                downloadEl.Add(downloadSubfoldersForChannelsEl);
 
                 XElement downloadRemoveCompletedEl = new XElement(DOWNLOAD_REMOVECOMPLETED_EL);
                 downloadRemoveCompletedEl.SetValue(preferences.DownloadRemoveCompleted);
@@ -473,20 +468,6 @@ namespace TwitchLeecher.Services.Services
                                 try
                                 {
                                     preferences.AppStartMinimised = appStartMinimisedEl.GetValueAsBool();
-                                }
-                                catch
-                                {
-                                    // Value from config file could not be loaded, use default value
-                                }
-                            }
-
-                            XElement appShowNotificationsEl = appEl.Element(APP_SHOWNOTIFICATIONS_EL);
-
-                            if (appShowNotificationsEl != null)
-                            {
-                                try
-                                {
-                                    preferences.AppShowNotifications = appShowNotificationsEl.GetValueAsBool();
                                 }
                                 catch
                                 {
@@ -721,7 +702,7 @@ namespace TwitchLeecher.Services.Services
                             {
                                 try
                                 {
-                                    preferences.DownloadSubfoldersForFav = donwloadSubfolderForFavEl.GetValueAsBool();
+                                    preferences.DownloadSubfoldersForChannels = donwloadSubfolderForFavEl.GetValueAsBool();
                                 }
                                 catch
                                 {
@@ -1017,7 +998,6 @@ namespace TwitchLeecher.Services.Services
                 AppTrayPromptShown = false,
                 AppStartWithOs = false,
                 AppStartMinimised = false,
-                AppShowNotifications = true,
                 SearchChannelName = null,
                 SearchVideoType = VideoType.Broadcast,
                 SearchLoadLimitType = LoadLimitType.Timespan,

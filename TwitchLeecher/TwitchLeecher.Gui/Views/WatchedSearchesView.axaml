@@ -123,7 +123,7 @@
 
     <!-- Uses the host page's section/h1/label/sub styles (PreferencesView), so it reads like the other Settings sections. -->
     <StackPanel Classes="section">
-        <TextBlock Classes="h1" Text="Watched searches" />
+        <TextBlock Classes="h1" Text="Watched Searches" />
 
         <Grid ColumnDefinitions="*,Auto">
             <StackPanel Grid.Column="0" VerticalAlignment="Center">

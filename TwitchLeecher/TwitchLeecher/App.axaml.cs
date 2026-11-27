@@ -76,7 +76,6 @@ public partial class App : Application
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowVM>();
         services.AddSingleton<IEventAggregator, EventAggregator>();
-        services.AddSingleton<IDesktopNotificationService, DesktopNotificationService>();
     }
 
     private void LoadModules(IServiceCollection services)
@@ -104,9 +103,6 @@ public partial class App : Application
         SyncAutoStart(preferencesService);
         _services.GetRequiredService<IEventAggregator>().GetEvent<PreferencesSavedEvent>()
             .Subscribe(() => SyncAutoStart(preferencesService), true);
-
-        // on Windows this registers the toast identity (AUMID); it must happen before any window is created
-        _services.GetRequiredService<IDesktopNotificationService>();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

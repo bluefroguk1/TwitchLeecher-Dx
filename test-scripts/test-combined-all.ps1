@@ -88,7 +88,7 @@ Ask 'Settings side menu' @'
 Settings has a side menu: General, Search, Download, Watched searches (NO Appearance section).
 General: TWITCH ACCOUNT "Signed in as <your Twitch name>" with a Log out button (click it later: back to sign-in),
 THEME, Check for updates, donation button, Minimise to the system tray, Start Twitch Leecher when Windows starts,
-Start minimised to the tray, Show desktop notifications. NO sub-only switch anywhere.
+Start minimised to the tray. NO sub-only switch anywhere.
 Search: DEFAULT CHANNEL box, NO favourite channels list. Download: folder, OFF-PEAK SCHEDULE, file name with
 clickable chips and a live preview, quality, Quick download, Compress videos after download (Compression level +
 Encoder), Keep the original stream file, then TEMPORARY FOLDER and MAX CONNECTIONS shown directly (NO Advanced
@@ -172,7 +172,6 @@ Back on the results: the video you downloaded showed QUEUED while it downloaded 
 (no new search). With "Hide downloaded" ticked it disappears.
 '@
 Ask 'Download Selected' 'Tick 5 results and Download Selected: the page stays responsive, all 5 show QUEUED, then remove them from Downloads.'
-Ask 'Desktop notification' 'When a download finished, a Windows notification appeared ("Download finished" + title). If not, check Focus Assist is off and say n.'
 Ask 'Subscriber-only message' 'Try to download a subscriber-only VOD from a channel you are NOT subscribed to: the message is exactly "This video is for subscribers only."'
 Ask 'Clip download' 'Download a clip: no crop section, no chat option, it saves as an mp4.'
 }

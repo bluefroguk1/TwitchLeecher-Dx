@@ -42,7 +42,6 @@ namespace TwitchLeecher.Core.Models
 
         private bool _appStartMinimised;
 
-        private bool _appShowNotifications;
 
         private RangeObservableCollection<string> _searchFavouriteChannels;
 
@@ -68,7 +67,7 @@ namespace TwitchLeecher.Core.Models
 
         private DefaultQuality _downloadDefaultQuality;
 
-        private bool _downloadSubfoldersForFav;
+        private bool _downloadSubfoldersForChannels;
 
         private bool _downloadRemoveCompleted;
 
@@ -164,11 +163,6 @@ namespace TwitchLeecher.Core.Models
             set { SetProperty(ref _appStartMinimised, value); }
         }
 
-        public bool AppShowNotifications
-        {
-            get { return _appShowNotifications; }
-            set { SetProperty(ref _appShowNotifications, value); }
-        }
 
         public bool MiscUseExternalPlayer
         {
@@ -274,10 +268,10 @@ namespace TwitchLeecher.Core.Models
             get { return DefaultQualities; }
         }
 
-        public bool DownloadSubfoldersForFav
+        public bool DownloadSubfoldersForChannels
         {
-            get { return _downloadSubfoldersForFav; }
-            set { SetProperty(ref _downloadSubfoldersForFav, value); }
+            get { return _downloadSubfoldersForChannels; }
+            set { SetProperty(ref _downloadSubfoldersForChannels, value); }
         }
 
         // keep the unconverted .ts when the mp4/mkv conversion fails (#49)
@@ -595,7 +589,6 @@ namespace TwitchLeecher.Core.Models
                 AppTrayPromptShown = AppTrayPromptShown,
                 AppStartWithOs = AppStartWithOs,
                 AppStartMinimised = AppStartMinimised,
-                AppShowNotifications = AppShowNotifications,
                 MiscUseExternalPlayer = MiscUseExternalPlayer,
                 MiscExternalPlayer = MiscExternalPlayer,
                 SearchChannelName = SearchChannelName,
@@ -609,7 +602,7 @@ namespace TwitchLeecher.Core.Models
                 DownloadFolder = DownloadFolder,
                 DownloadFileName = DownloadFileName,
                 DownloadDefaultQuality = _downloadDefaultQuality,
-                DownloadSubfoldersForFav = DownloadSubfoldersForFav,
+                DownloadSubfoldersForChannels = DownloadSubfoldersForChannels,
                 DownloadRemoveCompleted = DownloadRemoveCompleted,
                 DownloadKeepTsOnFailure = DownloadKeepTsOnFailure,
                 DownloadChatRealTime = DownloadChatRealTime,

@@ -219,12 +219,6 @@
                                 <TextBlock Classes="sub" Text="Opens hidden; click the tray icon to show the window" />
                             </StackPanel>
                         </CheckBox>
-                        <CheckBox IsChecked="{Binding CurrentPreferences.AppShowNotifications}">
-                            <StackPanel>
-                                <TextBlock Text="Show desktop notifications" />
-                                <TextBlock Classes="sub" Text="When a download finishes, and when a whole batch is done" />
-                            </StackPanel>
-                        </CheckBox>
 
 
                         <StackPanel Classes="field">
@@ -409,8 +403,8 @@
                                 <Button Grid.Column="2" Classes="outline" Content="Browse"
                                         Command="{Binding ChooseDownloadFolderCommand}" />
                             </Grid>
-                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadSubfoldersForFav}"
-                                      Content="Put favourite channels in their own subfolder" FontSize="13" />
+                            <CheckBox IsChecked="{Binding CurrentPreferences.DownloadSubfoldersForChannels}"
+                                      Content="Put channels in their own subfolder" FontSize="13" />
                         </StackPanel>
 
                         <StackPanel Classes="field">
@@ -576,24 +570,23 @@
                                     <TextBlock Classes="sub" Text="Re-encodes each finished video to a smaller file; takes a while" />
                                 </StackPanel>
                             </CheckBox>
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0" IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
-                                <TextBlock Text="Compression" VerticalAlignment="Center" />
-                                <ComboBox SelectedIndex="{Binding CurrentPreferences.DownloadCompressLevelIndex}" MinWidth="260"
+                            <Grid ColumnDefinitions="Auto,8,Auto" RowDefinitions="Auto,8,Auto" Margin="24,0,0,0"
+                                  IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Compression" VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="0" Grid.Column="2" SelectedIndex="{Binding CurrentPreferences.DownloadCompressLevelIndex}" MinWidth="260"
                                           AutomationProperties.Name="Compression level">
                                     <ComboBoxItem Content="Light: H.264, plays everywhere" />
                                     <ComboBoxItem Content="Balanced: H.265, about half the size" />
                                     <ComboBoxItem Content="Strong: H.265, smallest, some quality loss" />
                                 </ComboBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="24,0,0,0" IsEnabled="{Binding CurrentPreferences.DownloadCompress}">
-                                <TextBlock Text="Encoder" VerticalAlignment="Center" />
-                                <ComboBox SelectedIndex="{Binding CurrentPreferences.DownloadCompressEncoderIndex}" MinWidth="260"
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Encoder" VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="2" Grid.Column="2" SelectedIndex="{Binding CurrentPreferences.DownloadCompressEncoderIndex}" MinWidth="260"
                                           AutomationProperties.Name="Compression encoder">
                                     <ComboBoxItem Content="Auto: graphics card if available" />
                                     <ComboBoxItem Content="CPU: smallest files, slower" />
                                     <ComboBoxItem Content="Graphics card: fastest, files a bit bigger" />
                                 </ComboBox>
-                            </StackPanel>
+                            </Grid>
                             <CheckBox IsChecked="{Binding CurrentPreferences.DownloadRemoveCompleted}">
                                 <TextBlock Text="Remove finished downloads from the queue" />
                             </CheckBox>
@@ -609,21 +602,25 @@
                                     <TextBlock Classes="sub" Text="Saved as a .ts file next to where the mp4 would have gone" />
                                 </StackPanel>
                             </CheckBox>
+                        </StackPanel>
+
+                        <StackPanel Classes="field">
+                            <TextBlock Classes="label" Text="SAVED CHATS" />
                             <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatRealTime}">
                                 <StackPanel>
-                                    <TextBlock Text="Chat as text: show the time each message was sent" />
+                                    <TextBlock Text="Text chat: show the time each message was sent" />
                                     <TextBlock Classes="sub" Text="Date and time of day, instead of the time into the video" />
                                 </StackPanel>
                             </CheckBox>
                             <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatBadges}">
                                 <StackPanel>
-                                    <TextBlock Text="Saved chat: include badges" />
+                                    <TextBlock Text="Include badges" />
                                     <TextBlock Classes="sub" Text="Subscriber, moderator, VIP and other badges next to names (web page and JSON chat)" />
                                 </StackPanel>
                             </CheckBox>
                             <CheckBox IsChecked="{Binding CurrentPreferences.DownloadChatHighResEmotes}">
                                 <StackPanel>
-                                    <TextBlock Text="Saved chat: high-resolution emotes" />
+                                    <TextBlock Text="High-resolution emotes" />
                                     <TextBlock Classes="sub" Text="Sharper emotes and badges when zoomed in; chat files with emotes embedded get bigger" />
                                 </StackPanel>
                             </CheckBox>
@@ -641,11 +638,11 @@
                                        Text="Holds the video parts while they download. Needs write access." />
                         </StackPanel>
                         <StackPanel Classes="field">
-                            <TextBlock Classes="label" Text="MAX CONNECTIONS (EXPERIMENTAL)" />
+                            <TextBlock Classes="label" Text="MAX CONNECTIONS" />
                             <NumericUpDown Minimum="1" Maximum="25" Width="110" HorizontalAlignment="Left"
                                            Value="{Binding CurrentPreferences.MaxConnectionCount}" />
                             <TextBlock Classes="sub"
-                                       Text="More can be faster but may crash on some networks. Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
+                                       Text="More can be faster but may crash on some networks.&#10;Try 10; drop to 3 if downloads crash. Over 15 is not recommended." />
                         </StackPanel>
                         <StackPanel Classes="field">
                             <TextBlock Classes="label" Text="MAX DOWNLOAD SPEED (MB/S)" />
@@ -658,7 +655,7 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Watched searches">
+            <TabItem Header="Watched Searches">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <views:WatchedSearchesView DataContext="{Binding WatchedSearches}" />
                 </ScrollViewer>

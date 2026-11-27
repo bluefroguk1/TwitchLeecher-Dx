@@ -299,3 +299,10 @@ for b in $(git for-each-ref --format='%(refname:short)' 'refs/heads/pr/*'); do g
 ```
 
 It must print nothing.
+
+## Settings tidy-up on `final` (2026-11-27, from the by-hand check on the PC)
+
+- **Desktop notifications removed completely** (setting, `IDesktopNotificationService`, toast code, the DesktopNotifications packages, the windows-only target framework, `test-desktop-notifications.ps1`). `pr/desktop-notifications` is now dead: delete it when convenient. Old config files with `ShowNotifications` still load.
+- Settings: Compression/Encoder dropdowns aligned; new SAVED CHATS heading (labels: Text chat: show the time each message was sent / Include badges / High-resolution emotes); MAX CONNECTIONS without (EXPERIMENTAL) and the hint on two lines; the side-bar entry and heading are **Watched Searches**.
+- **Subfolders:** "Put channels in their own subfolder" now applies to every channel, not just favourites (`DownloadSubfoldersForChannels`, same `SubfoldersForFav` config key). The `tl` command line still ignores it.
+- **Carry over at the refresh:** `ui-settings-sections`, `compress-video`, `watched-searches`, `chat-export` and the other Wave 3 branches need these label changes. No open upstream PR (#104-#128) touches them. `preview` (linked from #104) was not rebuilt.

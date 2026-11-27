@@ -391,7 +391,6 @@ namespace TwitchLeecher.Gui.Services
                     Log("STARTED", label, video.Title);
                 }
 
-                // DESKTOP NOTIFICATION: call the tray/desktop notification service here once it exists.
             }
         }
 

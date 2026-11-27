@@ -111,8 +111,7 @@ namespace TwitchLeecher.Services.Services
         private (string folder, string filename, bool disableConversion) GetDefaultTarget(TwitchVideo video,
             Preferences prefs, TwitchVideoQuality quality)
         {
-            string folder = prefs.DownloadSubfoldersForFav &&
-                            _preferencesService.IsChannelInFavourites(video.Channel)
+            string folder = prefs.DownloadSubfoldersForChannels
                 ? Path.Combine(prefs.DownloadFolder, video.Channel)
                 : prefs.DownloadFolder;
 

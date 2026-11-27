@@ -64,7 +64,6 @@ public static class Program
         ServiceCollection services = new ServiceCollection();
         services.AddSingleton<IEventAggregator, EventAggregator>();
         // DownloadService reports finished downloads through this; a console run prints its own result instead
-        services.AddSingleton<IDesktopNotificationService, NoNotifications>();
         ServiceModule.Load(services);
         using ServiceProvider provider = services.BuildServiceProvider();
 
@@ -471,9 +470,3 @@ public static class Program
     }
 }
 
-internal sealed class NoNotifications : IDesktopNotificationService
-{
-    public void Notify(string title, string message)
-    {
-    }
-}
