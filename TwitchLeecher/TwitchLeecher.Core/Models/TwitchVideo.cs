@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using TwitchLeecher.Shared.Extensions;
@@ -76,6 +77,36 @@ namespace TwitchLeecher.Core.Models
         {
             get { return _isDownloaded; }
             set { SetProperty(ref _isDownloaded, value); }
+        }
+
+        // Set by the API service for VODs: asks Twitch whether the VOD is locked for the current login
+        // (sub-only and the user may not watch all of it). Run once, when a card first shows the badge.
+        public Func<Task<bool>> LockedCheck { get; init; }
+
+        private bool _isLocked;
+        private int _lockedChecked;
+
+        // true only when the check says so; a slow or failed check shows nothing
+        public bool IsLocked
+        {
+            get
+            {
+                if (LockedCheck != null && Interlocked.Exchange(ref _lockedChecked, 1) == 0)
+                {
+                    _ = LoadLockedAsync();
+                }
+
+                return _isLocked;
+            }
+        }
+
+        private async Task LoadLockedAsync()
+        {
+            if (await LockedCheck())
+            {
+                _isLocked = true;
+                FirePropertyChanged(nameof(IsLocked));
+            }
         }
 
         // "Clip by X · 9 Nov · 1.8K views · muted parts"

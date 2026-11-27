@@ -328,6 +328,10 @@
                                             <Border Classes="badge accent" Background="{DynamicResource AccentBrush}" IsVisible="{Binding IsClip}">
                                                 <TextBlock Text="CLIP" />
                                             </Border>
+                                            <Border Classes="badge" Background="{DynamicResource WarningBrush}" IsVisible="{Binding IsLocked}"
+                                                    ToolTip.Tip="Twitch holds back some qualities of this video for your login">
+                                                <TextBlock Text="SUB ONLY" />
+                                            </Border>
                                             <Border Classes="badge" Background="{DynamicResource WarningBrush}" IsVisible="{Binding IsQueued}">
                                                 <TextBlock Text="QUEUED" />
                                             </Border>
@@ -391,6 +395,10 @@
                                         </Border>
                                         <Border Classes="badge accent" Background="{DynamicResource AccentBrush}" IsVisible="{Binding IsClip}">
                                             <TextBlock Text="CLIP" />
+                                        </Border>
+                                        <Border Classes="badge" Background="{DynamicResource WarningBrush}" IsVisible="{Binding IsLocked}"
+                                                ToolTip.Tip="Twitch holds back some qualities of this video for your login">
+                                            <TextBlock Text="SUB ONLY" />
                                         </Border>
                                         <Border Classes="badge" Background="{DynamicResource WarningBrush}" IsVisible="{Binding IsQueued}">
                                             <TextBlock Text="QUEUED" />

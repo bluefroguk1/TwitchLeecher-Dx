@@ -36,6 +36,7 @@ Nothing below this comment block is sent as-is without the user's OK.
 * Speed, time left and pause for each download
 * Keep the unconverted .ts if conversion fails, which can be turned off (#49)
 * Open folder for every download (#85)
+* A "SUB ONLY" badge on search results that Twitch holds back for your login
 * An optional maximum download speed
 * Downloads still in the queue come back (paused) after a restart or crash, and keep the chunks already downloaded
 * Downloads stop straight away when a drive doesn't have room for them
