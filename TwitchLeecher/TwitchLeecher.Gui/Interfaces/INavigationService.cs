@@ -6,8 +6,6 @@ namespace TwitchLeecher.Gui.Interfaces
     {
         void ShowAuth();
 
-        void ShowWelcome();
-
         void ShowLoading();
 
         void ShowSearch();
@@ -19,6 +17,9 @@ namespace TwitchLeecher.Gui.Interfaces
         void ShowDownloads();
 
         void ShowPreferences();
+
+        // Settings, scrolled to the Watched searches section.
+        void ShowWatchedSearches();
 
         void ShowInfo();
 

@@ -57,7 +57,43 @@ Nearly all of the well known VOD downloaders execute the download process via FF
 - Modern .net 6.0 Framework
 - Save favorite search parameter as preset
 - Download VOD's that might are unavailable on twitch due to missing chunk data
+- Command-line tool (`tl`) for searching and downloading from a terminal or script
   
+## Command-line tool
+
+Twitch Leecher comes with a small command-line tool, `tl` (`tl.exe` on Windows), next to the app. It uses the same settings and Twitch sign-in as the app, so sign in once in Twitch Leecher first.
+
+```
+tl search <channel> [--type broadcast|highlight|upload] [--last <n>]
+tl qualities <vod url or id>
+tl info <vod url or id>
+tl download <vod url or id> [--quality <q>] [--from <time>] [--to <time>] [--out <folder>] [--name <file name>] [--chat <format>]
+```
+
+`tl info` prints the video's details, qualities and game chapters as JSON.
+
+**Examples**
+
+```
+tl search somechannel --last 5
+tl qualities https://www.twitch.tv/videos/123456789
+tl download 123456789 --quality 1080p60 --from 1:00:00 --to 1:30:00
+```
+
+| Option | What it does | Default |
+|---|---|---|
+| `--type` | Video type to list | `broadcast` |
+| `--last` | How many videos to list | `10` |
+| `--quality` | e.g. `1080p60`, `720p`, `source` or `audio` | your default quality in Settings |
+| `--from` / `--to` | Crop, as `h:mm:ss`, `m:ss` or seconds | the whole video |
+| `--out` | Folder to save to | the download folder in Settings |
+| `--name` | File name | the file name pattern in Settings |
+| `--chat` | Also save the chat: `text`, `html`, `html-emotes` (emotes embedded) or `json` | no chat |
+
+Downloads show their progress, and Ctrl+C cancels. `tl --help` shows all of this.
+
+**Exit codes** (for scripts): `0` done, `1` failed, `2` wrong usage, `3` not signed in.
+
 ## Support & Issues
 
 If you have any problem or wish a feature for Twitch Leecher-DX, feel free to open an issue on this page!
@@ -79,3 +115,5 @@ If you wan't to support me and the development of this project, please consider 
 
 ## LICENSE
 [MIT License](https://github.com/schneidermanuel/TwitchLeecher-DX/blob/master/LICENSE)
+
+Icons: [Font Awesome Free](https://fontawesome.com) by Fonticons, Inc., licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

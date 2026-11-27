@@ -3,6 +3,7 @@ using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.Views;
 using TwitchLeecher.Shared.Commands;
+using Avalonia.Input.Platform;
 
 namespace TwitchLeecher.Gui.ViewModels
 {

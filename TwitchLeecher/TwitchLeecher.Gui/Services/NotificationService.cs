@@ -1,4 +1,5 @@
-﻿using Ninject;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLeecher.Gui.Interfaces;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Gui.Views;
@@ -9,15 +10,15 @@ namespace TwitchLeecher.Gui.Services
     {
         #region Fields
 
-        private readonly IKernel _kernel;
+        private readonly IServiceProvider _services;
 
         #endregion Fields
 
         #region Constructor
 
-        public NotificationService(IKernel kernel)
+        public NotificationService(IServiceProvider services)
         {
-            _kernel = kernel;
+            _services = services;
         }
 
         #endregion Constructor
@@ -26,7 +27,7 @@ namespace TwitchLeecher.Gui.Services
 
         public void ShowNotification(string text)
         {
-            var mainWindow = _kernel.Get<MainWindow>();
+            var mainWindow = _services.GetRequiredService<MainWindow>();
             var mainWindowViewModel = (MainWindowVM)mainWindow.DataContext;
             mainWindowViewModel.SetNotification(text);
         }

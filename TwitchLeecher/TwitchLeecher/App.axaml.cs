@@ -1,11 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Ninject;
+using Avalonia.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using TwitchLeecher.Core.Constants;
+using TwitchLeecher.Core.Events;
 using TwitchLeecher.Gui.Modules;
 using TwitchLeecher.Gui.ViewModels;
 using TwitchLeecher.Gui.Views;
@@ -21,7 +25,7 @@ public partial class App : Application
 {
     private readonly Mutex _singletonMutex;
 
-    private IKernel _kernel;
+    private IServiceProvider _services;
     private Dictionary<string, ResourceDictionary> _themes;
     private ResourceDictionary _sharedResources;
 
@@ -32,7 +36,7 @@ public partial class App : Application
 
         if (!isOnlyInstance)
         {
-            new NamedPipeManager("TwitchLeecher").Write("Activate");
+            new NamedPipeManager(Constants.PipeName).Write("Activate");
 
             Environment.Exit(0);
         }
@@ -49,53 +53,160 @@ public partial class App : Application
 
     public override void Initialize()
     {
+        // Avalonia 12 only resolves avares:// assets from assemblies that are already loaded, and App.axaml
+        // (tray icon) reads one from the Gui assembly before anything else touches it
+        _ = typeof(GuiModule).Assembly;
+
         AvaloniaXamlLoader.Load(this);
     }
 
-    private IKernel CreateKernel()
+    private IServiceProvider CreateServices()
     {
-        IKernel kernel = new StandardKernel();
+        var services = new ServiceCollection();
 
-        RegisterTypes(kernel);
-        LoadModules(kernel);
+        RegisterTypes(services);
+        LoadModules(services);
 
-        return kernel;
+        // ValidateOnBuild: a missing registration fails at start-up, not when a page first opens
+        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }
 
-    private void RegisterTypes(IKernel kernel)
+    private void RegisterTypes(IServiceCollection services)
     {
-        kernel.Bind<MainWindow>().ToSelf().InSingletonScope();
-        kernel.Bind<MainWindowVM>().ToSelf().InSingletonScope();
-        kernel.Bind<IEventAggregator>().To<EventAggregator>().InSingletonScope();
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainWindowVM>();
+        services.AddSingleton<IEventAggregator, EventAggregator>();
     }
 
-    private void LoadModules(IKernel kernel)
+    private void LoadModules(IServiceCollection services)
     {
-        kernel.Load<GuiModule>();
-        kernel.Load<ServiceModule>();
+        GuiModule.Load(services);
+        ServiceModule.Load(services);
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        _kernel = CreateKernel();
+        _services = CreateServices();
 
         _sharedResources = (ResourceDictionary)Resources["Shared"];
         _themes.Add("New", (ResourceDictionary)Resources["New"]);
         _themes.Add("Original", (ResourceDictionary)Resources["Original"]);
-        var themeService = _kernel.Get<IThemeService>();
+        _themes.Add("Coyote", (ResourceDictionary)Resources["Coyote"]);
+        var themeService = _services.GetRequiredService<IThemeService>();
         themeService.StyleChanged += (sender, args) => { SetTheme(themeService.GetTheme()); };
-        var preferencesService = _kernel.Get<IPreferencesService>();
+        var preferencesService = _services.GetRequiredService<IPreferencesService>();
         SetTheme(string.IsNullOrEmpty(preferencesService.CurrentPreferences.Theme)
             ? "New"
             : preferencesService.CurrentPreferences.Theme);
 
+        // re-sync at start-up in case the exe moved
+        SyncAutoStart(preferencesService);
+        _services.GetRequiredService<IEventAggregator>().GetEvent<PreferencesSavedEvent>()
+            .Subscribe(() => SyncAutoStart(preferencesService), true);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.Exit += OnExit;
-            desktop.MainWindow = _kernel.Get<MainWindow>();
+            MainWindow mainWindow = _services.GetRequiredService<MainWindow>();
+
+            if (Array.Exists(desktop.Args ?? [], arg => arg == AutoStart.MinimizedArg))
+            {
+                // the lifetime shows MainWindow when it starts; assigning it afterwards keeps it hidden in the tray
+                Dispatcher.UIThread.Post(() => desktop.MainWindow = mainWindow);
+            }
+            else
+            {
+                desktop.MainWindow = mainWindow;
+            }
         }
 
+        StartTrayTooltip();
+
         base.OnFrameworkInitializationCompleted();
+    }
+
+    // The tray icon's tooltip says what is going on: % left on current downloads, else how many are paused,
+    // else how many watched searches there are.
+    private void StartTrayTooltip()
+    {
+        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        timer.Tick += (_, _) => UpdateTrayTooltip();
+        timer.Start();
+        UpdateTrayTooltip();
+    }
+
+    private void UpdateTrayTooltip()
+    {
+        try
+        {
+            TrayIcon icon = TrayIcon.GetIcons(this)?.FirstOrDefault();
+
+            if (icon == null || _services == null)
+            {
+                return;
+            }
+
+            var downloads = _services.GetRequiredService<TwitchLeecher.Services.Interfaces.IDownloadService>().Downloads.ToList();
+            var active = downloads.Where(d => d.IsDownloading).ToList();
+            int paused = downloads.Count(d => d.IsPaused);
+            var watched = _services.GetRequiredService<TwitchLeecher.Gui.Interfaces.IAutoDownloadService>();
+            int searches = watched.Enabled ? watched.Searches.Count(w => w.Active) : 0;
+
+            string detail;
+
+            if (active.Count > 0)
+            {
+                double left = active.Average(d => 100 - d.Progress);
+                detail = (active.Count == 1 ? "Downloading" : active.Count + " downloading") + " · " + left.ToString("0") + "% left";
+            }
+            else if (paused > 0)
+            {
+                detail = paused + (paused == 1 ? " paused download" : " paused downloads");
+            }
+            else if (searches > 0)
+            {
+                detail = searches + (searches == 1 ? " watched search" : " watched searches");
+            }
+            else
+            {
+                detail = null;
+            }
+
+            icon.ToolTipText = detail == null ? "Twitch Leecher DX" : "Twitch Leecher DX · " + detail;
+        }
+        catch
+        {
+            // the tooltip is cosmetic
+        }
+    }
+
+    private void TrayIcon_OnClicked(object sender, EventArgs e) => _services.GetRequiredService<MainWindow>().BringToFront();
+
+    private void TrayOpen_OnClick(object sender, EventArgs e) => _services.GetRequiredService<MainWindow>().BringToFront();
+
+    private void SyncAutoStart(IPreferencesService preferencesService)
+    {
+        try
+        {
+            AutoStart.Apply(preferencesService.CurrentPreferences);
+        }
+        catch (Exception ex)
+        {
+            _services.GetRequiredService<ILogService>().LogException(ex);
+        }
+    }
+
+    private void TrayExit_OnClick(object sender, EventArgs e)
+    {
+        // started with --minimized and never opened: no window to close
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { Windows.Count: 0 } hidden)
+        {
+            hidden.Shutdown();
+            return;
+        }
+
+        // same path as the close button: saves window state, then the app exits with its last window
+        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Close();
     }
 
     private void SetTheme(string name)

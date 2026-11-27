@@ -8,8 +8,6 @@ namespace TwitchLeecher.Services.Interfaces
         Preferences CurrentPreferences { get; }
         IEnumerable<string> AvailableThemes { get; }
 
-        bool IsChannelInFavourites(string channel);
-
         void Save(Preferences preferences);
 
         Preferences CreateDefault();

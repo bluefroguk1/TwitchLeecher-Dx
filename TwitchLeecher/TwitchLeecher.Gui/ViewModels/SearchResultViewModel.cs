@@ -1,9 +1,14 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
+using TwitchLeecher.Core;
+using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
 using TwitchLeecher.Gui.Interfaces;
@@ -19,12 +24,15 @@ namespace TwitchLeecher.Gui.ViewModels
         #region Fields
 
         private readonly IEventAggregator _eventAggregator;
-        private readonly IApiService _apiService;
         private readonly IDialogService _dialogService;
         private readonly INavigationService _navigationService;
         private readonly IPreferencesService _preferencesService;
         private readonly ISearchService _searchService;
-        private readonly IFilenameService _filenameService;
+        private readonly IApiService _apiService;
+        private readonly IQuickDownloadService _quickDownloadService;
+        private readonly IDownloadService _downloadService;
+        private readonly INotificationService _notificationService;
+        private readonly IAutoDownloadService _autoDownloadService;
 
         private readonly object _commandLockObject;
 
@@ -32,7 +40,25 @@ namespace TwitchLeecher.Gui.ViewModels
         private ICommand _downloadCommand;
         private ICommand _seachCommand;
 
-        private bool _isAuthenticatedSubOnly;
+
+        // the search these results came from; SearchService resets its LastSearchParams when preferences are saved
+        private SearchParameters _resultParams;
+        private string _channelDisplayName;
+        private Bitmap _channelAvatar;
+
+        private bool _hideDownloaded;
+        private bool _statusRefreshPending;
+
+        // default save path per video id, so badges don't rebuild filenames on every queue change
+        private readonly Dictionary<string, string> _defaultPaths = new Dictionary<string, string>();
+        private int _sortIndex;
+        private bool _isListView;
+        private List<TwitchVideo> _displayed = new List<TwitchVideo>();
+        private List<TwitchVideo> _hookedVideos = new List<TwitchVideo>();
+        private ObservableCollection<TwitchVideo> _hookedCollection;
+
+        // estimated bytes per video id; 0 = unknown, missing = not fetched yet
+        private readonly Dictionary<string, long> _estimatedBytes = new Dictionary<string, long>();
 
         #endregion Fields
 
@@ -40,29 +66,55 @@ namespace TwitchLeecher.Gui.ViewModels
 
         public SearchResultViewModel(
             IEventAggregator eventAggregator,
-            IApiService apiService,
-            IAuthService authService,
             IDialogService dialogService,
             INavigationService navigationService,
             IPreferencesService preferencesService,
             ISearchService searchService,
-            IFilenameService filenameService)
+            IApiService apiService,
+            IQuickDownloadService quickDownloadService,
+            IDownloadService downloadService,
+            INotificationService notificationService,
+            IAutoDownloadService autoDownloadService)
         {
+            _autoDownloadService = autoDownloadService;
             _eventAggregator = eventAggregator;
-            _apiService = apiService;
             _dialogService = dialogService;
             _navigationService = navigationService;
             _preferencesService = preferencesService;
             _searchService = searchService;
-            _filenameService = filenameService;
+            _apiService = apiService;
+            _quickDownloadService = quickDownloadService;
+            _downloadService = downloadService;
+            _notificationService = notificationService;
 
             _searchService.PropertyChanged += SearchService_PropertyChanged;
 
             _commandLockObject = new object();
 
-            _eventAggregator.GetEvent<SubOnlyAuthChangedEvent>().Subscribe(SubOnlyAuthChanged);
+            // favourites may be edited in Settings while this page is kept alive
+            _eventAggregator.GetEvent<PreferencesSavedEvent>().Subscribe(() => FirePropertyChanged(nameof(IsFavourite)));
 
-            _isAuthenticatedSubOnly = authService.IsAuthenticatedSubOnly;
+            _resultParams = _searchService.LastSearchParams;
+            LoadChannelHeader();
+
+            // queue changes may come from a background thread (e.g. automatic downloads)
+            // queue changes may come from a background thread (e.g. automatic downloads); a finished download
+            // changes state without leaving the list, so watch each item's state too
+            _downloadService.Downloads.CollectionChanged += Downloads_CollectionChanged;
+
+            foreach (TwitchVideoDownload download in _downloadService.Downloads)
+            {
+                download.PropertyChanged += Download_PropertyChanged;
+            }
+
+            // folder or filename settings may have changed
+            _eventAggregator.GetEvent<PreferencesSavedEvent>().Subscribe(() =>
+            {
+                _defaultPaths.Clear();
+                RequestStatusRefresh();
+            });
+
+            HookVideos();
         }
 
         #endregion Constructors
@@ -74,6 +126,166 @@ namespace TwitchLeecher.Gui.ViewModels
         public ObservableCollection<TwitchVideo> Videos
         {
             get { return _searchService.Videos; }
+        }
+
+        // Search summary bar: "somestreamer" + "Broadcasts · last 10 · 10 results"
+        public string SearchTitle
+        {
+            get
+            {
+                SearchParameters p = _resultParams;
+
+                switch (p.SearchType)
+                {
+                    case SearchType.Urls: return "Video URLs";
+                    case SearchType.Ids: return "Video IDs";
+                    case SearchType.Favorites: return "Favourites";
+                    default: return _channelDisplayName ?? p.Channel;
+                }
+            }
+        }
+
+        // Channel header: avatar and favourite star, channel searches only
+        public bool IsChannelSearch => _resultParams.SearchType == SearchType.Channel;
+
+        public Bitmap ChannelAvatar
+        {
+            get => _channelAvatar;
+            private set => SetProperty(ref _channelAvatar, value, nameof(ChannelAvatar));
+        }
+
+        public bool IsFavourite =>
+            IsChannelSearch
+            && _preferencesService.CurrentPreferences.SearchFavouriteChannels.Any(c =>
+                c.Equals(_resultParams.Channel, StringComparison.OrdinalIgnoreCase));
+
+        public string SearchSummary
+        {
+            get
+            {
+                SearchParameters p = _resultParams;
+                List<string> parts = new List<string>();
+
+                if (p.SearchType == SearchType.Channel || p.SearchType == SearchType.Favorites)
+                {
+                    parts.Add(p.VideoType switch
+                    {
+                        VideoType.Highlight => "Highlights",
+                        VideoType.Upload => "Uploads",
+                        VideoType.Clip => "Clips",
+                        _ => "Broadcasts"
+                    });
+
+                    parts.Add(p.LoadLimitType switch
+                    {
+                        LoadLimitType.LastVods => "last " + p.LoadLastVods,
+                        LoadLimitType.OnlyToday => "today",
+                        _ => p.LoadFrom?.ToString("d MMM") + " – " + p.LoadTo?.ToString("d MMM")
+                    });
+                }
+
+                int count = Videos?.Count ?? 0;
+                string results = count == 1 ? "1 result" : count + " results";
+                int hidden = count - _displayed.Count;
+
+                parts.Add(hidden > 0 ? results + " (" + hidden + " hidden)" : results);
+
+                return string.Join(" · ", parts);
+            }
+        }
+
+        public bool HideDownloaded
+        {
+            get { return _hideDownloaded; }
+            set
+            {
+                if (SetProperty(ref _hideDownloaded, value))
+                {
+                    RefreshDisplayed();
+                }
+            }
+        }
+
+        // 0 newest, 1 oldest, 2 longest, 3 most viewed (order of the dropdown items)
+        public int SortIndex
+        {
+            get { return _sortIndex; }
+            set
+            {
+                if (SetProperty(ref _sortIndex, value))
+                {
+                    RefreshDisplayed();
+                }
+            }
+        }
+
+        public bool IsListView
+        {
+            get { return _isListView; }
+            set
+            {
+                if (SetProperty(ref _isListView, value))
+                {
+                    FirePropertyChanged(nameof(GridVideos));
+                    FirePropertyChanged(nameof(ListVideos));
+                }
+            }
+        }
+
+        // only the visible layout gets items, so the hidden one never builds cards or loads thumbnails
+        public List<TwitchVideo> GridVideos => _isListView ? null : _displayed;
+
+        public List<TwitchVideo> ListVideos => _isListView ? _displayed : null;
+
+        public bool AllSelected
+        {
+            get
+            {
+                List<TwitchVideo> selectable = _displayed.Where(v => !v.Live).ToList();
+                return selectable.Count > 0 && selectable.All(v => v.IsSelected);
+            }
+            set
+            {
+                foreach (TwitchVideo video in _displayed.Where(v => !v.Live))
+                {
+                    video.IsSelected = value;
+                }
+            }
+        }
+
+        // same filter as DownloadSelected, so the count matches what the button queues
+        private List<TwitchVideo> Selected => Videos?.Where(v => v.IsSelected && !v.Live).ToList() ?? new List<TwitchVideo>();
+
+        public bool HasSelection => Selected.Count > 0;
+
+        public string SelectionSummary
+        {
+            get
+            {
+                List<TwitchVideo> selected = Selected;
+                string summary = selected.Count + " selected";
+                long known = selected.Sum(v => _estimatedBytes.TryGetValue(v.Id, out long b) ? b : 0);
+
+                if (known <= 0)
+                {
+                    return summary;
+                }
+
+                bool allKnown = selected.All(v => _estimatedBytes.TryGetValue(v.Id, out long b) && b > 0);
+                double gb = known / 1024.0 / 1024.0 / 1024.0;
+                string size = gb >= 1 ? gb.ToString("0.0") + " GB" : (known / 1024.0 / 1024.0).ToString("0") + " MB";
+
+                return summary + " · ~" + size + (allKnown ? "" : " + unknown");
+            }
+        }
+
+        public string DownloadSelectedLabel
+        {
+            get
+            {
+                int count = Selected.Count;
+                return count == 1 ? "Download 1 video" : "Download " + count + " videos";
+            }
         }
 
         public ICommand ViewCommand
@@ -118,11 +330,6 @@ namespace TwitchLeecher.Gui.ViewModels
         #endregion Properties
 
         #region Methods
-
-        private void SubOnlyAuthChanged(bool isAuthenticatedSubOnly)
-        {
-            _isAuthenticatedSubOnly = isAuthenticatedSubOnly;
-        }
 
         private void ViewVideo(string id)
         {
@@ -188,54 +395,30 @@ namespace TwitchLeecher.Gui.ViewModels
 
                         if (video != null)
                         {
-                            TwitchVideoAuthInfo vodAuthInfo = _apiService.GetVodAuthInfo(video.Id);
+                            DownloadParameters downloadParams = _quickDownloadService.CreateDownloadParams(video, out string problem);
 
-                            if (!vodAuthInfo.Privileged && vodAuthInfo.SubOnly)
+                            if (downloadParams == null)
                             {
-                                if (_isAuthenticatedSubOnly)
-                                {
-                                    _dialogService.ShowMessageBox(
-                                        "This video is sub-only but you are not subscribed to the channel!", "Download",
-                                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                                }
-                                else
-                                {
-                                    _dialogService.ShowMessageBox(
-                                        "This video is sub-only! You need to enable sub-only video download support first!",
-                                        "Download", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                                }
-
+                                _dialogService.ShowMessageBox(problem, "Download", MessageBoxButton.OK,
+                                    MessageBoxImage.Exclamation);
                                 return;
                             }
 
-                            Dictionary<TwitchVideoQuality, string> playlistInfo =
-                                _apiService.GetPlaylistInfo(id, vodAuthInfo);
-                            List<TwitchVideoQuality> qualities = playlistInfo.Keys.OrderBy(q => q).ToList();
-
-                            Preferences currentPrefs = _preferencesService.CurrentPreferences.Clone();
-
-                            TwitchVideoQuality selectedQuality =
-                                GetSelectedQuality(qualities, currentPrefs.DownloadDefaultQuality);
-
-                            string folder = currentPrefs.DownloadSubfoldersForFav &&
-                                            _preferencesService.IsChannelInFavourites(video.Channel)
-                                ? Path.Combine(currentPrefs.DownloadFolder, video.Channel)
-                                : currentPrefs.DownloadFolder;
-
-                            string filename = _filenameService.SubstituteWildcards(currentPrefs.DownloadFileName, video,
-                                selectedQuality);
-                            filename = _filenameService.EnsureExtension(filename,
-                                currentPrefs.DownloadDisableConversion);
-
-                            DownloadParameters downloadParams = new DownloadParameters(video, qualities,
-                                selectedQuality, folder, filename, currentPrefs.DownloadDisableConversion);
-
-                            if (video.StartTime.HasValue)
+                            if (_preferencesService.CurrentPreferences.DownloadQuickDownload)
                             {
-                                downloadParams.CropStartTime = video.StartTime.Value;
+                                // #96: skip the dialog and queue with the default settings
+                                string notQueued = _quickDownloadService.TryEnqueue(downloadParams);
+                                if (notQueued != null)
+                                {
+                                    // the only feedback for a click that queued nothing
+                                    _dialogService.ShowMessageBox(notQueued, "Download", MessageBoxButton.OK,
+                                        MessageBoxImage.Exclamation);
+                                }
                             }
-
-                            _navigationService.ShowDownload(downloadParams);
+                            else
+                            {
+                                _navigationService.ShowDownload(downloadParams);
+                            }
                         }
                     }
                 }
@@ -246,71 +429,373 @@ namespace TwitchLeecher.Gui.ViewModels
             }
         }
 
-        private TwitchVideoQuality GetSelectedQuality(List<TwitchVideoQuality> qualities, DefaultQuality defaultQuality)
+        private void Downloads_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            TwitchVideoQuality sourceQuality = qualities.Find(q => q.IsSource);
-
-            if (sourceQuality == null)
+            foreach (TwitchVideoDownload download in e.NewItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
             {
-                sourceQuality = qualities[0];
+                download.PropertyChanged += Download_PropertyChanged;
             }
 
-            if (defaultQuality.IsSource)
+            foreach (TwitchVideoDownload download in e.OldItems?.OfType<TwitchVideoDownload>() ?? Enumerable.Empty<TwitchVideoDownload>())
             {
-                return sourceQuality;
+                download.PropertyChanged -= Download_PropertyChanged;
             }
 
-            if (defaultQuality.IsAudioOnly)
-            {
-                TwitchVideoQuality audioOnlyQuality = qualities.FirstOrDefault(q => q.IsAudioOnly);
+            RequestStatusRefresh();
+        }
 
-                if (audioOnlyQuality != null)
+        private void Download_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(TwitchVideoDownload.DownloadState))
+            {
+                RequestStatusRefresh();
+            }
+        }
+
+        // many queue events in a row (Download Selected, a watched-search check) cause one refresh, not one each
+        private void RequestStatusRefresh()
+        {
+            if (_statusRefreshPending)
+            {
+                return;
+            }
+
+            _statusRefreshPending = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                _statusRefreshPending = false;
+                RefreshStatusesAndList();
+            }, DispatcherPriority.Background);
+        }
+
+        private static bool FileExists(Dictionary<string, HashSet<string>> folderFiles, string path)
+        {
+            string folder = Path.GetDirectoryName(path) ?? string.Empty;
+
+            if (!folderFiles.TryGetValue(folder, out HashSet<string> files))
+            {
+                files = Directory.Exists(folder)
+                    ? new HashSet<string>(Directory.EnumerateFiles(folder), StringComparer.OrdinalIgnoreCase)
+                    : new HashSet<string>();
+                folderFiles[folder] = files;
+            }
+
+            return files.Contains(path);
+        }
+
+        private void RefreshStatusesAndList()
+        {
+            // only rebuild the cards when the hidden set changed, a rebuild loses the scroll position
+            if (RefreshStatuses() && _hideDownloaded)
+            {
+                RefreshDisplayed();
+            }
+        }
+
+        // Sets the QUEUED and DOWNLOADED badges; true when any DOWNLOADED badge changed
+        private bool RefreshStatuses()
+        {
+            bool downloadedChanged = false;
+
+            try
+            {
+                Preferences prefs = _preferencesService.CurrentPreferences;
+
+                List<TwitchVideoDownload> active = _downloadService.Downloads
+                    .Where(d => d.DownloadState == DownloadState.Queued || d.DownloadState == DownloadState.Paused ||
+                                d.DownloadState == DownloadState.Downloading)
+                    .ToList();
+                HashSet<string> queuedIds = active.Select(d => d.DownloadParams.Video.Id).ToHashSet();
+                HashSet<string> queuedPaths = active.Select(d => d.DownloadParams.FullPath)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                // shortcut: only finds files saved under the default folder/filename, and not at all when the
+                // filename uses {res} (the quality is unknown until the playlist is fetched); upgrade by keeping
+                // a record of finished downloads by video id if renamed files should count too
+                bool canGuessPath = !string.IsNullOrWhiteSpace(prefs.DownloadFileName) &&
+                                    !prefs.DownloadFileName.Contains(FilenameWildcards.RES);
+                TwitchVideoQuality anyQuality = new TwitchVideoQuality("chunked", "Source");
+
+                // one directory listing per folder instead of a File.Exists per result
+                Dictionary<string, HashSet<string>> folderFiles = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (TwitchVideo video in Videos ?? new ObservableCollection<TwitchVideo>())
                 {
-                    return audioOnlyQuality;
+                    string path = null;
+
+                    if (canGuessPath && !_defaultPaths.TryGetValue(video.Id, out path))
+                    {
+                        path = _quickDownloadService.GetDefaultPath(video, anyQuality);
+                        _defaultPaths[video.Id] = path;
+                    }
+
+                    bool downloaded = path != null && FileExists(folderFiles, path);
+                    downloadedChanged |= downloaded != video.IsDownloaded;
+                    video.IsDownloaded = downloaded;
+                    video.IsQueued = !video.IsDownloaded &&
+                                     (queuedIds.Contains(video.Id) || (path != null && queuedPaths.Contains(path)));
                 }
-                else
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowAndLogException(ex);
+            }
+
+            return downloadedChanged;
+        }
+
+        private void RefreshDisplayed()
+        {
+            IEnumerable<TwitchVideo> videos = Videos ?? Enumerable.Empty<TwitchVideo>();
+
+            if (_hideDownloaded)
+            {
+                videos = videos.Where(v => !v.IsDownloaded);
+            }
+
+            videos = _sortIndex switch
+            {
+                1 => videos.OrderBy(v => v.RecordedDate),
+                2 => videos.OrderByDescending(v => v.Length),
+                3 => videos.OrderByDescending(v => v.Views),
+                _ => videos.OrderByDescending(v => v.RecordedDate)
+            };
+
+            _displayed = videos.ToList();
+
+            FirePropertyChanged(nameof(GridVideos));
+            FirePropertyChanged(nameof(ListVideos));
+            FirePropertyChanged(nameof(SearchTitle));
+            FirePropertyChanged(nameof(SearchSummary));
+            FireSelectionChanged();
+        }
+
+        private async void LoadChannelHeader()
+        {
+            SearchParameters p = _resultParams;
+
+            _channelDisplayName = null;
+            ChannelAvatar = null;
+            FirePropertyChanged(nameof(IsChannelSearch));
+            FirePropertyChanged(nameof(IsFavourite));
+
+            if (p.SearchType != SearchType.Channel || string.IsNullOrWhiteSpace(p.Channel))
+            {
+                return;
+            }
+
+            try
+            {
+                var info = await Task.Run(() => _apiService.GetChannelInfo(p.Channel));
+
+                // a newer search may have finished meanwhile
+                if (info == null || p != _resultParams)
                 {
-                    return sourceQuality;
+                    return;
                 }
-            }
 
-            IEnumerable<TwitchVideoQuality> visualQualities = qualities.Where(q => !q.IsAudioOnly);
+                _channelDisplayName = info.Value.DisplayName;
+                FirePropertyChanged(nameof(SearchTitle));
 
-            int defaultRes = defaultQuality.VerticalResolution;
-
-            TwitchVideoQuality selectedQuality = null;
-
-            foreach (TwitchVideoQuality quality in visualQualities)
-            {
-                if (quality.VerticalResolution <= defaultRes && (selectedQuality == null ||
-                                                                 selectedQuality.VerticalResolution <
-                                                                 quality.VerticalResolution))
+                if (Uri.TryCreate(info.Value.ProfileImageUrl, UriKind.Absolute, out Uri avatarUrl))
                 {
-                    selectedQuality = quality;
+                    Bitmap avatar = await ImageHelper.LoadFromWeb(avatarUrl);
+
+                    if (p == _resultParams)
+                    {
+                        ChannelAvatar = avatar;
+                    }
                 }
             }
-
-            if (selectedQuality != null)
+            catch (Exception ex)
             {
-                return selectedQuality;
+                // the header is cosmetic, the results stay usable without it
+                Console.WriteLine($"Could not load channel header for '{p.Channel}': {ex.Message}");
             }
+        }
 
-            foreach (TwitchVideoQuality quality in visualQualities)
+        [RelayCommand]
+        private void ToggleFavourite()
+        {
+            try
             {
-                if (quality.VerticalResolution >= defaultRes && (selectedQuality == null ||
-                                                                 selectedQuality.VerticalResolution >
-                                                                 quality.VerticalResolution))
+                lock (_commandLockObject)
                 {
-                    selectedQuality = quality;
+                    Preferences prefs = _preferencesService.CurrentPreferences;
+                    string existing = prefs.SearchFavouriteChannels.FirstOrDefault(c =>
+                        c.Equals(_resultParams.Channel, StringComparison.OrdinalIgnoreCase));
+
+                    if (existing != null)
+                    {
+                        prefs.SearchFavouriteChannels.Remove(existing);
+                    }
+                    else
+                    {
+                        prefs.SearchFavouriteChannels.Add(_resultParams.Channel);
+                    }
+
+                    _preferencesService.Save(prefs);
+                    FirePropertyChanged(nameof(IsFavourite));
                 }
             }
-
-            if (selectedQuality != null)
+            catch (Exception ex)
             {
-                return selectedQuality;
+                _dialogService.ShowAndLogException(ex);
+            }
+        }
+
+        private void FireSelectionChanged()
+        {
+            FirePropertyChanged(nameof(AllSelected));
+            FirePropertyChanged(nameof(HasSelection));
+            FirePropertyChanged(nameof(SelectionSummary));
+            FirePropertyChanged(nameof(DownloadSelectedLabel));
+        }
+
+        // Follows ticks on every result, for the footer and the size estimate
+        private void HookVideos()
+        {
+            _defaultPaths.Clear();
+
+            foreach (TwitchVideo video in _hookedVideos)
+            {
+                video.PropertyChanged -= Video_PropertyChanged;
             }
 
-            return sourceQuality;
+            if (_hookedCollection != null)
+            {
+                _hookedCollection.CollectionChanged -= Videos_CollectionChanged;
+            }
+
+            _hookedCollection = Videos;
+            _hookedVideos = Videos?.ToList() ?? new List<TwitchVideo>();
+
+            foreach (TwitchVideo video in _hookedVideos)
+            {
+                video.PropertyChanged += Video_PropertyChanged;
+            }
+
+            if (_hookedCollection != null)
+            {
+                _hookedCollection.CollectionChanged += Videos_CollectionChanged;
+            }
+
+            RefreshStatuses();
+            RefreshDisplayed();
+        }
+
+        // shortcut: fetches the playlist (2 API calls) for every ticked video to learn its bitrate, so "Select all"
+        // on a big search makes many requests; upgrade by estimating from a fixed bitrate per default quality
+        private void EstimateSize(TwitchVideo video)
+        {
+            if (_estimatedBytes.ContainsKey(video.Id))
+            {
+                return;
+            }
+
+            _estimatedBytes[video.Id] = 0;
+
+            Task.Run(() =>
+            {
+                DownloadParameters p = _quickDownloadService.CreateDownloadParams(video, out _);
+                long bandwidth = p?.SelectedQuality?.Bandwidth ?? 0;
+                return (long)(bandwidth / 8.0 * video.Length.TotalSeconds);
+            }).ContinueWith(task =>
+            {
+                // failures (sub-only, network) just stay unknown
+                _estimatedBytes[video.Id] = task.IsCompletedSuccessfully ? task.Result : 0;
+                FirePropertyChanged(nameof(SelectionSummary));
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        public override void OnBeforeShown()
+        {
+            base.OnBeforeShown();
+            RefreshStatusesAndList();
+        }
+
+        [RelayCommand]
+        private void ShowGrid() => IsListView = false;
+
+        [RelayCommand]
+        private void ShowList() => IsListView = true;
+
+        // Saves the current channel search as a watched search with default settings.
+        [RelayCommand]
+        private void WatchSearch()
+        {
+            try
+            {
+                SearchParameters searchParams = _searchService.LastSearchParams;
+
+                if (searchParams == null || searchParams.SearchType != SearchType.Channel ||
+                    string.IsNullOrWhiteSpace(searchParams.Channel))
+                {
+                    return;
+                }
+
+                WatchedSearch search = _autoDownloadService.Add(searchParams.Channel, searchParams.VideoType);
+
+                // asking to watch a search means wanting it to run
+                _autoDownloadService.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowAndLogException(ex);
+            }
+        }
+
+        [RelayCommand]
+        private async Task DownloadSelected()
+        {
+            try
+            {
+                List<TwitchVideo> selected = Videos.Where(v => v.IsSelected && !v.Live).ToList();
+
+                if (selected.Count == 0)
+                {
+                    return;
+                }
+
+                _dialogService.SetBusy();
+
+                int added = 0;
+                List<string> skipped = new List<string>();
+
+                foreach (TwitchVideo video in selected)
+                {
+                    // API calls off the UI thread so the window stays responsive for long selections
+                    (DownloadParameters downloadParams, string problem) = await Task.Run(() =>
+                    {
+                        DownloadParameters p = _quickDownloadService.CreateDownloadParams(video, out string reason);
+                        return (p, reason);
+                    });
+
+                    string notQueued = downloadParams == null ? problem : _quickDownloadService.TryEnqueue(downloadParams);
+
+                    if (notQueued == null)
+                    {
+                        added++;
+                        video.IsSelected = false;
+                    }
+                    else
+                    {
+                        skipped.Add(video.Title + ": " + notQueued);
+                    }
+                }
+
+                if (skipped.Count > 0)
+                {
+                    await _dialogService.ShowMessageBox(
+                        added + " download(s) added. Skipped (still ticked):" + Environment.NewLine +
+                        string.Join(Environment.NewLine, skipped),
+                        "Download Selected", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowAndLogException(ex);
+            }
         }
 
         public void ShowSearch()
@@ -338,6 +823,8 @@ namespace TwitchLeecher.Gui.ViewModels
             }
 
             menuCommands.Add(new MenuCommand(SeachCommnad, "New Search", "fa-solid fa-magnifying-glass"));
+            menuCommands.Add(new MenuCommand(DownloadSelectedCommand, "Download Selected", "fa-solid fa-list-check", 190));
+            menuCommands.Add(new MenuCommand(WatchSearchCommand, "Watch this search", "fa-solid fa-eye", 190));
 
             return menuCommands;
         }
@@ -354,7 +841,30 @@ namespace TwitchLeecher.Gui.ViewModels
 
             if (propertyName.Equals(nameof(Videos)))
             {
+                _resultParams = _searchService.LastSearchParams;
+                LoadChannelHeader();
                 ScrollPosition = Vector.Zero;
+                HookVideos();
+            }
+        }
+
+        private void Videos_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            HookVideos();
+        }
+
+        private void Video_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(TwitchVideo.IsSelected))
+            {
+                TwitchVideo video = (TwitchVideo)sender;
+
+                if (video.IsSelected && !video.Live)
+                {
+                    EstimateSize(video);
+                }
+
+                FireSelectionChanged();
             }
         }
 

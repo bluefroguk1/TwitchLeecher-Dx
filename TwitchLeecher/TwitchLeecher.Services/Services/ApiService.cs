@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Net;
-using System.Reactive.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
-using DynamicData;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 using TwitchLeecher.Core.Constants;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Models;
@@ -26,12 +27,22 @@ namespace TwitchLeecher.Services.Services
         #region Constants
 
         private const string GQL_URL = "https://gql.twitch.tv/gql";
+
+        // persisted query the Twitch web player uses to page through VOD chat
+        private const string CHAT_OPERATION = "VideoCommentsByOffsetOrCursor";
+        // persisted query the Twitch web player uses for a video's chapters (its game changes)
+        private const string CHAPTERS_OPERATION = "VideoPlayer_ChapterSelectButtonVideo";
+        private const string CHAPTERS_QUERY_HASH = "71835d5ef425e154bf282453a926d99b328cdc5e32f36d3a209d0f4778b41203";
+        private const string CHAT_QUERY_HASH = "b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a";
         private const string AUTH_URL = "https://id.twitch.tv/oauth2/validate";
         private const string REVOKE_URL = "https://id.twitch.tv/oauth2/revoke";
         private const string USERS_URL = "https://api.twitch.tv/helix/users";
+        private const string STREAMS_URL = "https://api.twitch.tv/helix/streams";
         private const string VIDEOS_URL = "https://api.twitch.tv/helix/videos";
         private const string CHANNELS_URL = "https://api.twitch.tv/helix/channels";
-        private const string PLAYLISTS_URL = "https://usher.ttvnw.net/vod/{0}.m3u8";
+        private const string CLIPS_URL = "https://api.twitch.tv/helix/clips";
+        // v2 + supported_codecs is what the Twitch web player uses; v1 never lists HEVC/AV1 renditions (#48)
+        private const string PLAYLISTS_URL = "https://usher.ttvnw.net/vod/v2/{0}.m3u8";
 
         private const string PROCESSING_THUMBNAIL =
             "https://vod-secure.twitch.tv/_404/404_processing_320x180.png";
@@ -47,6 +58,9 @@ namespace TwitchLeecher.Services.Services
         private readonly Regex _rxGroup = new Regex("GROUP-ID\\=\"(?<group>.*?)\\\"");
         private readonly Regex _rxName = new Regex("NAME\\=\"(?<name>.*?)\\\"");
         private readonly Regex _rxResolution = new Regex("RESOLUTION\\=(?<resolution>.*?),");
+        private readonly Regex _rxVariantId = new Regex("STABLE-VARIANT-ID\\=\"(?<id>.*?)\"");
+        private readonly Regex _rxIvsName = new Regex("IVS-NAME\\=\"(?<name>.*?)\"");
+        private readonly Regex _rxCodecs = new Regex("CODECS\\=\"(?<codecs>.*?)\"");
         private readonly Regex _rxBandwidth = new Regex("(?<![A-Z-])BANDWIDTH\\=(?<bandwidth>\\d+)");
         private IPreferencesService _preferencesService;
         private readonly ILogService _logService;
@@ -75,16 +89,16 @@ namespace TwitchLeecher.Services.Services
 
         #region Methods
 
-        private WebClient CreateWebClientWithEncoding()
+        private HttpRequestClient CreateWebClientWithEncoding()
         {
-            return new WebClient() { Encoding = Encoding.UTF8 };
+            return new HttpRequestClient();
         }
 
-        private WebClient CreateApiWebClient()
+        private HttpRequestClient CreateApiWebClient()
         {
-            WebClient wc = CreateWebClientWithEncoding();
-            wc.Headers.Add("Client-ID", Constants.ClientId);
-            wc.Headers.Add(
+            HttpRequestClient wc = CreateWebClientWithEncoding();
+            wc.AddHeader("Client-ID", Constants.ClientId);
+            wc.AddHeader(
                 "Authorization",
                 $"Bearer {_runtimeDataService.RuntimeData.AuthInfo.AccessToken}"
             );
@@ -92,25 +106,25 @@ namespace TwitchLeecher.Services.Services
             return wc;
         }
 
-        private WebClient CreateGqlWebClient()
+        private HttpRequestClient CreateGqlWebClient()
         {
-            WebClient wc = CreateWebClientWithEncoding();
-            wc.Headers.Add("Client-ID", Constants.ClientIdWeb);
+            HttpRequestClient wc = CreateWebClientWithEncoding();
+            wc.AddHeader("Client-ID", Constants.ClientIdWeb);
 
             string accessTokenSubOnly = _runtimeDataService.RuntimeData.AuthInfo.AccessTokenSubOnly;
 
             if (!string.IsNullOrWhiteSpace(accessTokenSubOnly))
             {
-                wc.Headers.Add("Authorization", $"OAuth {accessTokenSubOnly}");
+                wc.AddHeader("Authorization", $"OAuth {accessTokenSubOnly}");
             }
 
             return wc;
         }
 
-        private void SetNextRequestTime(WebClient wc)
+        private void SetNextRequestTime(HttpRequestClient wc)
         {
-            string remainingStr = wc.ResponseHeaders["Ratelimit-Remaining"];
-            string resetStr = wc.ResponseHeaders["Ratelimit-Reset"];
+            string remainingStr = wc.GetResponseHeader("Ratelimit-Remaining");
+            string resetStr = wc.GetResponseHeader("Ratelimit-Reset");
 
             // Only block further requests once the bucket is empty. While requests remain,
             // _nextRequest is left untouched (a stale or concurrent response must not
@@ -155,6 +169,40 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
+        public bool? CheckToken(string accessToken, bool subOnly)
+        {
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return false;
+            }
+
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
+            {
+                webClient.AddHeader("Authorization", $"Bearer {accessToken}");
+
+                try
+                {
+                    JsonObject json = JsonNodeExtensions.ParseObject(webClient.DownloadString(AUTH_URL));
+                    string clientId = json.Value<string>("client_id");
+                    string expected = subOnly ? Constants.ClientIdWeb : Constants.ClientId;
+
+                    return !string.IsNullOrWhiteSpace(json.Value<string>("user_id")) &&
+                           string.Equals(clientId, expected, StringComparison.OrdinalIgnoreCase);
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return false;
+                }
+                catch (Exception)
+                {
+                    // network or Twitch trouble: don't tell the user their login is broken
+                    return null;
+                }
+            }
+        }
+
+        public string SignedInLogin { get; private set; }
+
         public bool ValidateAuthentication(string accessToken, bool subOnly)
         {
             if (string.IsNullOrWhiteSpace(accessToken))
@@ -162,9 +210,9 @@ namespace TwitchLeecher.Services.Services
                 return false;
             }
 
-            using (WebClient webClient = CreateWebClientWithEncoding())
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
             {
-                webClient.Headers.Add("Authorization", $"Bearer {accessToken}");
+                webClient.AddHeader("Authorization", $"Bearer {accessToken}");
 
                 string jsonStr = null;
 
@@ -172,15 +220,15 @@ namespace TwitchLeecher.Services.Services
                 {
                     jsonStr = webClient.DownloadString(AUTH_URL);
                 }
-                catch (WebException)
+                catch (HttpRequestException)
                 {
-                    // Any WebException indicates that the access token could not be verified
+                    // Any HttpRequestException indicates that the access token could not be verified
                     return false;
                 }
 
                 if (!string.IsNullOrWhiteSpace(jsonStr))
                 {
-                    JObject json = JObject.Parse(jsonStr);
+                    JsonObject json = JsonNodeExtensions.ParseObject(jsonStr);
 
                     if (json != null)
                     {
@@ -197,6 +245,11 @@ namespace TwitchLeecher.Services.Services
                             && clientId.Equals(checkClientId, StringComparison.OrdinalIgnoreCase)
                         )
                         {
+                            if (!subOnly)
+                            {
+                                SignedInLogin = login;
+                            }
+
                             return true;
                         }
                     }
@@ -213,19 +266,19 @@ namespace TwitchLeecher.Services.Services
                 return;
             }
 
-            using (WebClient webClient = CreateWebClientWithEncoding())
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
             {
-                webClient.QueryString.Add(
+                webClient.AddQuery(
                     "client_id",
                     subOnly ? Constants.ClientIdWeb : Constants.ClientId
                 );
-                webClient.QueryString.Add("token", accessToken);
+                webClient.AddQuery("token", accessToken);
 
                 try
                 {
                     _ = webClient.UploadString(REVOKE_URL, string.Empty);
                 }
-                catch (WebException)
+                catch (HttpRequestException)
                 {
                     // Ignore potentionally failed revoke requests
                 }
@@ -242,6 +295,37 @@ namespace TwitchLeecher.Services.Services
             return GetChannelIdByName(channel) != null;
         }
 
+        public DateTime? GetLiveStreamStart(string channel)
+        {
+            if (string.IsNullOrWhiteSpace(channel))
+            {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            using (HttpRequestClient webClient = CreateApiWebClient())
+            {
+                webClient.AddQuery("user_login", channel);
+
+                WaitForNextRequest();
+
+                string result = webClient.DownloadString(STREAMS_URL);
+
+                SetNextRequestTime(webClient);
+
+                JsonArray streams = JsonNodeExtensions.ParseObject(result).Value<JsonArray>("data");
+                JsonNode stream = streams?.FirstOrDefault(s => s.Value<string>("type") == "live");
+                string startedAt = stream?.Value<string>("started_at");
+
+                if (string.IsNullOrWhiteSpace(startedAt))
+                {
+                    return null;
+                }
+
+                return DateTime.Parse(startedAt, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+            }
+        }
+
         public string GetChannelIdByName(string channel)
         {
             if (string.IsNullOrWhiteSpace(channel))
@@ -249,9 +333,9 @@ namespace TwitchLeecher.Services.Services
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            using (WebClient webClient = CreateApiWebClient())
+            using (HttpRequestClient webClient = CreateApiWebClient())
             {
-                webClient.QueryString.Add("login", channel);
+                webClient.AddQuery("login", channel);
 
                 string result = null;
 
@@ -263,20 +347,20 @@ namespace TwitchLeecher.Services.Services
 
                     SetNextRequestTime(webClient);
                 }
-                catch (WebException)
+                catch (HttpRequestException)
                 {
                     return null;
                 }
 
                 if (!string.IsNullOrWhiteSpace(result))
                 {
-                    JObject searchResultJson = JObject.Parse(result);
+                    JsonObject searchResultJson = JsonNodeExtensions.ParseObject(result);
 
-                    JArray usersJson = searchResultJson.Value<JArray>("data");
+                    JsonArray usersJson = searchResultJson.Value<JsonArray>("data");
 
-                    if (usersJson != null && usersJson.HasValues)
+                    if (usersJson != null && usersJson.HasValues())
                     {
-                        JToken userJson = usersJson.FirstOrDefault();
+                        JsonNode userJson = usersJson.FirstOrDefault();
 
                         if (userJson != null)
                         {
@@ -284,9 +368,9 @@ namespace TwitchLeecher.Services.Services
 
                             if (!string.IsNullOrWhiteSpace(id))
                             {
-                                using (WebClient webClientChannel = CreateApiWebClient())
+                                using (HttpRequestClient webClientChannel = CreateApiWebClient())
                                 {
-                                    webClientChannel.QueryString.Add("broadcaster_id", id);
+                                    webClientChannel.AddQuery("broadcaster_id", id);
 
                                     try
                                     {
@@ -298,7 +382,7 @@ namespace TwitchLeecher.Services.Services
 
                                         return id;
                                     }
-                                    catch (WebException)
+                                    catch (HttpRequestException)
                                     {
                                         return null;
                                     }
@@ -313,6 +397,45 @@ namespace TwitchLeecher.Services.Services
                 }
 
                 return null;
+            }
+        }
+
+        public (string DisplayName, string ProfileImageUrl)? GetChannelInfo(string channel)
+        {
+            if (string.IsNullOrWhiteSpace(channel))
+            {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            using (HttpRequestClient webClient = CreateApiWebClient())
+            {
+                webClient.AddQuery("login", channel);
+
+                string result;
+
+                try
+                {
+                    WaitForNextRequest();
+
+                    result = webClient.DownloadString(USERS_URL);
+
+                    SetNextRequestTime(webClient);
+                }
+                catch (HttpRequestException)
+                {
+                    return null;
+                }
+
+                JsonNode userJson = string.IsNullOrWhiteSpace(result)
+                    ? null
+                    : JsonNodeExtensions.ParseObject(result).Value<JsonArray>("data")?.FirstOrDefault();
+
+                if (userJson == null)
+                {
+                    return null;
+                }
+
+                return (userJson.Value<string>("display_name"), userJson.Value<string>("profile_image_url"));
             }
         }
 
@@ -381,7 +504,10 @@ namespace TwitchLeecher.Services.Services
                     loadTo,
                     0
                 );
-                results.AddRange(videos);
+                foreach (TwitchVideo video in videos)
+                {
+                    results.Add(video);
+                }
             }
 
             results = new ObservableCollection<TwitchVideo>(
@@ -406,6 +532,11 @@ namespace TwitchLeecher.Services.Services
             }
 
             string channelId = GetChannelIdByName(channel);
+
+            if (videoType == VideoType.Clip)
+            {
+                return SearchChannelClips(channelId, loadLimit, loadFrom, loadTo, loadLastVods);
+            }
 
             ObservableCollection<TwitchVideo> videos = new ObservableCollection<TwitchVideo>();
 
@@ -445,15 +576,15 @@ namespace TwitchLeecher.Services.Services
 
             do
             {
-                using (WebClient webClient = CreateApiWebClient())
+                using (HttpRequestClient webClient = CreateApiWebClient())
                 {
-                    webClient.QueryString.Add("user_id", channelId);
-                    webClient.QueryString.Add("type", broadcastTypeParam);
-                    webClient.QueryString.Add("first", TWITCH_MAX_LOAD_LIMIT.ToString());
+                    webClient.AddQuery("user_id", channelId);
+                    webClient.AddQuery("type", broadcastTypeParam);
+                    webClient.AddQuery("first", TWITCH_MAX_LOAD_LIMIT.ToString());
 
                     if (!string.IsNullOrWhiteSpace(cursor))
                     {
-                        webClient.QueryString.Add("after", cursor);
+                        webClient.AddQuery("after", cursor);
                     }
 
                     WaitForNextRequest();
@@ -462,11 +593,11 @@ namespace TwitchLeecher.Services.Services
 
                     SetNextRequestTime(webClient);
 
-                    JObject videosResponseJson = JObject.Parse(result);
+                    JsonObject videosResponseJson = JsonNodeExtensions.ParseObject(result);
 
                     if (videosResponseJson != null)
                     {
-                        JArray videosJson = videosResponseJson.Value<JArray>("data");
+                        JsonArray videosJson = videosResponseJson.Value<JsonArray>("data");
 
                         if (videosJson.Count == 0)
                         {
@@ -474,7 +605,7 @@ namespace TwitchLeecher.Services.Services
                         }
                         else
                         {
-                            JObject paginationJson = videosResponseJson.Value<JObject>(
+                            JsonObject paginationJson = videosResponseJson.Value<JsonObject>(
                                 "pagination"
                             );
 
@@ -483,7 +614,7 @@ namespace TwitchLeecher.Services.Services
                                 cursor = paginationJson.Value<string>("cursor");
                             }
 
-                            foreach (JObject videoJson in videosJson)
+                            foreach (JsonObject videoJson in videosJson)
                             {
                                 sum++;
 
@@ -524,7 +655,143 @@ namespace TwitchLeecher.Services.Services
             } while (!stop);
 
             return videos;
-            return videos;
+        }
+
+        // Helix filters clips by any date range server-side, so no need to page past old ones like VODs.
+        private ObservableCollection<TwitchVideo> SearchChannelClips(
+            string channelId,
+            LoadLimitType loadLimit,
+            DateTime loadFrom,
+            DateTime loadTo,
+            int loadLastClips
+        )
+        {
+            ObservableCollection<TwitchVideo> clips = new ObservableCollection<TwitchVideo>();
+            string cursor = null;
+
+            do
+            {
+                using (HttpRequestClient webClient = CreateApiWebClient())
+                {
+                    webClient.AddQuery("broadcaster_id", channelId);
+                    webClient.AddQuery("first", TWITCH_MAX_LOAD_LIMIT.ToString());
+
+                    if (loadLimit == LoadLimitType.Timespan)
+                    {
+                        webClient.AddQuery("started_at", loadFrom.Date.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+                        webClient.AddQuery("ended_at", loadTo.Date.AddDays(1).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(cursor))
+                    {
+                        webClient.AddQuery("after", cursor);
+                    }
+
+                    WaitForNextRequest();
+
+                    string result = webClient.DownloadString(CLIPS_URL);
+
+                    SetNextRequestTime(webClient);
+
+                    JsonObject clipsResponseJson = JsonNodeExtensions.ParseObject(result);
+                    JsonArray clipsJson = clipsResponseJson.Value<JsonArray>("data");
+                    cursor = clipsResponseJson.Value<JsonObject>("pagination")?.Value<string>("cursor");
+
+                    foreach (JsonObject clipJson in clipsJson)
+                    {
+                        clips.Add(ParseClip(clipJson));
+
+                        if (loadLimit == LoadLimitType.LastVods && clips.Count >= loadLastClips)
+                        {
+                            return clips;
+                        }
+                    }
+
+                    if (clipsJson.Count == 0)
+                    {
+                        cursor = null;
+                    }
+                }
+            } while (!string.IsNullOrWhiteSpace(cursor));
+
+            return clips;
+        }
+
+        private TwitchVideo GetTwitchClipFromSlug(string slug)
+        {
+            using (HttpRequestClient webClient = CreateApiWebClient())
+            {
+                webClient.AddQuery("id", slug);
+
+                JsonArray clipsJson = JsonNodeExtensions.ParseObject(webClient.DownloadString(CLIPS_URL)).Value<JsonArray>("data");
+                JsonNode clipJson = clipsJson?.FirstOrDefault();
+
+                return clipJson == null ? null : ParseClip(clipJson);
+            }
+        }
+
+        private TwitchVideo ParseClip(JsonNode clipJson)
+        {
+            DateTime createdDate = DateTime.Parse(
+                clipJson.Value<string>("created_at"),
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal
+            );
+
+            return new TwitchVideo(
+                clipJson.Value<string>("broadcaster_name"),
+                clipJson.Value<string>("title"),
+                clipJson.Value<string>("id"),
+                clipJson.Value<int>("view_count"),
+                TimeSpan.FromSeconds(clipJson.Value<double>("duration")),
+                createdDate,
+                new Uri(clipJson.Value<string>("thumbnail_url")),
+                new Uri(clipJson.Value<string>("url")),
+                true,
+                false,
+                false
+            )
+            {
+                IsClip = true,
+                ClipCreator = clipJson.Value<string>("creator_name")
+            };
+        }
+
+        public Dictionary<TwitchVideoQuality, string> GetClipQualities(string slug)
+        {
+            using (HttpRequestClient webClient = CreateGqlWebClient())
+            {
+                // persisted query the Twitch web player uses to get signed clip URLs
+                string request = "{\"operationName\":\"VideoAccessToken_Clip\",\"variables\":{\"slug\":\"" + slug +
+                                 "\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11\"}}}";
+
+                JsonNode clipJson = JsonNodeExtensions.ParseObject(webClient.UploadString(GQL_URL, request)).SelectToken("$.data.clip");
+
+                if (clipJson == null || !clipJson.HasValues())
+                {
+                    throw new ApplicationException("Clip '" + slug + "' was not found!");
+                }
+
+                JsonNode tokenJson = clipJson["playbackAccessToken"];
+                string auth = "?sig=" + tokenJson.Value<string>("signature") + "&token=" +
+                              Uri.EscapeDataString(tokenJson.Value<string>("value"));
+
+                Dictionary<TwitchVideoQuality, string> qualities = new Dictionary<TwitchVideoQuality, string>();
+
+                foreach (JsonNode qualityJson in clipJson["videoQualities"].AsArray())
+                {
+                    int height = int.Parse(qualityJson.Value<string>("quality"), CultureInfo.InvariantCulture);
+                    int fps = (int)Math.Round(qualityJson.Value<double>("frameRate"));
+                    string name = height + "p" + fps;
+                    // shortcut: Twitch only gives the height; assumes 16:9 (clip renditions are served from /landscape/)
+                    string resolution = (int)Math.Round(height * 16 / 9.0 / 2) * 2 + "x" + height;
+
+                    qualities.TryAdd(new TwitchVideoQuality(name, name, resolution),
+                        qualityJson.Value<string>("sourceURL") + auth);
+                }
+
+                return qualities;
+            }
         }
 
         private ObservableCollection<TwitchVideo> SearchUrls(string urls)
@@ -547,6 +814,23 @@ namespace TwitchLeecher.Services.Services
 
                 foreach (string url in urlArr)
                 {
+                    string clipSlug = GetClipSlugFromUrl(url);
+
+                    if (clipSlug != null)
+                    {
+                        if (addedIds.Add(clipSlug))
+                        {
+                            TwitchVideo clip = GetTwitchClipFromSlug(clipSlug);
+
+                            if (clip != null)
+                            {
+                                videos.Add(clip);
+                            }
+                        }
+
+                        continue;
+                    }
+
                     string id = GetVideoIdFromUrl(url);
 
                     if (!string.IsNullOrWhiteSpace(id) && !addedIds.Contains(id))
@@ -608,6 +892,42 @@ namespace TwitchLeecher.Services.Services
             return videos;
         }
 
+        // shortcut: 4 checks at a time and an in-memory cache per sign-in state; fine for a result page, upgrade if Twitch starts rate limiting the token call
+        private static readonly SemaphoreSlim _lockedCheckGate = new SemaphoreSlim(4);
+        private static readonly ConcurrentDictionary<string, bool> _lockedCache = new ConcurrentDictionary<string, bool>();
+
+        // Locked = Twitch holds back qualities for this login. The token a download needs anyway says so
+        // (restricted_bitrates), and it is empty when the signed-in user may watch it. Any failure answers false.
+        private async Task<bool> IsVodLockedAsync(string id)
+        {
+            string key = id + "|" + !string.IsNullOrWhiteSpace(_runtimeDataService.RuntimeData.AuthInfo?.AccessTokenSubOnly);
+
+            if (_lockedCache.TryGetValue(key, out bool cached))
+            {
+                return cached;
+            }
+
+            await _lockedCheckGate.WaitAsync();
+
+            try
+            {
+                TwitchVideoAuthInfo info = await Task.Run(() => GetVodAuthInfo(id));
+
+                // privileged (own channel, moderator) is reported as SubOnly too, but nothing is held back
+                bool locked = info.SubOnly && !info.Privileged;
+                _lockedCache[key] = locked;
+                return locked;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                _lockedCheckGate.Release();
+            }
+        }
+
         public TwitchVideoAuthInfo GetVodAuthInfo(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -615,14 +935,14 @@ namespace TwitchLeecher.Services.Services
                 throw new ArgumentNullException(nameof(id));
             }
 
-            using (WebClient webClient = CreateGqlWebClient())
+            using (HttpRequestClient webClient = CreateGqlWebClient())
             {
                 var gqlPlaybackAccessToken = CreateGqlPlaybackAccessToken(id);
                 string accessTokenStr = webClient.UploadString(GQL_URL, gqlPlaybackAccessToken);
 
-                JObject accessTokenJson = JObject.Parse(accessTokenStr);
+                JsonObject accessTokenJson = JsonNodeExtensions.ParseObject(accessTokenStr);
 
-                JToken vpaToken = accessTokenJson.SelectToken(
+                JsonNode vpaToken = accessTokenJson.SelectToken(
                     "$.data.videoPlaybackAccessToken",
                     false
                 );
@@ -648,7 +968,7 @@ namespace TwitchLeecher.Services.Services
                 bool privileged = false;
                 bool subOnly = false;
 
-                JObject tokenJson = JObject.Parse(HttpUtility.UrlDecode(token));
+                JsonObject tokenJson = JsonNodeExtensions.ParseObject(HttpUtility.UrlDecode(token));
 
                 if (tokenJson == null)
                 {
@@ -663,14 +983,14 @@ namespace TwitchLeecher.Services.Services
                 }
                 else
                 {
-                    JObject chansubJson = tokenJson.Value<JObject>("chansub");
+                    JsonObject chansubJson = tokenJson.Value<JsonObject>("chansub");
 
                     if (chansubJson == null)
                     {
                         throw new ApplicationException("Token property 'chansub' is null!");
                     }
 
-                    JArray restrictedQualitiesJson = chansubJson.Value<JArray>(
+                    JsonArray restrictedQualitiesJson = chansubJson.Value<JsonArray>(
                         "restricted_bitrates"
                     );
 
@@ -716,14 +1036,19 @@ namespace TwitchLeecher.Services.Services
             TwitchVideoAuthInfo vodAuthInfo
         )
         {
-            using (WebClient webClient = CreateWebClientWithEncoding())
+            using (HttpRequestClient webClient = CreateWebClientWithEncoding())
             {
-                webClient.Headers.Add("Accept", "*/*");
+                webClient.AddHeader("Accept", "*/*");
 
-                webClient.QueryString.Add("allow_source", "true");
-                webClient.QueryString.Add("allow_audio_only", "true");
-                webClient.QueryString.Add("token", vodAuthInfo.Token);
-                webClient.QueryString.Add("sig", vodAuthInfo.Signature);
+                webClient.AddQuery("allow_source", "true");
+                webClient.AddQuery("allow_audio_only", "true");
+                webClient.AddQuery("platform", "web");
+                webClient.AddQuery("player_backend", "mediaplayer");
+                webClient.AddQuery("playlist_include_framerate", "true");
+                webClient.AddQuery("supported_codecs", "av1,h265,h264");
+                // the token is stored URL-escaped; AddQuery escapes every value itself, so hand it over unescaped once
+                webClient.AddQuery("token", Uri.UnescapeDataString(vodAuthInfo.Token));
+                webClient.AddQuery("sig", vodAuthInfo.Signature);
 
                 string playlist = webClient.DownloadString(string.Format(PLAYLISTS_URL, vodId));
 
@@ -740,14 +1065,28 @@ namespace TwitchLeecher.Services.Services
 
                     if (!line.StartsWith("#"))
                     {
-                        string mediaInfo = lines[i - 2];
                         string streamInfo = lines[i - 1];
 
-                        Match groupMatch = _rxGroup.Match(mediaInfo);
-                        string id = groupMatch.Groups["group"].Value;
+                        string id;
+                        string name;
 
-                        Match nameMatch = _rxName.Match(mediaInfo);
-                        string name = nameMatch.Groups["name"].Value;
+                        Match variantMatch = _rxVariantId.Match(streamInfo);
+
+                        if (variantMatch.Success)
+                        {
+                            // v2 playlist: everything is on the EXT-X-STREAM-INF line
+                            id = variantMatch.Groups["id"].Value;
+                            name = _rxIvsName.Match(streamInfo).Groups["name"].Value;
+                        }
+                        else
+                        {
+                            // v1 playlist: id and name are on the preceding EXT-X-MEDIA line
+                            string mediaInfo = lines[i - 2];
+                            id = _rxGroup.Match(mediaInfo).Groups["group"].Value;
+                            name = _rxName.Match(mediaInfo).Groups["name"].Value;
+                        }
+
+                        string codecs = _rxCodecs.Match(streamInfo).Groups["codecs"].Value;
 
                         string resolution = null;
 
@@ -767,13 +1106,428 @@ namespace TwitchLeecher.Services.Services
                             long.TryParse(bandwidthMatch.Groups["bandwidth"].Value, out bandwidth);
                         }
 
-                        TwitchVideoQuality quality = new TwitchVideoQuality(id, name, resolution, bandwidth);
+                        TwitchVideoQuality quality = new TwitchVideoQuality(id, name, resolution, codecs, bandwidth);
 
-                        playlistInfo.Add(quality, line);
+                        // first listed variant wins if Twitch ever repeats an id
+                        playlistInfo.TryAdd(quality, line);
                     }
                 }
 
                 return playlistInfo;
+            }
+        }
+
+        // Video.seekPreviewsURL points to a JSON array of storyboards ("low" 160x90, "high" 220x124), each
+        // {count, width, height, cols, rows, interval, quality, images:[file names relative to the JSON]}.
+        // Returns null when the VOD has none.
+        public TwitchStoryboard GetStoryboard(string vodId)
+        {
+            if (string.IsNullOrEmpty(vodId) || !vodId.All(char.IsAsciiDigit))
+            {
+                return null;
+            }
+
+            string infoUrl;
+
+            using (HttpRequestClient webClient = CreateGqlWebClient())
+            {
+                string request = "{\"query\":\"query{video(id:\\\"" + vodId + "\\\"){seekPreviewsURL}}\"}";
+                infoUrl = JsonNodeExtensions.ParseObject(webClient.UploadString(GQL_URL, request))
+                    .SelectToken("$.data.video.seekPreviewsURL")?.Value<string>();
+            }
+
+            if (string.IsNullOrWhiteSpace(infoUrl))
+            {
+                return null;
+            }
+
+            // plain client: the CDN must not receive the Twitch OAuth header
+            using (HttpRequestClient webClient = new HttpRequestClient())
+            {
+                JsonNode board = JsonNodeExtensions.ParseArray(webClient.DownloadString(infoUrl))
+                    .FirstOrDefault(b => b.Value<string>("quality") == "high");
+
+                if (board == null)
+                {
+                    return null;
+                }
+
+                Uri baseUri = new Uri(infoUrl);
+
+                return new TwitchStoryboard(
+                    board["images"].AsArray().Select(image => new Uri(baseUri, image.Value<string>())).ToList(),
+                    board.Value<int>("interval"),
+                    board.Value<int>("cols"),
+                    board.Value<int>("rows"),
+                    board.Value<int>("width"),
+                    board.Value<int>("height"),
+                    board.Value<int>("count"));
+            }
+        }
+
+        // Pages through VOD chat with the persisted query the Twitch web player uses; anonymous access is enough.
+        // Pages by time offset only: Twitch rejects cursor paging without a browser integrity token.
+        // Chat pages come one at a time per position, so a long VOD means thousands of requests in a row.
+        // Split the range into parallel segments (whole seconds, no overlap) and merge them in order.
+        public List<(TimeSpan Start, string Game)> GetChapters(string vodId)
+        {
+            var chapters = new List<(TimeSpan Start, string Game)>();
+
+            if (string.IsNullOrEmpty(vodId) || !vodId.All(char.IsAsciiDigit))
+            {
+                return chapters;
+            }
+
+            using (HttpRequestClient webClient = CreateGqlWebClient())
+            {
+                string request = new JsonObject
+                {
+                    ["operationName"] = CHAPTERS_OPERATION,
+                    ["variables"] = new JsonObject { ["videoID"] = vodId },
+                    ["extensions"] = new JsonObject
+                    {
+                        ["persistedQuery"] = new JsonObject { ["version"] = 1, ["sha256Hash"] = CHAPTERS_QUERY_HASH }
+                    }
+                }.ToJsonString();
+
+                JsonArray edges = JsonNodeExtensions.ParseObject(webClient.UploadString(GQL_URL, request))
+                    .SelectToken("$.data.video.moments.edges") as JsonArray;
+
+                foreach (JsonNode edge in edges ?? new JsonArray())
+                {
+                    JsonNode node = edge?["node"];
+                    string game = node.SelectToken("$.details.game.displayName")?.Value<string>() ?? node.Value<string>("description");
+                    chapters.Add((TimeSpan.FromMilliseconds(node.Value<double>("positionMilliseconds")), game ?? "Chapter"));
+                }
+            }
+
+            return chapters;
+        }
+
+        // BTTV's few overlay ("zero-width") emotes aren't marked in its data; chat apps keep this list
+        private static readonly HashSet<string> BttvOverlays = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "SoSnowy", "IceCold", "SantaHat", "TopHat", "ReinDeer", "CandyCane", "cvMask", "cvHazmat"
+        };
+
+        // Global lists first, then the channel's own, which win on a clash. Every list is optional: one that fails,
+        // or a channel a provider doesn't know (404), is simply skipped.
+        public ChatExtras GetChatExtras(string vodId, bool highRes)
+        {
+            ChatExtras extras = new ChatExtras();
+            string channelId = null;
+
+            void Put(string code, string url, bool overlay)
+            {
+                if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(url))
+                {
+                    extras.Emotes[code] = new ChatImage(url.StartsWith("//") ? "https:" + url : url, overlay);
+                }
+            }
+
+            void Bttv(JsonNode list)
+            {
+                foreach (JsonNode e in list as JsonArray ?? new JsonArray())
+                {
+                    // "modifier" entries (c!, h!, ...) are typed commands, not pictures
+                    if (!e.Value<bool>("modifier"))
+                    {
+                        string code = e.Value<string>("code");
+                        Put(code, "https://cdn.betterttv.net/emote/" + e.Value<string>("id") + (highRes ? "/3x" : "/2x"),
+                            BttvOverlays.Contains(code ?? ""));
+                    }
+                }
+            }
+
+            void Ffz(JsonNode sets, JsonNode only)
+            {
+                HashSet<string> wanted = only is JsonArray ids ? ids.Select(i => i.Value<string>()).ToHashSet() : null;
+                string size = highRes ? "4" : "2";
+
+                foreach (KeyValuePair<string, JsonNode> set in sets as JsonObject ?? new JsonObject())
+                {
+                    if (wanted != null && !wanted.Contains(set.Key))
+                    {
+                        continue;
+                    }
+
+                    foreach (JsonNode e in set.Value?["emoticons"] as JsonArray ?? new JsonArray())
+                    {
+                        // animated emotes list their moving images separately; fall back to smaller sizes
+                        JsonNode urls = e["animated"] as JsonObject ?? e["urls"];
+                        string url = urls?.Value<string>(size) ?? urls?.Value<string>("2") ?? urls?.Value<string>("1");
+                        Put(e.Value<string>("name"), url, e.Value<bool>("modifier"));
+                    }
+                }
+            }
+
+            void SevenTv(JsonNode list)
+            {
+                foreach (JsonNode e in list as JsonArray ?? new JsonArray())
+                {
+                    string host = e.SelectToken("$.data.host.url")?.Value<string>();
+                    // flag 1 on the set's entry marks a zero-width emote
+                    Put(e.Value<string>("name"), host == null ? null : host + (highRes ? "/4x.webp" : "/2x.webp"),
+                        (e.Value<int>("flags") & 1) != 0);
+                }
+            }
+
+            void Badges(JsonNode list)
+            {
+                foreach (JsonNode badge in list as JsonArray ?? new JsonArray())
+                {
+                    string url = badge.Value<string>("imageURL");
+
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        extras.Badges[badge.Value<string>("setID") + "/" + badge.Value<string>("version")] =
+                            new ChatImage(url, Title: badge.Value<string>("title"));
+                    }
+                }
+            }
+
+            void Cheers(JsonNode groups, JsonNode colors)
+            {
+                List<(int Bits, string Color)> palette = (colors as JsonArray ?? new JsonArray())
+                    .Select(c => (c.Value<int>("bits"), c.Value<string>("color"))).OrderBy(c => c.Item1).ToList();
+
+                foreach (JsonNode group in groups as JsonArray ?? new JsonArray())
+                {
+                    string template = group.Value<string>("templateURL");
+
+                    foreach (JsonNode node in group["nodes"] as JsonArray ?? new JsonArray())
+                    {
+                        string prefix = node.Value<string>("prefix");
+
+                        if (string.IsNullOrEmpty(template) || string.IsNullOrEmpty(prefix))
+                        {
+                            continue;
+                        }
+
+                        extras.Cheermotes[prefix] = (node["tiers"] as JsonArray ?? new JsonArray())
+                            .Select(t => t.Value<int>("bits"))
+                            .OrderBy(bits => bits)
+                            .Select(bits => new CheerTier(bits,
+                                template.Replace("PREFIX", prefix.ToLowerInvariant()).Replace("BACKGROUND", "dark")
+                                    .Replace("ANIMATION", "animated").Replace("TIER", bits.ToString(CultureInfo.InvariantCulture))
+                                    .Replace("SCALE", highRes ? "4" : "2").Replace("EXTENSION", "gif"),
+                                palette.LastOrDefault(c => c.Bits <= bits).Color))
+                            .ToList();
+                    }
+                }
+            }
+
+            void Read(string url, Action<JsonNode> read)
+            {
+                try
+                {
+                    using (HttpRequestClient client = new HttpRequestClient())
+                    {
+                        read(JsonNodeExtensions.Parse(client.DownloadString(url)));
+                    }
+                }
+                catch (Exception)
+                {
+                    // optional extras: a missing or broken list just means fewer images
+                }
+            }
+
+            void ReadGql(string query, Action<JsonNode> read)
+            {
+                try
+                {
+                    using (HttpRequestClient client = CreateGqlWebClient())
+                    {
+                        string request = new JsonObject { ["query"] = query }.ToJsonString();
+                        read(JsonNodeExtensions.ParseObject(client.UploadString(GQL_URL, request))["data"]);
+                    }
+                }
+                catch (Exception)
+                {
+                    // as above
+                }
+            }
+
+            string badgeSize = highRes ? "QUADRUPLE" : "DOUBLE";
+
+            Read("https://api.frankerfacez.com/v1/set/global", d => Ffz(d["sets"], d["default_sets"]));
+            Read("https://api.betterttv.net/3/cached/emotes/global", Bttv);
+            Read("https://7tv.io/v3/emote-sets/global", d => SevenTv(d["emotes"]));
+            ReadGql("query{badges{setID version title imageURL(size:" + badgeSize + ")}}", d => Badges(d["badges"]));
+            ReadGql("query{cheerConfig{displayConfig{colors{bits color}} groups{templateURL nodes{prefix tiers{bits}}}}}",
+                d => Cheers(d.SelectToken("$.cheerConfig.groups"), d.SelectToken("$.cheerConfig.displayConfig.colors")));
+
+            // the VOD's owner id: display names can't be looked up as logins (e.g. Japanese or Korean names)
+            if (!string.IsNullOrEmpty(vodId) && vodId.All(char.IsAsciiDigit))
+            {
+                ReadGql("query{video(id:\"" + vodId + "\"){owner{id}}}", d => channelId = d.SelectToken("$.video.owner.id")?.Value<string>());
+            }
+
+            if (!string.IsNullOrEmpty(channelId) && channelId.All(char.IsAsciiDigit))
+            {
+                Read("https://api.frankerfacez.com/v1/room/id/" + channelId, d => Ffz(d["sets"], null));
+                Read("https://api.betterttv.net/3/cached/users/twitch/" + channelId, d =>
+                {
+                    Bttv(d["channelEmotes"]);
+                    Bttv(d["sharedEmotes"]);
+                });
+                Read("https://7tv.io/v3/users/twitch/" + channelId, d => SevenTv(d.SelectToken("$.emote_set.emotes")));
+                ReadGql("query{user(id:\"" + channelId + "\"){broadcastBadges{setID version title imageURL(size:" + badgeSize + ")}}}",
+                    d => Badges(d.SelectToken("$.user.broadcastBadges")));
+                ReadGql("query{cheerConfig{displayConfig{colors{bits color}}} user(id:\"" + channelId + "\"){cheer{cheerGroups{templateURL nodes{prefix tiers{bits}}}}}}",
+                    d => Cheers(d.SelectToken("$.user.cheer.cheerGroups"), d.SelectToken("$.cheerConfig.displayConfig.colors")));
+            }
+
+            return extras;
+        }
+
+        public List<TwitchChatMessage> GetChatMessages(string vodId, TimeSpan from, TimeSpan to,
+            Action<TimeSpan> onPage)
+        {
+            // shortcut: fixed 10-minute segments, at most 4 at once; raise if Twitch allows more without throttling
+            const int maxParallel = 4;
+            TimeSpan segmentLength = TimeSpan.FromMinutes(10);
+
+            int start = (int)Math.Floor(from.TotalSeconds);
+            int end = (int)Math.Ceiling(to.TotalSeconds);
+            int count = Math.Clamp((int)Math.Ceiling((end - start) / segmentLength.TotalSeconds), 1, 1000);
+
+            if (count == 1)
+            {
+                return GetChatSegment(vodId, from, to, onPage);
+            }
+
+            int size = (int)Math.Ceiling((end - start) / (double)count);
+            List<(TimeSpan From, TimeSpan To)> segments = Enumerable.Range(0, count)
+                .Select(i => (TimeSpan.FromSeconds(start + i * size),
+                    // non-last segments stop one second before the next one starts, so no message is fetched twice
+                    i == count - 1 ? to : TimeSpan.FromSeconds(Math.Min(end, start + (i + 1) * size) - 1)))
+                .Where(seg => seg.Item1 <= seg.Item2)
+                .ToList();
+
+            List<TwitchChatMessage>[] results = new List<TwitchChatMessage>[segments.Count];
+            double[] covered = new double[segments.Count];
+            object progressLock = new object();
+
+            try
+            {
+                Parallel.For(0, segments.Count, new ParallelOptions { MaxDegreeOfParallelism = maxParallel }, i =>
+                {
+                    (TimeSpan segFrom, TimeSpan segTo) = segments[i];
+
+                    results[i] = GetChatSegment(vodId, segFrom, segTo, position =>
+                    {
+                        // report overall progress as if one fetch had covered the same number of seconds
+                        lock (progressLock)
+                        {
+                            covered[i] = Math.Max(0, (position - segFrom).TotalSeconds);
+                            onPage(from + TimeSpan.FromSeconds(covered.Sum()));
+                        }
+                    });
+                });
+            }
+            catch (AggregateException ex) when (ex.InnerExceptions.Count > 0)
+            {
+                // keep cancellation (and the first real error) as the caller expects
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                    ex.InnerExceptions.FirstOrDefault(e => e is OperationCanceledException) ?? ex.InnerExceptions[0]).Throw();
+                throw;
+            }
+
+            // segments are in time order and each is in order, so concatenating keeps the chat order
+            return results.Where(r => r != null).SelectMany(r => r).ToList();
+        }
+
+        private List<TwitchChatMessage> GetChatSegment(string vodId, TimeSpan from, TimeSpan to,
+            Action<TimeSpan> onPage)
+        {
+            List<TwitchChatMessage> messages = new List<TwitchChatMessage>();
+            HashSet<string> seenIds = new HashSet<string>();
+            int position = (int)from.TotalSeconds;
+
+            using (HttpRequestClient webClient = CreateGqlWebClient())
+            {
+                while (true)
+                {
+                    string request = new JsonObject
+                    {
+                        ["operationName"] = CHAT_OPERATION,
+                        ["variables"] = new JsonObject
+                        {
+                            ["videoID"] = vodId,
+                            ["contentOffsetSeconds"] = position
+                        },
+                        ["extensions"] = new JsonObject
+                        {
+                            ["persistedQuery"] = new JsonObject
+                            {
+                                ["version"] = 1,
+                                ["sha256Hash"] = CHAT_QUERY_HASH
+                            }
+                        }
+                    }.ToJsonString();
+
+                    JsonNode comments = JsonNodeExtensions.ParseObject(webClient.UploadString(GQL_URL, request))
+                        .SelectToken("$.data.video.comments");
+
+                    JsonArray edges = comments is JsonObject ? comments.Value<JsonArray>("edges") : null;
+
+                    if (edges == null || edges.Count == 0)
+                    {
+                        return messages;
+                    }
+
+                    int lastOffset = position;
+                    int added = 0;
+
+                    foreach (JsonNode edge in edges)
+                    {
+                        JsonNode node = edge["node"];
+                        int offsetSeconds = node.Value<int>("contentOffsetSeconds");
+                        lastOffset = Math.Max(lastOffset, offsetSeconds);
+                        TimeSpan offset = TimeSpan.FromSeconds(offsetSeconds);
+
+                        if (offset > to)
+                        {
+                            return messages;
+                        }
+
+                        // each page restarts at the last second seen, so skip messages we already have
+                        if (offset < from || !seenIds.Add(node.Value<string>("id")))
+                        {
+                            continue;
+                        }
+
+                        // commenter is null for deleted accounts
+                        string name = node["commenter"] is JsonObject commenter
+                            ? commenter.Value<string>("displayName")
+                            : "(deleted user)";
+
+                        List<TwitchChatFragment> fragments = node["message"]["fragments"].AsArray()
+                            .Select(f => new TwitchChatFragment(f.Value<string>("text"),
+                                f["emote"] is JsonObject emote ? emote.Value<string>("emoteID") : null))
+                            .ToList();
+
+                        string text = string.Concat(fragments.Select(f => f.Text));
+                        string color = node["message"].Value<string>("userColor");
+                        List<string> badges = (node["message"]["userBadges"] as JsonArray ?? new JsonArray())
+                            .Select(badge => badge.Value<string>("setID") + "/" + badge.Value<string>("version"))
+                            .ToList();
+
+                        messages.Add(new TwitchChatMessage(offset, name, text, color, fragments, badges));
+                        added++;
+                    }
+
+                    onPage(TimeSpan.FromSeconds(lastOffset));
+
+                    if (!comments["pageInfo"].Value<bool>("hasNextPage"))
+                    {
+                        return messages;
+                    }
+
+                    // shortcut: a single second with more messages than one page loses the overflow; move on so we never loop
+                    position = added > 0 ? lastOffset : lastOffset + 1;
+                }
             }
         }
 
@@ -825,6 +1579,26 @@ namespace TwitchLeecher.Services.Services
             return null;
         }
 
+        // twitch.tv/<channel>/clip/<slug> or clips.twitch.tv/<slug>
+        private string GetClipSlugFromUrl(string url)
+        {
+            if (!Uri.TryCreate(url?.Trim(), UriKind.Absolute, out Uri validUrl))
+            {
+                return null;
+            }
+
+            string[] segments = validUrl.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            if (validUrl.Host.Equals("clips.twitch.tv", StringComparison.OrdinalIgnoreCase))
+            {
+                return segments.FirstOrDefault();
+            }
+
+            int clipIndex = Array.FindIndex(segments, s => s.Equals("clip", StringComparison.OrdinalIgnoreCase));
+
+            return clipIndex >= 0 && clipIndex + 1 < segments.Length ? segments[clipIndex + 1] : null;
+        }
+
         private TimeSpan? GetStartTimeFromUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -865,23 +1639,23 @@ namespace TwitchLeecher.Services.Services
 
         private TwitchVideo GetTwitchVideoFromId(string id)
         {
-            using (WebClient webClient = CreateApiWebClient())
+            using (HttpRequestClient webClient = CreateApiWebClient())
             {
                 try
                 {
-                    webClient.QueryString.Add("id", id);
+                    webClient.AddQuery("id", id);
 
                     string result = webClient.DownloadString(VIDEOS_URL);
 
-                    JObject videosResponseJson = JObject.Parse(result);
+                    JsonObject videosResponseJson = JsonNodeExtensions.ParseObject(result);
 
                     if (videosResponseJson != null)
                     {
-                        JArray videosJson = videosResponseJson.Value<JArray>("data");
+                        JsonArray videosJson = videosResponseJson.Value<JsonArray>("data");
 
                         if (videosJson != null)
                         {
-                            JToken videoJson = videosJson.FirstOrDefault();
+                            JsonNode videoJson = videosJson.FirstOrDefault();
 
                             if (videoJson != null)
                             {
@@ -890,12 +1664,9 @@ namespace TwitchLeecher.Services.Services
                         }
                     }
                 }
-                catch (WebException ex)
+                catch (HttpRequestException ex)
                 {
-                    if (
-                        ex.Response is HttpWebResponse resp
-                        && resp.StatusCode == HttpStatusCode.NotFound
-                    )
+                    if (ex.StatusCode == HttpStatusCode.NotFound)
                     {
                         return null;
                     }
@@ -909,7 +1680,7 @@ namespace TwitchLeecher.Services.Services
             return null;
         }
 
-        public TwitchVideo ParseVideo(JToken videoJson)
+        public TwitchVideo ParseVideo(JsonNode videoJson)
         {
             string id = videoJson.Value<string>("id");
             string title = videoJson.Value<string>("title");
@@ -923,7 +1694,7 @@ namespace TwitchLeecher.Services.Services
             TimeSpan length = TimeSpanExtensions.ParseTwitchFormat(
                 videoJson.Value<string>("duration")
             );
-            JArray mutedSegments = videoJson.Value<JArray>("muted_segments");
+            JsonArray mutedSegments = videoJson.Value<JsonArray>("muted_segments");
 
             string recorded = videoJson.Value<string>("published_at");
 
@@ -941,7 +1712,8 @@ namespace TwitchLeecher.Services.Services
             bool muted = mutedSegments != null && mutedSegments.Count > 0;
             bool live = false;
 
-            if (string.IsNullOrWhiteSpace(thumbnail))
+            // a VOD still being recorded has no thumbnail, or Twitch's "processing" placeholder
+            if (string.IsNullOrWhiteSpace(thumbnail) || thumbnail.Contains("processing", StringComparison.OrdinalIgnoreCase))
             {
                 thumbnail = PROCESSING_THUMBNAIL;
                 live = true;
@@ -963,7 +1735,11 @@ namespace TwitchLeecher.Services.Services
                 viewable,
                 muted,
                 live
-            );
+            )
+            {
+                // a VOD still being recorded has nothing to check yet
+                LockedCheck = live ? null : () => IsVodLockedAsync(id)
+            };
         }
 
         #endregion Methods

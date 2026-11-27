@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TwitchLeecher.Core.Models
 {
@@ -41,6 +43,29 @@ namespace TwitchLeecher.Core.Models
         #endregion Properties
 
         #region Methods
+
+        // The quality to download for this default: source, audio only, else the highest at or below
+        // this resolution, else the lowest above it, else source.
+        public TwitchVideoQuality PickFrom(List<TwitchVideoQuality> qualities)
+        {
+            TwitchVideoQuality sourceQuality = qualities.Find(q => q.IsSource) ?? qualities[0];
+
+            if (IsSource)
+            {
+                return sourceQuality;
+            }
+
+            if (IsAudioOnly)
+            {
+                return qualities.FirstOrDefault(q => q.IsAudioOnly) ?? sourceQuality;
+            }
+
+            List<TwitchVideoQuality> visual = qualities.Where(q => !q.IsAudioOnly).ToList();
+
+            return visual.Where(q => q.VerticalResolution <= VerticalResolution).OrderByDescending(q => q.VerticalResolution).FirstOrDefault()
+                   ?? visual.Where(q => q.VerticalResolution >= VerticalResolution).OrderBy(q => q.VerticalResolution).FirstOrDefault()
+                   ?? sourceQuality;
+        }
 
         public override string ToString()
         {

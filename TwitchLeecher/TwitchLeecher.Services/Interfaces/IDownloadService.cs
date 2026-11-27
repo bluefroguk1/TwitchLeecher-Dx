@@ -16,15 +16,32 @@ namespace TwitchLeecher.Services.Interfaces
 
         void Enqueue(DownloadParameters downloadParams);
 
+        /// <summary>startPaused: the item waits in the list until Resume(id) is called.</summary>
+        void Enqueue(DownloadParameters downloadParams, bool startPaused);
+
         void Cancel(string id);
 
         void Retry(string id);
 
         void Remove(string id);
 
+        /// <summary>Pauses every new download start (the whole queue).</summary>
         void Pause();
 
         void Resume();
+
+        /// <summary>Pauses one item. A running download stops after its in-flight chunks and keeps the finished ones.</summary>
+        void Pause(string id);
+
+        void Resume(string id);
+
+        void MoveUp(string id);
+
+        /// <summary>Removes done, failed and canceled items.</summary>
+        void ClearFinished();
+
+        /// <summary>Brings back the downloads that were still waiting or running when the app was last open, as paused items. Also turns on saving the queue. The app calls it once at start-up.</summary>
+        void Restore();
 
         bool CanShutdown();
 

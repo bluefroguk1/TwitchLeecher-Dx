@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Xml.Linq;
 using TwitchLeecher.Core.Enums;
 using TwitchLeecher.Core.Events;
 using TwitchLeecher.Core.Models;
@@ -19,10 +20,16 @@ namespace TwitchLeecher.Gui.Services
         private readonly IDialogService _dialogService;
         private readonly INavigationService _navigationService;
         private readonly IPreferencesService _preferencesService;
+        private readonly IRuntimeDataService _runtimeDataService;
+
+        private const int MAX_RECENT_SEARCHES = 5;
 
         private ObservableCollection<TwitchVideo> _videos;
 
         private SearchParameters lastSearchParams;
+
+        private bool _isSearching;
+        private bool _hasSearched;
 
         #endregion Fields
 
@@ -33,7 +40,8 @@ namespace TwitchLeecher.Gui.Services
             IApiService apiService,
             IDialogService dialogService,
             INavigationService navigationService,
-            IPreferencesService preferencesService
+            IPreferencesService preferencesService,
+            IRuntimeDataService runtimeDataService
         )
         {
             _eventAggregator = eventAggregator;
@@ -41,6 +49,7 @@ namespace TwitchLeecher.Gui.Services
             _apiService = apiService;
             _navigationService = navigationService;
             _preferencesService = preferencesService;
+            _runtimeDataService = runtimeDataService;
 
             _eventAggregator.GetEvent<PreferencesSavedEvent>().Subscribe(PreferencesSaved);
 
@@ -71,6 +80,18 @@ namespace TwitchLeecher.Gui.Services
 
                 FireVideosCountChanged();
             }
+        }
+
+        public bool IsSearching
+        {
+            get { return _isSearching; }
+            private set { SetProperty(ref _isSearching, value, nameof(IsSearching)); }
+        }
+
+        public bool HasSearched
+        {
+            get { return _hasSearched; }
+            private set { SetProperty(ref _hasSearched, value, nameof(HasSearched)); }
         }
 
         public SearchParameters LastSearchParams
@@ -110,7 +131,11 @@ namespace TwitchLeecher.Gui.Services
         {
             lastSearchParams = searchParams;
 
-            _navigationService.ShowLoading();
+            AddRecentSearch(searchParams);
+
+            // results appear in the right-hand pane of the Search page, so stay there while loading
+            IsSearching = true;
+            _navigationService.ShowSearch();
 
             Task.Run(() => _apiService.Search(searchParams))
                 .ContinueWith(
@@ -118,16 +143,40 @@ namespace TwitchLeecher.Gui.Services
                     {
                         if (task.IsFaulted)
                         {
-                            _navigationService.ShowSearch();
+                            IsSearching = false;
                             _dialogService.ShowAndLogException(task.Exception);
                             return;
                         }
 
                         Videos = task.Result;
-                        _navigationService.ShowSearchResults();
+                        HasSearched = true;
+                        IsSearching = false;
                     },
                     TaskScheduler.FromCurrentSynchronizationContext()
                 );
+        }
+
+        private void AddRecentSearch(SearchParameters searchParams)
+        {
+            try
+            {
+                List<SearchParameters> recent = _runtimeDataService.RuntimeData.RecentSearches;
+                XElement searchXml = searchParams.GetXml();
+
+                recent.RemoveAll(s => XNode.DeepEquals(s.GetXml(), searchXml));
+                recent.Insert(0, searchParams.Clone());
+
+                if (recent.Count > MAX_RECENT_SEARCHES)
+                {
+                    recent.RemoveRange(MAX_RECENT_SEARCHES, recent.Count - MAX_RECENT_SEARCHES);
+                }
+
+                _runtimeDataService.Save();
+            }
+            catch
+            {
+                // Recent searches are a convenience; never block the search itself
+            }
         }
 
         private void PreferencesSaved()

@@ -47,7 +47,7 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Padding="0,0,0,5" BorderThickness="0,0,0,1">
-                <TextBlock Text="Update Available" FontSize="21" FontWeight="Bold" />
+                <TextBlock Text="Update Available" FontSize="20" FontWeight="Bold" />
             </Border>
 
             <TextBlock Grid.Row="2">
@@ -61,7 +61,7 @@
                 <Button Classes="hyperlink" Command="{Binding DownloadCommand}"
                         CommandParameter="{Binding UpdateInfo.DownloadUrl, Mode=OneWay}">
                     <TextBlock
-                        Text="{Binding UpdateInfo.DownloadUrl, Mode=OneWay, FallbackValue='https://github.com/Franiac/TwitchLeecher.Old/releases/tag/vX.Y.Z'}" />
+                        Text="{Binding UpdateInfo.DownloadUrl, Mode=OneWay, FallbackValue='https://github.com/schneidermanuel/TwitchLeecher-Dx/releases/tag/vX.Y.Z'}" />
                 </Button>
             </TextBlock>
 

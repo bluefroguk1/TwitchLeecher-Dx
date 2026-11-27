@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Text.Json.Nodes;
 using System;
 using System.Globalization;
 using System.Net;
@@ -14,8 +14,8 @@ namespace TwitchLeecher.Services.Services
     {
         #region Constants
 
-        private const string LatestReleaseUrl = "https://github.com/schneidermanuel/TwitchLeecher.Old-dx/releases/tag/v{0}";
-        private const string ReleasesApiUrl = "https://api.github.com/repos/schneidermanuel/TwitchLeecher.Old-dx/releases";
+        private const string LatestReleaseUrl = "https://github.com/schneidermanuel/TwitchLeecher-Dx/releases/tag/v{0}";
+        private const string ReleasesApiUrl = "https://api.github.com/repos/schneidermanuel/TwitchLeecher-Dx/releases";
 
         #endregion Constants
 
@@ -25,15 +25,15 @@ namespace TwitchLeecher.Services.Services
         {
             try
             {
-                using (WebClient webClient = new WebClient() { Encoding = Encoding.UTF8 })
+                using (HttpRequestClient webClient = new HttpRequestClient())
                 {
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "TwitchLeecher.Old");
+                    webClient.AddHeader("User-Agent", "TwitchLeecher-Dx");
 
                     string result = webClient.DownloadString(ReleasesApiUrl);
 
-                    JToken releasesJson = JToken.Parse(result);
+                    JsonNode releasesJson = JsonNodeExtensions.Parse(result);
 
-                    foreach (JToken releaseJson in releasesJson)
+                    foreach (JsonNode releaseJson in releasesJson.AsArray())
                     {
                         bool draft = releaseJson.Value<bool>("draft");
                         bool prerelease = releaseJson.Value<bool>("prerelease");

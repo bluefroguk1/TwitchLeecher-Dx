@@ -74,10 +74,10 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Orientation="Horizontal">
-                <Image Source="/Assets/TL_Icon.png" Width="27" Margin="0,1,5,0"
+                <Image Source="/Assets/TL_Icon.png" Width="27" Margin="0,0,8,0"
                        VerticalAlignment="Center" />
                 <TextBlock Text="{Binding ProductName, Mode=OneTime, FallbackValue='Twitch Leecher X.Y'}"
-                           FontWeight="Bold" FontSize="20" VerticalAlignment="Top" />
+                           FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
             </StackPanel>
 
             <TextBlock Grid.Row="1" Text="Developers" FontWeight="Bold" Margin="0,15,0,0" />
@@ -100,10 +100,19 @@
                 </Button>
             </TextBlock>
 
-            <TextBlock Grid.Row="8" Text="Donate" FontWeight="Bold" Margin="0,15,0,0" />
-            <TextBlock Grid.Row="9" Text="Help me out with a bottle of beer if you like the program :)"
+            <TextBlock Grid.Row="8" Text="Command-line tool" FontWeight="Bold" Margin="0,15,0,0" />
+            <StackPanel Grid.Row="9" Margin="15,5,0,0" Spacing="4" MaxWidth="560" HorizontalAlignment="Left">
+                <TextBlock TextWrapping="Wrap"
+                           Text="Search and download from a terminal with tl, found next to Twitch Leecher. It uses your settings and sign-in." />
+                <TextBlock FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace"
+                           Text="tl download &lt;video link&gt; --quality 1080p60" />
+                <TextBlock TextWrapping="Wrap" Text="Run tl --help for everything it can do." />
+            </StackPanel>
+
+            <TextBlock Grid.Row="10" Text="Donate" FontWeight="Bold" Margin="0,15,0,0" />
+            <TextBlock Grid.Row="11" Text="Help me out with a bottle of beer if you like the program :)"
                        Margin="15,5,0,0" />
-            <Button Classes="DonateButton" Grid.Row="10" Command="{Binding DonateCommand}" HorizontalAlignment="Left"
+            <Button Classes="DonateButton" Grid.Row="12" Command="{Binding DonateCommand}" HorizontalAlignment="Left"
                     Margin="15,5,0,0" Cursor="Hand">
                 <Image Classes="Img_Donate" />
             </Button>
