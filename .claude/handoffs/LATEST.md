@@ -2,7 +2,12 @@
 
 Updated **2026-11-27 on the Mac: fork review done; two features built from it, pushed to origin on their own branches, NOT compiled (no .NET SDK on the Mac), waiting for a PC run. Also 2026-11-27 on the PC: Settings tidy-up in `final` (see its section below)**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
 
-## NEXT PC RUN (2026-11-27): two new feature branches, never compiled
+## MERGED (2026-11-27, PC): `feature/persist-queue` and `feature/sub-only-badge` are in `final` (f1eb12f)
+
+Both compiled first time (0 errors). **Checked on the PC:** `persist-queue` also builds as the Native AOT publish and the published app starts and stays up; a round-trip test of the saved queue (video, quality, crop, chat, size estimate, bad id, corrupt file) passed 9/9; `sub-only-badge` code reviewed. Merged `final`, all 8 automated scripts: PASS. `test-chat-extras.ps1 -Channel jynxzi` **failed once** (the "badges off" HTML chat file was not written, cause not found) and **passed 10/10 on the immediate rerun**, so treat it as a flake to watch. **Not tested (needs the window, screen access was declined):** every by-hand item in A and B below. Merged anyway on the user's say-so, so those two lists still need doing.
+- **Refreshed:** `upgrade/net11-avalonia12.2` rebased onto f1eb12f (28b1849, builds, force-pushed); `preview` rebuilt (05017b6, CI run 46062032934, artifacts until 2026-12-11) and the #104 comment points at it. This replaces the "lagging branches" note below.
+
+## BY HAND STILL TO DO (2026-11-27): persist-queue (A) and sub-only-badge (B)
 
 **Where they are** (**pushed to `origin`**, each one commit rebased onto `final` 038a3e9 after the notification removal; they touch different files except one shared line in `.claude/pr-drafts/release-notes-4.0.md`, so they merge cleanly):
 - **`feature/persist-queue`** (3571b65): the download queue survives a restart.
