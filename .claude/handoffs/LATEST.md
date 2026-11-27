@@ -1,6 +1,17 @@
 ﻿# Handoff: TwitchLeecher-Dx (master overview)
 
-Updated **2026-11-25 (late) on the Mac: PC run on merged `final` all passed; only by-hand checks left for the PC**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+Updated **2026-11-27 on the PC: Settings tidy-up in `final` (see the first section); earlier PC run on merged `final` all passed**. Read this file from **`final`**: `git show origin/final:.claude/handoffs/LATEST.md`. Everything above "HISTORY" is current. Everything below it is the record of earlier rounds and loses wherever it disagrees with the top.
+
+## SETTINGS TIDY-UP + BRANCH UPDATES (2026-11-27, PC): in `final` (83460e5, 6953bf0), nothing left to do
+
+After pulling `final` (7a25b8d) the PC re-ran all 8 automated checks (rebuilt, 0 errors): **all PASS** (video-metadata, tl-info-chat, chat-real-time, third-party-emotes xqc, chat-extras kaicenat and jynxzi with 4 cheermotes, speed-limit 1.7 MB/s at a 2 limit and 5.69 unlimited, free-space). A saved `.chat.html` was checked by file contents only (536 images, all embedded, animated GIF and WebP present, no outside links; no overlay emotes in the sample). The user then looked at Settings by hand and asked for these changes, all now in `final`:
+- **Desktop notifications removed completely** (setting, service, packages, windows-only target framework, `test-desktop-notifications.ps1`, lines in `test-combined-all.ps1`). The in-window toast (`INotificationService`) stays. Old configs with `ShowNotifications` still load.
+- **Settings > Download:** Compression and Encoder aligned in one grid; new **SAVED CHATS** heading (Text chat: show the time each message was sent / Include badges / High-resolution emotes); MAX CONNECTIONS without "(EXPERIMENTAL)", hint on two lines.
+- **"Put channels in their own subfolder"** now applies to every channel (`DownloadSubfoldersForChannels`, config key still `SubfoldersForFav`). `tl download` still ignores it (not asked for).
+- **Watched Searches** capitalised in the Settings side bar and heading only (other mentions left).
+- **Branches:** `upgrade/net11-avalonia12.2` rebased onto `final` (be348fd, builds, force-pushed); `preview` rebuilt (445e6bf) and #104 comment updated; `pr/desktop-notifications` deleted. Unopened Wave 3 branches (`ui-settings-sections`, `compress-video`, `watched-searches`, `chat-export`) still need these label changes at their refresh; no open upstream PR (#104-#128) is affected.
+- **Not re-run after the changes:** the automated scripts (only `test-tl-info-chat.ps1`, 22/22, after the first edits). By hand the user has seen the new Settings layout (OK'd: "Perfect"); the Settings rows in all three themes and the saved chat in a browser were not separately recorded.
+- Mistake fixed: a tool state file (`test-scripts/.claude/handoff-nudge-state.json`) went into 83460e5 and was removed in 6953bf0.
 
 ## PARKED IDEAS FOR THE MAC (added 2026-11-25; don't act on them until the user says so, e.g. after usage limits reset)
 
