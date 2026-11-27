@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -891,6 +892,42 @@ namespace TwitchLeecher.Services.Services
             return videos;
         }
 
+        // shortcut: 4 checks at a time and an in-memory cache per sign-in state; fine for a result page, upgrade if Twitch starts rate limiting the token call
+        private static readonly SemaphoreSlim _lockedCheckGate = new SemaphoreSlim(4);
+        private static readonly ConcurrentDictionary<string, bool> _lockedCache = new ConcurrentDictionary<string, bool>();
+
+        // Locked = Twitch holds back qualities for this login. The token a download needs anyway says so
+        // (restricted_bitrates), and it is empty when the signed-in user may watch it. Any failure answers false.
+        private async Task<bool> IsVodLockedAsync(string id)
+        {
+            string key = id + "|" + !string.IsNullOrWhiteSpace(_runtimeDataService.RuntimeData.AuthInfo?.AccessTokenSubOnly);
+
+            if (_lockedCache.TryGetValue(key, out bool cached))
+            {
+                return cached;
+            }
+
+            await _lockedCheckGate.WaitAsync();
+
+            try
+            {
+                TwitchVideoAuthInfo info = await Task.Run(() => GetVodAuthInfo(id));
+
+                // privileged (own channel, moderator) is reported as SubOnly too, but nothing is held back
+                bool locked = info.SubOnly && !info.Privileged;
+                _lockedCache[key] = locked;
+                return locked;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                _lockedCheckGate.Release();
+            }
+        }
+
         public TwitchVideoAuthInfo GetVodAuthInfo(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -1698,7 +1735,11 @@ namespace TwitchLeecher.Services.Services
                 viewable,
                 muted,
                 live
-            );
+            )
+            {
+                // a VOD still being recorded has nothing to check yet
+                LockedCheck = live ? null : () => IsVodLockedAsync(id)
+            };
         }
 
         #endregion Methods
