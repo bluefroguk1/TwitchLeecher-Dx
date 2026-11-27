@@ -63,7 +63,6 @@ public static class Program
 
         ServiceCollection services = new ServiceCollection();
         services.AddSingleton<IEventAggregator, EventAggregator>();
-        // DownloadService reports finished downloads through this; a console run prints its own result instead
         ServiceModule.Load(services);
         using ServiceProvider provider = services.BuildServiceProvider();
 

@@ -60,9 +60,6 @@ namespace TwitchLeecher.Services.Services
 
         private volatile bool _paused;
 
-        // downloads that ended since the queue was last empty
-        // shortcut: removing the last queued items by hand skips the reset, so the next batch count is too high; reset on Remove if anyone notices
-
         #endregion Fields
 
         #region Constructors
@@ -460,7 +457,6 @@ namespace TwitchLeecher.Services.Services
                             {
                                 _eventAggregator.GetEvent<RemoveDownloadEvent>().Publish(downloadId);
                             }
-
                         });
 
                         if (_downloadTasks.TryAdd(downloadId,
@@ -1494,7 +1490,6 @@ namespace TwitchLeecher.Services.Services
             {
                 Remove(id);
             }
-
         }
 
         public bool IsFileNameUsed(string fullPath)

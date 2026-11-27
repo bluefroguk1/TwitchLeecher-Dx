@@ -123,33 +123,6 @@ namespace TwitchLeecher.Services.Services
 
         #region Methods
 
-        public bool IsChannelInFavourites(string channel)
-        {
-            if (string.IsNullOrWhiteSpace(channel))
-            {
-                return false;
-            }
-
-            string searchChannelName = CurrentPreferences.SearchChannelName;
-
-            if (!string.IsNullOrWhiteSpace(searchChannelName) &&
-                searchChannelName.Equals(channel, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            string existingEntry =
-                CurrentPreferences.SearchFavouriteChannels.FirstOrDefault(c =>
-                    c.Equals(channel, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(existingEntry))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         public void Save(Preferences preferences)
         {
             lock (_commandLockObject)

@@ -11,6 +11,7 @@ After pulling `final` (7a25b8d) the PC re-ran all 8 automated checks (rebuilt, 0
 - **Watched Searches** capitalised in the Settings side bar and heading only (other mentions left).
 - **Branches:** `upgrade/net11-avalonia12.2` rebased onto `final` (be348fd, builds, force-pushed); `preview` rebuilt (445e6bf) and #104 comment updated; `pr/desktop-notifications` deleted. Unopened Wave 3 branches (`ui-settings-sections`, `compress-video`, `watched-searches`, `chat-export`) still need these label changes at their refresh; no open upstream PR (#104-#128) is affected.
 - **Not re-run after the changes:** the automated scripts (only `test-tl-info-chat.ps1`, 22/22, after the first edits). By hand the user has seen the new Settings layout (OK'd: "Perfect"); the Settings rows in all three themes and the saved chat in a browser were not separately recorded.
+- **Mac review (2026-11-27):** all OK. Small clean-up committed on top (unused `IsChannelInFavourites`, orphaned comments, blank lines; no behaviour change, CI checks it). Nothing for the PC to run.
 - Mistake fixed: a tool state file (`test-scripts/.claude/handoff-nudge-state.json`) went into 83460e5 and was removed in 6953bf0.
 
 ## PARKED IDEAS FOR THE MAC (added 2026-11-25; don't act on them until the user says so, e.g. after usage limits reset)
