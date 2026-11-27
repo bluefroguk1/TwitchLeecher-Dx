@@ -172,7 +172,7 @@ New issue #120 (crop time boxes cut off) was closed by its reporter as a duplica
   - Downloads: faster Cancel with a "Cancelling" message, no text on queued cards: `pr/ui-downloads-queue`.
   - Search sidebar FAVOURITES header: `pr/ui-search-sidebar`. Only in `final` for now: results toolbar with no animation on entering Search (fold into `pr/ui-results-toolbar` at the Wave 3 refresh) and the frameless message box (needs the theme colours and Avalonia 12's `WindowDecorations`, so it is a small follow-up after `pr/avalonia-12`, not part of Wave 1's `pr/ui-draggable-dialogs`).
 - **Three PC tweaks from 2026-11-20 that only lived on `preview` are now in `final`** (user, 2026-11-23: keep all three): Default quality on one line (folded into `pr/ui-settings-sections`), corner pop-ups removed, and a message box when a quick download queues nothing. The last two touch about 15 PR branches, so they are **one follow-up PR sent last**: body `bodies/remove-popups.md`, no branch yet (cut it from `final` once the others merge).
-- **Desktop notifications are not a requirement** (user): `pr/desktop-notifications` stays on hold.
+- **Desktop notifications are not a requirement** (user): removed from `final`; the branch is deleted.
 - **`final` = `final-next`**, `preview` rebuilt from it, and the #104 comment updated with the new build link and the code-quality and issue PRs.
 - Testing sections of the bodies are updated for everything checked in this round.
 - **#104 comment updated** (2026-11-23): new preview build, run 45237723230 since the master update (artifacts until 2026-12-07; Windows is the native AOT build), plus #85, the code-quality PRs, the CLI (#36) and fewer pop-ups.
@@ -265,14 +265,13 @@ These sit on `pr/_after-open-prs`: a single commit on `master` holding the code 
 | `pr/compress-video` | Option to compress videos after download | open PRs | – |
 | `pr/tray` | System tray icon and minimise to tray | open PRs | T\* (first-minimise prompt new) |
 | `pr/start-with-windows` | Option to start with Windows, minimised to the tray | tray, pipe fix | – (label now "when Windows starts") |
-| `pr/desktop-notifications` | Desktop notifications when downloads finish | tray | – (toasts never showed in round 1) |
 | `pr/watched-searches` | Watched searches: automatically download new VODs and clips | Settings, Downloads page, #106, #108 | T\* (live-stream fix, layout, On/Off switch new) |
 | `pr/download-schedule` | Off-peak download schedule | watched searches | – |
 | `pr/perf-downloads-idle` | Downloads page: only refresh every second while something downloads | Downloads page PR | – |
 | `pr/perf-result-badges` | Search results: cheaper badge refresh, and DOWNLOADED when a download finishes | results toolbar PR | – |
 | `pr/perf-parallel-chat` | Chat export: fetch long ranges in parallel | chat export PR | – |
 
-**Recommendation:** hold back `pr/desktop-notifications` and `pr/download-schedule` until they've passed a Windows test. Submit the rest of a wave once `combined-all` has passed the current test round.
+**Recommendation:** hold back `pr/download-schedule` until they've passed a Windows test. Submit the rest of a wave once `combined-all` has passed the current test round.
 
 ## How to submit one (when ready)
 
