@@ -33,6 +33,9 @@ namespace TwitchLeecher.Services.Services
         private const int DOWNLOAD_RETRIES = 3;
         private const int DOWNLOAD_RETRY_TIME = 5;
 
+        private const string QUEUE_FILE = "downloads.json";
+        private const int QUEUE_SAVE_DELAY = 1000;
+
         // one shared client so segment downloads reuse connections instead of a new TLS handshake per chunk
         private static readonly HttpClient _httpClient = new HttpClient();
 
@@ -49,8 +52,14 @@ namespace TwitchLeecher.Services.Services
         private readonly IPreferencesService _preferencesService;
         private readonly IProcessingService _processingService;
         private readonly IEventAggregator _eventAggregator;
+        private readonly IFolderService _folderService;
 
         private readonly Timer _downloadTimer;
+        private readonly Timer _saveQueueTimer;
+
+        // the queue is only written once Restore() has read the file, so the command line tool (which
+        // never restores) cannot overwrite the app's saved queue
+        private volatile bool _persistQueue;
 
         private ObservableCollection<TwitchVideoDownload> _downloads;
 
@@ -68,12 +77,14 @@ namespace TwitchLeecher.Services.Services
             IApiService apiService,
             IPreferencesService preferencesService,
             IProcessingService processingService,
-            IEventAggregator eventAggregator)
+            IEventAggregator eventAggregator,
+            IFolderService folderService)
         {
             _apiService = apiService;
             _preferencesService = preferencesService;
             _processingService = processingService;
             _eventAggregator = eventAggregator;
+            _folderService = folderService;
 
             _downloads = new ObservableCollection<TwitchVideoDownload>();
             _downloads.CollectionChanged += Downloads_CollectionChanged;
@@ -83,6 +94,7 @@ namespace TwitchLeecher.Services.Services
             _changeDownloadLockObject = new object();
 
             _downloadTimer = new Timer(DownloadTimerCallback, null, 0, TIMER_INTERVALL);
+            _saveQueueTimer = new Timer(_ => WriteQueue(), null, Timeout.Infinite, Timeout.Infinite);
 
             _eventAggregator.GetEvent<RemoveDownloadEvent>().Subscribe(Remove, ThreadOption.UIThread);
         }
@@ -457,6 +469,9 @@ namespace TwitchLeecher.Services.Services
                             {
                                 _eventAggregator.GetEvent<RemoveDownloadEvent>().Publish(downloadId);
                             }
+
+                            // the item may have just left the queue (done, failed, canceled)
+                            SaveQueue();
                         });
 
                         if (_downloadTasks.TryAdd(downloadId,
@@ -1335,6 +1350,7 @@ namespace TwitchLeecher.Services.Services
                         download.SetProgress(0);
                         download.SetDownloadState(DownloadState.Queued);
                         download.SetStatus("Initializing");
+                        SaveQueue();
                     }
                 }
             }
@@ -1492,6 +1508,113 @@ namespace TwitchLeecher.Services.Services
             }
         }
 
+        public void Restore()
+        {
+            if (_persistQueue)
+            {
+                return;
+            }
+
+            SavedDownloadQueue saved = null;
+            string file = QueueFile;
+
+            try
+            {
+                if (File.Exists(file))
+                {
+                    saved = JsonSerializer.Deserialize(File.ReadAllText(file), SavedDownloadQueueJson.Default.SavedDownloadQueue);
+                }
+            }
+            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+            {
+                // keep the unreadable file for inspection; the next save would overwrite it
+                TryCopy(file, file + ".bak");
+            }
+
+            _persistQueue = true;
+
+            foreach (SavedDownload item in saved?.Downloads ?? new List<SavedDownload>())
+            {
+                try
+                {
+                    if (item == null || !item.HasValidId)
+                    {
+                        continue;
+                    }
+
+                    TwitchVideoDownload download = item.ToDownload();
+
+                    lock (_changeDownloadLockObject)
+                    {
+                        if (_downloads.Any(d => d.Id == download.Id) || IsFileNameUsed(download.DownloadParams.FullPath))
+                        {
+                            continue;
+                        }
+
+                        // paused, so nothing starts by itself (a metered link, or a start with Windows)
+                        download.SetDownloadState(DownloadState.Paused);
+                        _downloads.Add(download);
+                    }
+                }
+                catch (Exception ex) when (ex is ArgumentException or FormatException)
+                {
+                    // one bad entry must not lose the rest
+                }
+            }
+        }
+
+        private string QueueFile => Path.Combine(_folderService.GetAppDataFolder(), QUEUE_FILE);
+
+        // the queue is saved a second after the last change, so a burst of changes writes once
+        private void SaveQueue()
+        {
+            if (_persistQueue)
+            {
+                _saveQueueTimer.Change(QUEUE_SAVE_DELAY, Timeout.Infinite);
+            }
+        }
+
+        private void WriteQueue()
+        {
+            try
+            {
+                SavedDownloadQueue queue = new SavedDownloadQueue();
+
+                lock (_changeDownloadLockObject)
+                {
+                    foreach (TwitchVideoDownload d in _downloads.Where(d =>
+                                 d.DownloadState == DownloadState.Downloading || d.DownloadState == DownloadState.Queued ||
+                                 d.DownloadState == DownloadState.Paused))
+                    {
+                        queue.Downloads.Add(SavedDownload.From(d));
+                    }
+                }
+
+                string file = QueueFile;
+                Directory.CreateDirectory(Path.GetDirectoryName(file));
+
+                // write then move, so a crash never leaves a half-written queue
+                string tempFile = file + ".tmp";
+                File.WriteAllText(tempFile, JsonSerializer.Serialize(queue, SavedDownloadQueueJson.Default.SavedDownloadQueue));
+                File.Move(tempFile, file, true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // shortcut: a failed save is dropped silently (the queue just isn't kept), add logging if it ever matters
+            }
+        }
+
+        private static void TryCopy(string source, string target)
+        {
+            try
+            {
+                File.Copy(source, target, true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+
         public bool IsFileNameUsed(string fullPath)
         {
             IEnumerable<TwitchVideoDownload> downloads = _downloads.Where(d =>
@@ -1521,6 +1644,7 @@ namespace TwitchLeecher.Services.Services
                 if (disposing)
                 {
                     _downloadTimer.Dispose();
+                    _saveQueueTimer.Dispose();
                 }
 
                 _downloads = null;
@@ -1542,6 +1666,7 @@ namespace TwitchLeecher.Services.Services
         private void Downloads_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             FireDownloadsCountChanged();
+            SaveQueue();
         }
 
         #endregion EventHandlers

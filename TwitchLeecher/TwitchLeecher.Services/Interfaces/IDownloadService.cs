@@ -40,6 +40,9 @@ namespace TwitchLeecher.Services.Interfaces
         /// <summary>Removes done, failed and canceled items.</summary>
         void ClearFinished();
 
+        /// <summary>Brings back the downloads that were still waiting or running when the app was last open, as paused items. Also turns on saving the queue. The app calls it once at start-up.</summary>
+        void Restore();
+
         bool CanShutdown();
 
         void Shutdown();
