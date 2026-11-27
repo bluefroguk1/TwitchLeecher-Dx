@@ -44,9 +44,10 @@ namespace TwitchLeecher.Core.Models
 
         #region Constructors
 
-        public TwitchVideoDownload(DownloadParameters downloadParams)
+        // id: only a restored download passes one, so it finds the chunks it left in its temp folder
+        public TwitchVideoDownload(DownloadParameters downloadParams, string id = null)
         {
-            Id = Guid.NewGuid().ToString("N");
+            Id = id ?? Guid.NewGuid().ToString("N");
             DownloadParams = downloadParams ?? throw new ArgumentNullException(nameof(downloadParams));
 
             _log = new StringBuilder();

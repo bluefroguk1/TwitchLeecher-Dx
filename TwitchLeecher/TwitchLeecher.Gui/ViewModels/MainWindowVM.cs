@@ -562,6 +562,8 @@ namespace TwitchLeecher.Gui.ViewModels
 
         private void ShowSearchOnStart()
         {
+            _downloadService.Restore();
+
             // signed in now, so the Twitch API works; the loop itself waits for the setting to be on
             _autoDownloadService.Start();
             _scheduleService.Start();

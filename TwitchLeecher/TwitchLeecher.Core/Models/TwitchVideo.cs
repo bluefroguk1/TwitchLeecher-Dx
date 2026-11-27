@@ -41,6 +41,7 @@ namespace TwitchLeecher.Core.Models
             RecordedDate = recordedDate;
             // Created on first access, i.e. when a card is realised and binds to it, so
             // off-screen results do not download their thumbnails up front.
+            ThumbnailUri = thumbnail;
             _thumbnail = new Lazy<Task<Bitmap>>(() => ImageHelper.LoadFromWeb(thumbnail));
             Url = url;
             Muted = muted;
@@ -121,6 +122,9 @@ namespace TwitchLeecher.Core.Models
         public Task<Bitmap> Thumbnail => _thumbnail.Value;
 
         public Uri Url { get; }
+
+        // kept so a queued download can be saved and rebuilt after a restart
+        public Uri ThumbnailUri { get; }
 
         public bool Viewable { get; }
 

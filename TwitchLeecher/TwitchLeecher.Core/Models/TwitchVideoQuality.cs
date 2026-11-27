@@ -43,6 +43,8 @@ namespace TwitchLeecher.Core.Models
 
         public string Resolution { get; private set; }
 
+        public string Codecs { get; private set; }
+
         public int VerticalResolution { get; private set; }
 
         public string DisplayString { get; private set; }
@@ -60,6 +62,7 @@ namespace TwitchLeecher.Core.Models
             Id = id;
             Name = name;
             Resolution = resolution;
+            Codecs = codecs;
 
             string displayString = Name;
 
